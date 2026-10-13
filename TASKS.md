@@ -23,14 +23,14 @@
 
 ### T0.2 — Migrar código da AP02 para firmware/ com config.h
 - **Marco:** M0
-- **Status:** todo
+- **Status:** done
 - **Responsável:** Davi
 - **Depende de:** T0.1
 - **Descrição:** trazer o projeto PlatformIO da AP02 para `firmware/` sem mudar comportamento, movendo SSID, senha, IP do broker e nº do grupo para `config.h` (ignorado) com `config.example.h` versionado.
 - **Critérios de aceite:**
-  - [ ] `pio run` em `firmware/` compila sem erros
-  - [ ] Nenhum segredo em arquivo versionado (`git grep` por SSID/senha/IP retorna vazio)
-  - [ ] Build falha com mensagem clara se `config.h` não existir
+  - [x] `pio run` em `firmware/` compila sem erros
+  - [x] Nenhum segredo em arquivo versionado (`git grep` por SSID/senha/IP retorna vazio)
+  - [x] Build falha com mensagem clara se `config.h` não existir
 - **Evidência:** `docs/entregas/M0/t0.2-pio-run.log`
 
 ### T0.3 — Registrar ADR 0001: escolha da testnet blockchain
