@@ -11,14 +11,14 @@
 
 ### T0.1 — Criar estrutura de pastas, .gitignore e README inicial
 - **Marco:** M0
-- **Status:** todo
+- **Status:** done
 - **Responsável:** Davi
 - **Depende de:** —
 - **Descrição:** criar o esqueleto de pastas definido em `CLAUDE.md` §2, um `.gitignore` que bloqueie segredos e artefatos de build, e um README inicial.
 - **Critérios de aceite:**
-  - [ ] Pastas `docs/{decisoes,entregas}`, `firmware/`, `backend/{ingest,anchor}`, `dashboard/` existem no repo
-  - [ ] `.gitignore` cobre `config.h`, `.env`, `.pio/`, `node_modules/`, `*.db`, chaves/mnemônicos
-  - [ ] README descreve o projeto, a estrutura e aponta para `CLAUDE.md` e `TASKS.md`
+  - [x] Pastas `docs/{decisoes,entregas}`, `firmware/`, `backend/{ingest,anchor}`, `dashboard/` existem no repo
+  - [x] `.gitignore` cobre `config.h`, `.env`, `.pio/`, `node_modules/`, `*.db`, chaves/mnemônicos
+  - [x] README descreve o projeto, a estrutura e aponta para `CLAUDE.md` e `TASKS.md`
 - **Evidência:** `docs/entregas/M0/t0.1-estrutura.txt` (saída de `git ls-files`)
 
 ### T0.2 — Migrar código da AP02 para firmware/ com config.h
