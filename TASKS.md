@@ -10,15 +10,15 @@ Regras: [tasks](docs/regras/tasks.md) · [commits](docs/regras/commits.md) · [m
 
 ### T0.1 — Criar estrutura de pastas, .gitignore e README inicial
 - **Marco:** M0
-- **Status:** todo
-- **Responsável:** —
+- **Status:** doing
+- **Responsável:** Davi Marques Oliveira
 - **Depende de:** —
 - **Descrição:** organizar o repositório no layout acordado (`firmware/`, `backend/`, `dashboard/`, `docs/`) para que todos trabalhem sobre a mesma base.
 - **Critérios de aceite:**
-  - [ ] pastas `firmware/`, `backend/ingest/`, `backend/anchor/`, `dashboard/`, `docs/decisoes/`, `docs/entregas/` criadas
-  - [ ] `.gitignore` cobre `.pio/`, `node_modules/`, `.env`, `config.h`
+  - [x] pastas `firmware/`, `backend/ingest/`, `backend/anchor/`, `dashboard/`, `docs/decisoes/`, `docs/entregas/` criadas
+  - [x] `.gitignore` cobre `.pio/`, `node_modules/`, `.env`, `config.h`
   - [ ] README com objetivo, integrantes e links para as regras
-- **Evidência:** docs/entregas/M0/T0.1-estrutura.png (árvore do repo)
+- **Evidência:** docs/entregas/M0/T0.1-estrutura.txt (árvore do repo)
 
 ### T0.2 — Migrar código da AP02 para firmware/
 - **Marco:** M0
