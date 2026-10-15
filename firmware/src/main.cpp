@@ -15,80 +15,146 @@
 
 const char* MQTT_TOPIC = "/botao/status";
 
-const char* MQTT_PAYLOAD = "ON-GRUPO" NUMERO_GRUPO;
+// Botões ligados entre o GPIO e o GND (INPUT_PULLUP).
+#define BOTAO_ENTRADA_PIN 19   // amarelo: entrada de lote no silo
+#define BOTAO_SAIDA_PIN   18   // vermelho: saída de lote do silo
+// 1 = imprime o nível dos pinos dos botões a cada 200 ms (diagnóstico de fiação).
+#define MODO_TESTE_PINOS 1
 
-#define BOTAO_PIN 27
 #define FILA_TAMANHO 10
 #define DEBOUNCE_MS 200
+#define CONFIRMA_MS 50          // o pino precisa ficar em LOW esse tempo todo para contar
+#define IGNORAR_INICIO_MS 2000  // o D19 vai a LOW sozinho logo após o boot; ignora esse período
+
+// Valores trafegados na fila.
+#define EVENTO_ENTRADA 1
+#define EVENTO_SAIDA   2
 
 WiFiClient wifiClient;
 PubSubClient mqtt(wifiClient);
 
-SemaphoreHandle_t xSemBotao = NULL;
 QueueHandle_t xFilaBotao = NULL;
+SemaphoreHandle_t xMutexSerial = NULL;
 
-volatile TickType_t ultimoTickISR = 0;
+// Serial compartilhado entre tasks dos dois núcleos: monta a mensagem inteira
+// num buffer local e só então escreve, segurando o mutex, para as linhas não se misturarem.
+void logSerial(const char* fmt, ...) {
+    char buf[160];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
 
-void IRAM_ATTR isrBotao() {
-    TickType_t agora = xTaskGetTickCountFromISR();
-
-    if ((TickType_t)(agora - ultimoTickISR) < pdMS_TO_TICKS(DEBOUNCE_MS)) {
-        return;
+    if (xMutexSerial != NULL) {
+        xSemaphoreTake(xMutexSerial, portMAX_DELAY);
     }
+    Serial.print(buf);
+    if (xMutexSerial != NULL) {
+        xSemaphoreGive(xMutexSerial);
+    }
+}
 
-    ultimoTickISR = agora;
+struct Botao {
+    const char* nome;
+    uint8_t pino;
+    int evento;
+    SemaphoreHandle_t sem;
+    uint32_t ruidos;   // pulsos descartados por confirmarAperto()
+};
 
+Botao botaoEntrada = {"ENTRADA", BOTAO_ENTRADA_PIN, EVENTO_ENTRADA, NULL, 0};
+Botao botaoSaida   = {"SAIDA",   BOTAO_SAIDA_PIN,   EVENTO_SAIDA,   NULL, 0};
+
+// Sem trava de tempo aqui: um pulso de ruído não pode bloquear o aperto real que vem logo depois.
+// Quem filtra é a TaskBotao (confirmarAperto + espera de DEBOUNCE_MS após soltar).
+void IRAM_ATTR isrBotao(void *arg) {
+    Botao *b = (Botao *)arg;
     BaseType_t tarefaDespertada = pdFALSE;
-    xSemaphoreGiveFromISR(xSemBotao, &tarefaDespertada);
+    xSemaphoreGiveFromISR(b->sem, &tarefaDespertada);
 
     if (tarefaDespertada == pdTRUE) {
         portYIELD_FROM_ISR();
     }
 }
 
+// Marcado no fim do setup(); eventos antes de IGNORAR_INICIO_MS a partir daqui são descartados.
+volatile TickType_t tickInicio = 0;
+
+// Amostra o pino a cada 5 ms; um único HIGH na janela descarta o evento (toque acidental ou ruído).
+bool confirmarAperto(uint8_t pino) {
+    for (int i = 0; i < CONFIRMA_MS / 5; i++) {
+        if (digitalRead(pino) != LOW) {
+            return false;
+        }
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    return true;
+}
+
 void TaskBotao(void *pvParameters) {
-    const int valor = 1;
+    Botao *b = (Botao *)pvParameters;
 
     for (;;) {
-        if (xSemaphoreTake(xSemBotao, portMAX_DELAY) == pdTRUE) {
-            vTaskDelay(pdMS_TO_TICKS(20));
-
-            if (digitalRead(BOTAO_PIN) == LOW) {
-                if (xQueueSend(xFilaBotao, &valor, pdMS_TO_TICKS(10)) == pdPASS) {
-                    Serial.println("[BOTAO] Pressionado: valor 1 enviado para a fila.");
-                } else {
-                    Serial.println("[ERRO] Fila cheia. Evento descartado.");
-                }
-
-                while (digitalRead(BOTAO_PIN) == LOW) {
-                    vTaskDelay(pdMS_TO_TICKS(10));
-                }
-
-                vTaskDelay(pdMS_TO_TICKS(DEBOUNCE_MS));
-                xSemaphoreTake(xSemBotao, 0);
+        if (xSemaphoreTake(b->sem, portMAX_DELAY) == pdTRUE) {
+            if ((TickType_t)(xTaskGetTickCount() - tickInicio) < pdMS_TO_TICKS(IGNORAR_INICIO_MS)) {
+                continue;
             }
+
+            // Ruído é contado em silêncio; o total aparece na linha [TESTE].
+            if (!confirmarAperto(b->pino)) {
+                b->ruidos++;
+                continue;
+            }
+
+            if (xQueueSend(xFilaBotao, &b->evento, pdMS_TO_TICKS(10)) == pdPASS) {
+                logSerial("[BOTAO] %s pressionado: evento enviado para a fila.\n", b->nome);
+            } else {
+                logSerial("[ERRO] Fila cheia. Evento descartado.\n");
+            }
+
+            while (digitalRead(b->pino) == LOW) {
+                vTaskDelay(pdMS_TO_TICKS(10));
+            }
+
+            vTaskDelay(pdMS_TO_TICKS(DEBOUNCE_MS));
+            xSemaphoreTake(b->sem, 0);
         }
     }
 }
+
+#if MODO_TESTE_PINOS
+// Solto = 1 (pull-up), pressionado = 0.
+void TaskTestePinos(void *pvParameters) {
+    for (;;) {
+        logSerial("[TESTE] D19(amarelo)=%d D18(vermelho)=%d | ruidos: amarelo=%lu vermelho=%lu\n",
+             digitalRead(BOTAO_ENTRADA_PIN), digitalRead(BOTAO_SAIDA_PIN),
+             (unsigned long)botaoEntrada.ruidos, (unsigned long)botaoSaida.ruidos);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+#endif
 
 bool conectarWiFi() {
     if (WiFi.status() == WL_CONNECTED) {
         return true;
     }
 
-    Serial.print("[WiFi] Conectando");
+    logSerial("[WiFi] Conectando a %s...\n", WIFI_SSID);
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
+    int tentativas = 0;
     while (WiFi.status() != WL_CONNECTED) {
-        Serial.print(".");
         vTaskDelay(pdMS_TO_TICKS(500));
+
+        // A cada 5 s mostra o motivo: 1 = rede nao encontrada, 4 = falha (senha), 6 = desconectado.
+        if (++tentativas % 10 == 0) {
+            logSerial("[WiFi] Ainda conectando, status = %d\n", WiFi.status());
+        }
     }
 
-    Serial.println();
-    Serial.print("[WiFi] Conectado. IP local: ");
-    Serial.println(WiFi.localIP());
+    logSerial("[WiFi] Conectado. IP local: %s\n", WiFi.localIP().toString().c_str());
 
     return true;
 }
@@ -101,16 +167,14 @@ bool conectarMQTT() {
     String clientId = "ESP32-GRUPO" NUMERO_GRUPO "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
 
     while (WiFi.status() == WL_CONNECTED && !mqtt.connected()) {
-        Serial.print("[MQTT] Conectando ao broker: ");
-        Serial.println(MQTT_BROKER);
+        logSerial("[MQTT] Conectando ao broker: %s\n", MQTT_BROKER);
 
         if (mqtt.connect(clientId.c_str())) {
-            Serial.println("[MQTT] Conectado ao broker.");
+            logSerial("[MQTT] Conectado ao broker.\n");
             return true;
         }
 
-        Serial.print("[MQTT] Falha na conexao. Estado: ");
-        Serial.println(mqtt.state());
+        logSerial("[MQTT] Falha na conexao. Estado: %d\n", mqtt.state());
 
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
@@ -125,9 +189,13 @@ void TaskComunicacao(void *pvParameters) {
 
     int valorRecebido;
 
+    // Só esta task consome a fila, então os contadores não precisam de mutex.
+    uint32_t entradas = 0;
+    uint32_t saidas = 0;
+
     for (;;) {
         if (WiFi.status() != WL_CONNECTED) {
-            Serial.println("[WiFi] Conexao perdida.");
+            logSerial("[WiFi] Sem conexao.\n");
             conectarWiFi();
         }
 
@@ -140,21 +208,36 @@ void TaskComunicacao(void *pvParameters) {
         }
 
         if (xQueueReceive(xFilaBotao, &valorRecebido, pdMS_TO_TICKS(100)) == pdPASS) {
-            if (valorRecebido == 1) {
+            const char* tipo = NULL;
+
+            if (valorRecebido == EVENTO_ENTRADA) {
+                entradas++;
+                tipo = "ENTRADA";
+            } else if (valorRecebido == EVENTO_SAIDA) {
+                saidas++;
+                tipo = "SAIDA";
+            }
+
+            if (tipo != NULL) {
+                // Ex.: "ENTRADA-GRUPO3 entradas=5 saidas=2 saldo=3"
+                char payload[96];
+                snprintf(payload, sizeof(payload), "%s-GRUPO%s entradas=%lu saidas=%lu saldo=%ld",
+                         tipo, NUMERO_GRUPO, (unsigned long)entradas, (unsigned long)saidas,
+                         (long)entradas - (long)saidas);
+
+                logSerial("[SILO] %s\n", payload);
+
                 conectarWiFi();
                 conectarMQTT();
 
                 if (mqtt.connected()) {
-                    if (mqtt.publish(MQTT_TOPIC, MQTT_PAYLOAD)) {
-                        Serial.print("[MQTT] Publicado em ");
-                        Serial.print(MQTT_TOPIC);
-                        Serial.print(": ");
-                        Serial.println(MQTT_PAYLOAD);
+                    if (mqtt.publish(MQTT_TOPIC, payload)) {
+                        logSerial("[MQTT] Publicado em %s: %s\n", MQTT_TOPIC, payload);
                     } else {
-                        Serial.println("[MQTT] Falha ao publicar mensagem.");
+                        logSerial("[MQTT] Falha ao publicar mensagem.\n");
                     }
                 } else {
-                    Serial.println("[MQTT] Broker indisponivel. Evento nao publicado.");
+                    logSerial("[MQTT] Broker indisponivel. Evento nao publicado.\n");
                 }
             }
         }
@@ -164,7 +247,7 @@ void TaskComunicacao(void *pvParameters) {
 }
 
 void travar(const char* msg) {
-    Serial.println(msg);
+    logSerial("%s\n", msg);
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
@@ -174,26 +257,39 @@ void setup() {
     Serial.begin(9600);
     delay(1000);
 
-    pinMode(BOTAO_PIN, INPUT_PULLUP);
+    // Criado antes de qualquer task, para todas já encontrarem o mutex pronto.
+    xMutexSerial = xSemaphoreCreateMutex();
 
-    xSemBotao = xSemaphoreCreateBinary();
+    pinMode(BOTAO_ENTRADA_PIN, INPUT_PULLUP);
+    pinMode(BOTAO_SAIDA_PIN, INPUT_PULLUP);
+
+    botaoEntrada.sem = xSemaphoreCreateBinary();
+    botaoSaida.sem = xSemaphoreCreateBinary();
     xFilaBotao = xQueueCreate(FILA_TAMANHO, sizeof(int));
 
-    if (xSemBotao == NULL || xFilaBotao == NULL) {
-        travar("[ERRO] Falha ao criar semaforo ou fila.");
+    if (xMutexSerial == NULL || botaoEntrada.sem == NULL || botaoSaida.sem == NULL || xFilaBotao == NULL) {
+        travar("[ERRO] Falha ao criar semaforos ou fila.");
     }
 
-    if (xTaskCreatePinnedToCore(TaskBotao, "TaskBotao", 3072, NULL, 2, NULL, 1) != pdPASS) {
-        travar("[ERRO] Falha ao criar TaskBotao.");
+    if (xTaskCreatePinnedToCore(TaskBotao, "TaskBotaoEntrada", 3072, &botaoEntrada, 2, NULL, 1) != pdPASS ||
+        xTaskCreatePinnedToCore(TaskBotao, "TaskBotaoSaida", 3072, &botaoSaida, 2, NULL, 1) != pdPASS) {
+        travar("[ERRO] Falha ao criar tasks dos botoes.");
     }
+
+#if MODO_TESTE_PINOS
+    xTaskCreatePinnedToCore(TaskTestePinos, "TaskTestePinos", 2048, NULL, 1, NULL, 1);
+#endif
 
     if (xTaskCreatePinnedToCore(TaskComunicacao, "TaskComunicacao", 8192, NULL, 1, NULL, 0) != pdPASS) {
         travar("[ERRO] Falha ao criar TaskComunicacao.");
     }
 
-    attachInterrupt(digitalPinToInterrupt(BOTAO_PIN), isrBotao, FALLING);
+    tickInicio = xTaskGetTickCount();
 
-    Serial.println("[APP] Sistema iniciado com FreeRTOS.");
+    attachInterruptArg(digitalPinToInterrupt(BOTAO_ENTRADA_PIN), isrBotao, &botaoEntrada, FALLING);
+    attachInterruptArg(digitalPinToInterrupt(BOTAO_SAIDA_PIN), isrBotao, &botaoSaida, FALLING);
+
+    logSerial("[APP] Sistema iniciado com FreeRTOS.\n");
 }
 
 void loop() {
