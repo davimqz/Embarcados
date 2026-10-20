@@ -38,6 +38,7 @@ Broker ──► Ingestão (valida + SQLite) ──► Ancoragem (Merkle root �
 
 - **[`CLAUDE.md`](CLAUDE.md)**: regras do projeto (segredos, FreeRTOS, commits, branches, roadmap).
 - **[`TASKS.md`](TASKS.md)**: backlog. Nenhum código entra sem uma task.
+- **[`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md)**: o que ainda falta decidir para fechar o projeto.
 - Regras detalhadas de [tasks](docs/regras/tasks.md) · [commits](docs/regras/commits.md) · [marcos](docs/regras/marcos.md).
 - Commits em Conventional Commits em português, com `Refs: T<marco>.<n>`.
   Template: `git config commit.template .gitmessage`.
