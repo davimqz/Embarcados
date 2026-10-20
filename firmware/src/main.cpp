@@ -17,7 +17,7 @@ const char* MQTT_TOPIC = "/botao/status";
 
 // Botões ligados entre o GPIO e o GND (INPUT_PULLUP).
 #define BOTAO_ENTRADA_PIN 19   // amarelo: entrada de lote no silo
-#define BOTAO_SAIDA_PIN   18   // vermelho: saída de lote do silo
+#define BOTAO_SAIDA_PIN   21   // vermelho: saída de lote do silo
 // 1 = imprime o nível dos pinos dos botões a cada 200 ms (diagnóstico de fiação).
 #define MODO_TESTE_PINOS 1
 
