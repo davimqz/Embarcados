@@ -3,7 +3,9 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M0 — Fundação (pendentes: T0.3, T0.4, T0.5) · firmware já avançou no M1 (ver abaixo)
+**Marco atual:** M0 — Fundação (pendente: T0.5, bloqueada pela escolha do sensor) · M1 fechado em 2026-10-20 (`v0.1.0`)
+
+> **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
 > **Nota (2026-10-20):** T1.2, T1.3, T1.4 e T1.5 foram implementadas na branch `m1/wip-botoes-silo`
 > enquanto este arquivo estava fora do repositório, e registradas aqui depois. Os commits dessa branch
@@ -39,35 +41,36 @@
 
 ### T0.3 — Registrar ADR 0001: escolha da testnet blockchain
 - **Marco:** M0
-- **Status:** todo
-- **Responsável:** —
+- **Status:** done
+- **Responsável:** Davi
 - **Depende de:** —
 - **Descrição:** decidir entre Cardano Preprod e EVM testnet (Sepolia/Amoy) e registrar o porquê em `docs/decisoes/0001-rede-blockchain.md`. Decisão do grupo.
 - **Critérios de aceite:**
-  - [ ] ADR com contexto, opções, decisão e consequências
-  - [ ] Campo "Rede blockchain" do `CLAUDE.md` §1 preenchido
-- **Evidência:** o próprio ADR
+  - [x] ADR com contexto, opções, decisão e consequências
+  - [x] Campo "Rede blockchain" do `CLAUDE.md` §1 preenchido
+- **Evidência:** [`docs/decisoes/0001-rede-blockchain.md`](docs/decisoes/0001-rede-blockchain.md) — Cardano Preprod
 
 ### T0.4 — Registrar ADR 0002: dashboard Node-RED vs web
 - **Marco:** M0
-- **Status:** todo
-- **Responsável:** —
+- **Status:** done
+- **Responsável:** Davi
 - **Depende de:** —
 - **Descrição:** escolher a tecnologia do dashboard e registrar em `docs/decisoes/0002-dashboard.md`. Decisão do grupo.
 - **Critérios de aceite:**
-  - [ ] ADR com contexto, opções, decisão e consequências
-  - [ ] Linha "Dashboard" da stack no `CLAUDE.md` §2 atualizada
-- **Evidência:** o próprio ADR
+  - [x] ADR com contexto, opções, decisão e consequências
+  - [x] Linha "Dashboard" da stack no `CLAUDE.md` §2 atualizada
+- **Evidência:** [`docs/decisoes/0002-dashboard.md`](docs/decisoes/0002-dashboard.md) — web própria (Vite + React + TS)
 
 ### T0.5 — Definir tema/sensor e escrever docs/arquitetura.md
 - **Marco:** M0
-- **Status:** todo
-- **Responsável:** —
+- **Status:** blocked
+- **Responsável:** Davi
 - **Depende de:** —
 - **Descrição:** fechar o domínio do projeto e o(s) sensor(es)/atuador(es) usados; documentar a arquitetura em `docs/arquitetura.md`. Decisão do grupo.
-- **Proposta em uso no firmware (falta o grupo confirmar):** controle de lotes de um silo, com botão amarelo (GPIO 19) = entrada e vermelho (GPIO 21) = saída (ver T1.5).
+- **Tema confirmado em 2026-10-20:** controle de lotes de um silo de grãos, com botão amarelo (GPIO 19) = entrada e vermelho (GPIO 21) = saída (ver T1.5).
+- **Bloqueio:** falta escolher o sensor, o atuador e a pinagem. **Destrava:** itens 1–3 de [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md).
 - **Critérios de aceite:**
-  - [ ] Campo "Tema/domínio" do `CLAUDE.md` §1 preenchido
+  - [x] Campo "Tema/domínio" do `CLAUDE.md` §1 preenchido
   - [ ] `docs/arquitetura.md` com diagrama, componentes, tasks FreeRTOS previstas e pinagem
 - **Evidência:** `docs/arquitetura.md`
 
@@ -85,7 +88,9 @@
 
 ---
 
-## M1 — Firmware base robusto · tag `v0.1.0`
+## M1 — Firmware base robusto · tag `v0.1.0` · **fechado em 2026-10-20**
+
+Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md).
 
 **Critério do marco:** desconectar o broker e reconectar sem reset; LWT visível no broker.
 
