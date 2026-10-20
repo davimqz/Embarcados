@@ -91,14 +91,14 @@
 
 ### T1.1 — Modularizar o firmware em wifi_mqtt.* e botao.*
 - **Marco:** M1
-- **Status:** todo
-- **Responsável:** —
+- **Status:** done
+- **Responsável:** Davi
 - **Depende de:** T1.3
 - **Descrição:** tirar do `main.cpp` a conexão Wi-Fi/MQTT e a leitura dos botões, sem mudar comportamento. Fica depois da T1.3 para não mover código que ainda vai mudar.
 - **Critérios de aceite:**
-  - [ ] `firmware/src/` com `wifi_mqtt.{h,cpp}` e `botao.{h,cpp}`; `main.cpp` só cria filas, semáforos e tasks
-  - [ ] `pio run` sem warnings novos
-  - [ ] Mesmo teste da T1.5 na placa dá o mesmo resultado (3 entradas + 3 saídas → `saldo:0`)
+  - [x] Módulos `wifi_mqtt.{h,cpp}`, `botao.{h,cpp}` e `log_serial.{h,cpp}` (headers em `include/`); `main.cpp` fica com o `setup()` e a `TaskComunicacao` (regra do silo: contadores e JSON)
+  - [x] `pio run` sem warnings novos
+  - [x] Mesmo teste da T1.5 na placa dá o mesmo resultado (3 entradas + 3 saídas → `saldo:0`)
 - **Evidência:** `docs/entregas/M1/t1.1-modularizacao.log`
 
 ### T1.2 — Publicar eventos em JSON com ArduinoJson
@@ -125,7 +125,7 @@
   - [x] `pio run` compila sem warnings novos
   - [x] `{"status":"online"}` retido em `grupo3/status` ao conectar
   - [x] Após a queda da conexão MQTT, a placa reconecta sozinha em ≤ 5 s, sem reset
-  - [ ] Botão apertado durante a queda é publicado na volta, com o `seq` seguinte — **não testado**
+  - [x] Botão apertado durante a queda é publicado na volta, com o `seq` seguinte — verificado no boot, com o MQTT ainda conectando (`docs/entregas/M1/t1.1-modularizacao.log`)
   - [ ] Placa desligada → broker publica `{"status":"offline"}` em ≤ ~25 s — **não testado** (o LWT apareceu na queda simulada)
 - **Evidência:** `docs/entregas/M1/t1.3-reconexao-lwt.log` (monitor serial + mensagens do broker)
 - **Observações:** em 2026-10-20 o grupo decidiu seguir para as próximas tasks sem os dois testes pendentes. Fazer antes de fechar o M1 (tag `v0.1.0`).

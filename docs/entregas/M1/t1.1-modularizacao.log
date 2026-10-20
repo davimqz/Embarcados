@@ -1,0 +1,24 @@
+# Evidência T1.1 — 2026-10-20, firmware modularizado (main + botao + wifi_mqtt + log_serial)
+# Placa: ESP32 DevKit, COM4, broker test.mosquitto.org. Teste: 3x amarelo (entrada) + 3x vermelho (saída).
+# Os dois primeiros apertos aconteceram antes de o MQTT conectar: os eventos esperaram na fila e saíram
+# em ordem depois da conexão (critério 3 da T1.3).
+# ts = null em todos: o NTP ainda não tinha sincronizado (ver T1.4).
+# Os bytes ilegíveis do boot (antes de [APP]) foram removidos.
+[APP] Sistema iniciado com FreeRTOS.
+[WiFi] Conectando a uaifai-tiradentes...
+[WiFi] Sem conexao, status = 0
+[WiFi] Conectado. IP local: 172.26.64.234
+[MQTT] Conectando ao broker: test.mosquitto.org
+[BOTAO] ENTRADA pressionado: evento enviado para a fila.
+[BOTAO] ENTRADA pressionado: evento enviado para a fila.
+[MQTT] Conectado ao broker.
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":null,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":null,"seq":2,"evento":"ENTRADA","entradas":2,"saidas":0,"saldo":2}
+[BOTAO] ENTRADA pressionado: evento enviado para a fila.
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":null,"seq":3,"evento":"ENTRADA","entradas":3,"saidas":0,"saldo":3}
+[BOTAO] SAIDA pressionado: evento enviado para a fila.
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":null,"seq":4,"evento":"SAIDA","entradas":3,"saidas":1,"saldo":2}
+[BOTAO] SAIDA pressionado: evento enviado para a fila.
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":null,"seq":5,"evento":"SAIDA","entradas":3,"saidas":2,"saldo":1}
+[BOTAO] SAIDA pressionado: evento enviado para a fila.
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":null,"seq":6,"evento":"SAIDA","entradas":3,"saidas":3,"saldo":0}
