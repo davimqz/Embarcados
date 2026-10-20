@@ -17,6 +17,10 @@
 
 // Contrato em docs/topicos-mqtt.md.
 const char* MQTT_TOPIC = "grupo" NUMERO_GRUPO "/silo/evento";
+const char* MQTT_TOPIC_STATUS = "grupo" NUMERO_GRUPO "/status";
+
+#define RECONEXAO_MS 5000      // intervalo entre tentativas de reconectar Wi-Fi e MQTT
+#define MQTT_KEEPALIVE_S 15    // o broker publica o LWT ~1,5x isso depois de a placa sumir
 
 // Botões ligados entre o GPIO e o GND (INPUT_PULLUP).
 #define BOTAO_ENTRADA_PIN 19   // amarelo: entrada de lote no silo
@@ -133,65 +137,90 @@ void TaskBotao(void *pvParameters) {
     }
 }
 
-bool conectarWiFi() {
+// Preenchido no início da TaskComunicacao e só usado por ela.
+char deviceId[32];
+
+// Uma tentativa por chamada, sem laço: a TaskComunicacao não pode ficar presa aqui,
+// senão a fila enche e os eventos seguintes são descartados.
+void verificarWiFi() {
+    static bool conectado = false;
+    static TickType_t ultimaTentativa = 0;
+    static int tentativas = 0;
+
     if (WiFi.status() == WL_CONNECTED) {
-        return true;
-    }
-
-    logSerial("[WiFi] Conectando a %s...\n", WIFI_SSID);
-
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-    int tentativas = 0;
-    while (WiFi.status() != WL_CONNECTED) {
-        vTaskDelay(pdMS_TO_TICKS(500));
-
-        // A cada 5 s mostra o motivo: 1 = rede nao encontrada, 4 = falha (senha), 6 = desconectado.
-        if (++tentativas % 10 == 0) {
-            logSerial("[WiFi] Ainda conectando, status = %d\n", WiFi.status());
+        if (!conectado) {
+            conectado = true;
+            tentativas = 0;
+            logSerial("[WiFi] Conectado. IP local: %s\n", WiFi.localIP().toString().c_str());
         }
+        return;
     }
 
-    logSerial("[WiFi] Conectado. IP local: %s\n", WiFi.localIP().toString().c_str());
+    if (conectado) {
+        conectado = false;
+        logSerial("[WiFi] Conexao perdida.\n");
+    }
 
-    return true;
+    if ((TickType_t)(xTaskGetTickCount() - ultimaTentativa) < pdMS_TO_TICKS(RECONEXAO_MS)) {
+        return;
+    }
+    ultimaTentativa = xTaskGetTickCount();
+
+    // O auto-reconnect do ESP32 costuma resolver sozinho; a cada 30 s força uma nova tentativa.
+    // Status: 1 = rede nao encontrada, 4 = falha (senha), 6 = desconectado.
+    logSerial("[WiFi] Sem conexao, status = %d\n", WiFi.status());
+    if (++tentativas % 6 == 0) {
+        WiFi.reconnect();
+    }
 }
 
-bool conectarMQTT() {
-    if (mqtt.connected()) {
-        return true;
+void verificarMQTT() {
+    static TickType_t ultimaTentativa = 0;
+    static bool primeiraTentativa = true;
+
+    if (mqtt.connected() || WiFi.status() != WL_CONNECTED) {
+        return;
     }
 
-    String clientId = "ESP32-GRUPO" NUMERO_GRUPO "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
-
-    while (WiFi.status() == WL_CONNECTED && !mqtt.connected()) {
-        logSerial("[MQTT] Conectando ao broker: %s\n", MQTT_BROKER);
-
-        if (mqtt.connect(clientId.c_str())) {
-            logSerial("[MQTT] Conectado ao broker.\n");
-            return true;
-        }
-
-        logSerial("[MQTT] Falha na conexao. Estado: %d\n", mqtt.state());
-
-        vTaskDelay(pdMS_TO_TICKS(2000));
+    if (!primeiraTentativa &&
+        (TickType_t)(xTaskGetTickCount() - ultimaTentativa) < pdMS_TO_TICKS(RECONEXAO_MS)) {
+        return;
     }
+    primeiraTentativa = false;
+    ultimaTentativa = xTaskGetTickCount();
 
-    return mqtt.connected();
+    char statusOnline[80];
+    char statusOffline[80];
+    snprintf(statusOnline, sizeof(statusOnline), "{\"device_id\":\"%s\",\"status\":\"online\"}", deviceId);
+    snprintf(statusOffline, sizeof(statusOffline), "{\"device_id\":\"%s\",\"status\":\"offline\"}", deviceId);
+
+    logSerial("[MQTT] Conectando ao broker: %s\n", MQTT_BROKER);
+
+    // LWT: se a conexão cair sem aviso, o próprio broker publica o "offline" (retido).
+    if (mqtt.connect(deviceId, MQTT_TOPIC_STATUS, 1, true, statusOffline)) {
+        logSerial("[MQTT] Conectado ao broker.\n");
+        mqtt.publish(MQTT_TOPIC_STATUS, statusOnline, true);
+    } else {
+        logSerial("[MQTT] Falha na conexao. Estado: %d (nova tentativa em %d s)\n",
+                  mqtt.state(), RECONEXAO_MS / 1000);
+    }
 }
 
 void TaskComunicacao(void *pvParameters) {
     mqtt.setServer(MQTT_BROKER, MQTT_PORT);
     mqtt.setSocketTimeout(3);
-    mqtt.setKeepAlive(30);
+    mqtt.setKeepAlive(MQTT_KEEPALIVE_S);
+
+    snprintf(deviceId, sizeof(deviceId), "esp32-grupo%s-%llx", NUMERO_GRUPO,
+             (unsigned long long)ESP.getEfuseMac());
+
+    logSerial("[WiFi] Conectando a %s...\n", WIFI_SSID);
+    WiFi.mode(WIFI_STA);
+    WiFi.setAutoReconnect(true);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
     // Horário em UTC; o SNTP sincroniza sozinho assim que o Wi-Fi conectar.
     configTime(0, 0, "pool.ntp.org", "a.st1.ntp.br");
-
-    char deviceId[32];
-    snprintf(deviceId, sizeof(deviceId), "esp32-grupo%s-%llx", NUMERO_GRUPO,
-             (unsigned long long)ESP.getEfuseMac());
 
     EventoSilo ev;
 
@@ -201,64 +230,66 @@ void TaskComunicacao(void *pvParameters) {
     uint32_t seq = 0;
 
     for (;;) {
-        if (WiFi.status() != WL_CONNECTED) {
-            logSerial("[WiFi] Sem conexao.\n");
-            conectarWiFi();
-        }
+        verificarWiFi();
+        verificarMQTT();
 
         if (!mqtt.connected()) {
-            conectarMQTT();
+            // Sem broker os eventos esperam na fila (até FILA_TAMANHO) e saem em ordem na volta.
+            vTaskDelay(pdMS_TO_TICKS(100));
+            continue;
         }
 
-        if (mqtt.connected()) {
-            mqtt.loop();
+        mqtt.loop();
+
+        // Peek em vez de receive: o evento só sai da fila depois de publicado,
+        // então uma queda no meio da publicação não perde o evento.
+        if (xQueuePeek(xFilaBotao, &ev, pdMS_TO_TICKS(100)) != pdPASS) {
+            continue;
         }
 
-        if (xQueueReceive(xFilaBotao, &ev, pdMS_TO_TICKS(100)) == pdPASS) {
-            const char* tipo = NULL;
+        const char* tipo = NULL;
+        uint32_t novasEntradas = entradas;
+        uint32_t novasSaidas = saidas;
 
-            if (ev.tipo == EVENTO_ENTRADA) {
-                entradas++;
-                tipo = "ENTRADA";
-            } else if (ev.tipo == EVENTO_SAIDA) {
-                saidas++;
-                tipo = "SAIDA";
-            }
+        if (ev.tipo == EVENTO_ENTRADA) {
+            novasEntradas++;
+            tipo = "ENTRADA";
+        } else if (ev.tipo == EVENTO_SAIDA) {
+            novasSaidas++;
+            tipo = "SAIDA";
+        }
 
-            if (tipo != NULL) {
-                seq++;
+        if (tipo == NULL) {
+            xQueueReceive(xFilaBotao, &ev, 0);
+            continue;
+        }
 
-                JsonDocument doc;
-                doc["device_id"] = deviceId;
-                if (ev.ts >= TS_MINIMO_VALIDO) {
-                    doc["ts"] = (uint32_t)ev.ts;
-                } else {
-                    doc["ts"] = nullptr;
-                }
-                doc["seq"] = seq;
-                doc["evento"] = tipo;
-                doc["entradas"] = entradas;
-                doc["saidas"] = saidas;
-                doc["saldo"] = (long)entradas - (long)saidas;
+        JsonDocument doc;
+        doc["device_id"] = deviceId;
+        if (ev.ts >= TS_MINIMO_VALIDO) {
+            doc["ts"] = (uint32_t)ev.ts;
+        } else {
+            doc["ts"] = nullptr;
+        }
+        doc["seq"] = seq + 1;
+        doc["evento"] = tipo;
+        doc["entradas"] = novasEntradas;
+        doc["saidas"] = novasSaidas;
+        doc["saldo"] = (long)novasEntradas - (long)novasSaidas;
 
-                char payload[160];
-                serializeJson(doc, payload, sizeof(payload));
+        char payload[160];
+        serializeJson(doc, payload, sizeof(payload));
 
-                logSerial("[SILO] %s\n", payload);
-
-                conectarWiFi();
-                conectarMQTT();
-
-                if (mqtt.connected()) {
-                    if (mqtt.publish(MQTT_TOPIC, payload)) {
-                        logSerial("[MQTT] Publicado em %s: %s\n", MQTT_TOPIC, payload);
-                    } else {
-                        logSerial("[MQTT] Falha ao publicar mensagem.\n");
-                    }
-                } else {
-                    logSerial("[MQTT] Broker indisponivel. Evento nao publicado.\n");
-                }
-            }
+        if (mqtt.publish(MQTT_TOPIC, payload)) {
+            xQueueReceive(xFilaBotao, &ev, 0);
+            entradas = novasEntradas;
+            saidas = novasSaidas;
+            seq++;
+            logSerial("[MQTT] Publicado em %s: %s\n", MQTT_TOPIC, payload);
+        } else {
+            // Continua na fila; sai na próxima volta, depois da reconexão.
+            logSerial("[MQTT] Falha ao publicar. Evento mantido na fila.\n");
+            vTaskDelay(pdMS_TO_TICKS(500));
         }
 
         vTaskDelay(pdMS_TO_TICKS(10));

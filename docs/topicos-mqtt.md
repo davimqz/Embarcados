@@ -34,6 +34,26 @@ Publicado pelo ESP32 a cada lote que entra ou sai do silo (botão amarelo = entr
 
 Os contadores são voláteis e zeram no reboot. A fonte de verdade para o saldo histórico são os eventos.
 
+## `grupo3/status`
+
+Diz se o ESP32 está conectado ao broker. É retido, então quem assina recebe o estado atual na hora.
+
+- **Direção:** ESP32 → broker (o `offline` é publicado pelo próprio broker, como LWT)
+- **QoS:** 1 · **Retain:** sim
+- **Payload:** JSON
+
+```json
+{"device_id": "esp32-grupo3-a1b2c3d4", "status": "online"}
+```
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `device_id` | string | Mesmo valor de `grupo3/silo/evento`. |
+| `status` | string | `"online"`: publicado pelo ESP32 logo após conectar. `"offline"`: LWT, publicado pelo broker quando a conexão cai sem aviso. |
+
+Com keep-alive de 15 s, o broker publica o `offline` entre 15 s e 25 s depois de a placa sumir.
+Não tem `ts` nem `seq`: o LWT é fixado no momento da conexão e não pode carregar o horário da queda.
+
 ## `/botao/status` (legado — descontinuado)
 
 Tópico da AP02. Deixou de ser publicado com a migração para `grupo3/silo/evento`.
