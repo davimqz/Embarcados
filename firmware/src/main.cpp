@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -13,7 +15,8 @@
 #error "config.h nao encontrado: copie include/config.example.h para include/config.h e preencha"
 #endif
 
-const char* MQTT_TOPIC = "/botao/status";
+// Contrato em docs/topicos-mqtt.md.
+const char* MQTT_TOPIC = "grupo" NUMERO_GRUPO "/silo/evento";
 
 // Botões ligados entre o GPIO e o GND (INPUT_PULLUP).
 #define BOTAO_ENTRADA_PIN 19   // amarelo: entrada de lote no silo
@@ -24,9 +27,19 @@ const char* MQTT_TOPIC = "/botao/status";
 #define CONFIRMA_MS 50          // o pino precisa ficar em LOW esse tempo todo para contar
 #define IGNORAR_INICIO_MS 2000  // o D19 vai a LOW sozinho logo após o boot; ignora esse período
 
-// Valores trafegados na fila.
+// Tipos de evento.
 #define EVENTO_ENTRADA 1
 #define EVENTO_SAIDA   2
+
+// Antes disso o relógio ainda não foi acertado pelo NTP (2023-11-14).
+#define TS_MINIMO_VALIDO 1700000000
+
+// Item trafegado na fila: o horário é marcado no aperto, não na publicação,
+// para eventos que esperaram o broker na fila manterem o ts correto.
+struct EventoSilo {
+    int tipo;
+    time_t ts;
+};
 
 WiFiClient wifiClient;
 PubSubClient mqtt(wifiClient);
@@ -102,7 +115,9 @@ void TaskBotao(void *pvParameters) {
                 continue;
             }
 
-            if (xQueueSend(xFilaBotao, &b->evento, pdMS_TO_TICKS(10)) == pdPASS) {
+            EventoSilo ev = {b->evento, time(nullptr)};
+
+            if (xQueueSend(xFilaBotao, &ev, pdMS_TO_TICKS(10)) == pdPASS) {
                 logSerial("[BOTAO] %s pressionado: evento enviado para a fila.\n", b->nome);
             } else {
                 logSerial("[ERRO] Fila cheia. Evento descartado.\n");
@@ -171,11 +186,19 @@ void TaskComunicacao(void *pvParameters) {
     mqtt.setSocketTimeout(3);
     mqtt.setKeepAlive(30);
 
-    int valorRecebido;
+    // Horário em UTC; o SNTP sincroniza sozinho assim que o Wi-Fi conectar.
+    configTime(0, 0, "pool.ntp.org", "a.st1.ntp.br");
+
+    char deviceId[32];
+    snprintf(deviceId, sizeof(deviceId), "esp32-grupo%s-%llx", NUMERO_GRUPO,
+             (unsigned long long)ESP.getEfuseMac());
+
+    EventoSilo ev;
 
     // Só esta task consome a fila, então os contadores não precisam de mutex.
     uint32_t entradas = 0;
     uint32_t saidas = 0;
+    uint32_t seq = 0;
 
     for (;;) {
         if (WiFi.status() != WL_CONNECTED) {
@@ -191,23 +214,35 @@ void TaskComunicacao(void *pvParameters) {
             mqtt.loop();
         }
 
-        if (xQueueReceive(xFilaBotao, &valorRecebido, pdMS_TO_TICKS(100)) == pdPASS) {
+        if (xQueueReceive(xFilaBotao, &ev, pdMS_TO_TICKS(100)) == pdPASS) {
             const char* tipo = NULL;
 
-            if (valorRecebido == EVENTO_ENTRADA) {
+            if (ev.tipo == EVENTO_ENTRADA) {
                 entradas++;
                 tipo = "ENTRADA";
-            } else if (valorRecebido == EVENTO_SAIDA) {
+            } else if (ev.tipo == EVENTO_SAIDA) {
                 saidas++;
                 tipo = "SAIDA";
             }
 
             if (tipo != NULL) {
-                // Ex.: "ENTRADA-GRUPO3 entradas=5 saidas=2 saldo=3"
-                char payload[96];
-                snprintf(payload, sizeof(payload), "%s-GRUPO%s entradas=%lu saidas=%lu saldo=%ld",
-                         tipo, NUMERO_GRUPO, (unsigned long)entradas, (unsigned long)saidas,
-                         (long)entradas - (long)saidas);
+                seq++;
+
+                JsonDocument doc;
+                doc["device_id"] = deviceId;
+                if (ev.ts >= TS_MINIMO_VALIDO) {
+                    doc["ts"] = (uint32_t)ev.ts;
+                } else {
+                    doc["ts"] = nullptr;
+                }
+                doc["seq"] = seq;
+                doc["evento"] = tipo;
+                doc["entradas"] = entradas;
+                doc["saidas"] = saidas;
+                doc["saldo"] = (long)entradas - (long)saidas;
+
+                char payload[160];
+                serializeJson(doc, payload, sizeof(payload));
 
                 logSerial("[SILO] %s\n", payload);
 
@@ -249,7 +284,7 @@ void setup() {
 
     botaoEntrada.sem = xSemaphoreCreateBinary();
     botaoSaida.sem = xSemaphoreCreateBinary();
-    xFilaBotao = xQueueCreate(FILA_TAMANHO, sizeof(int));
+    xFilaBotao = xQueueCreate(FILA_TAMANHO, sizeof(EventoSilo));
 
     if (xMutexSerial == NULL || botaoEntrada.sem == NULL || botaoSaida.sem == NULL || xFilaBotao == NULL) {
         travar("[ERRO] Falha ao criar semaforos ou fila.");
