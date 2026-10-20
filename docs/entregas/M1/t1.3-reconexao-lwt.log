@@ -1,0 +1,47 @@
+# Evidência T1.3 — 2026-10-20, firmware com reconexão não bloqueante + LWT
+# Placa: ESP32 DevKit, COM4, broker test.mosquitto.org.
+# Queda simulada às 11:57:25: um cliente de teste conectou com o mesmo client ID da placa e o broker expulsou a sessão.
+# O cliente de teste também reconectava sozinho, por isso a placa foi expulsa mais de uma vez até 11:57:32.
+# Os dois testes que faltavam estão no complemento, no fim do arquivo.
+
+## Monitor serial (bytes ilegíveis do boot removidos)
+[APP] Sistema iniciado com FreeRTOS.
+[WiFi] Conectando a uaifai-tiradentes...
+[WiFi] Conectado. IP local: 172.26.64.234
+[MQTT] Conectando ao broker: test.mosquitto.org
+[MQTT] Conectado ao broker.
+[MQTT] Conectando ao broker: test.mosquitto.org
+[MQTT] Conectado ao broker.
+[MQTT] Conectando ao broker: test.mosquitto.org
+[MQTT] Conectado ao broker.
+[BOTAO] ENTRADA pressionado: evento enviado para a fila.
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792508257,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+
+## Mensagens recebidas no broker (assinante em grupo3/#, horário de Brasília)
+11:57:03 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"online"}
+11:57:25 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"offline"}
+11:57:27 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"offline"}
+11:57:27 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"online"}
+11:57:29 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"offline"}
+11:57:32 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"online"}
+11:57:39 grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792508257,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+
+## Complemento — 2026-10-20, firmware modularizado (commit b6a11bb)
+# Evento durante a queda: ver docs/entregas/M1/t1.1-modularizacao.log (2 apertos antes do MQTT conectar, publicados com seq 1 e 2).
+# Reset pelo botão EN às 12:05:59: a sessão antiga dispara o LWT e a nova publica online.
+# Cabo USB retirado depois do evento das 12:06:57: o broker publicou o offline às 12:07:21 (24 s).
+
+## Monitor serial
+[APP] Sistema iniciado com FreeRTOS.
+[WiFi] Conectando a uaifai-tiradentes...
+[WiFi] Conectado. IP local: 172.26.64.234
+[MQTT] Conectando ao broker: test.mosquitto.org
+[MQTT] Conectado ao broker.
+[BOTAO] ENTRADA pressionado: evento enviado para a fila.
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792508815,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+
+## Mensagens recebidas no broker (horário de Brasília)
+12:05:59 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"offline"}
+12:05:59 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"online"}
+12:06:57 grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792508815,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+12:07:21 grupo3/status: {"device_id":"esp32-grupo3-84f49529e748","status":"offline"}

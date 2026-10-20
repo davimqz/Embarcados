@@ -1,162 +1,101 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
 #include "config.h"
+#include "log_serial.h"
+#include "botao.h"
+#include "wifi_mqtt.h"
 
 // O SDK do ESP32 tem outros "config.h" no include path; checa por um define nosso.
 #ifndef WIFI_SSID
 #error "config.h nao encontrado: copie include/config.example.h para include/config.h e preencha"
 #endif
 
-const char* MQTT_TOPIC = "/botao/status";
+// Contrato em docs/topicos-mqtt.md.
+const char* MQTT_TOPIC = "grupo" NUMERO_GRUPO "/silo/evento";
 
-const char* MQTT_PAYLOAD = "ON-GRUPO" NUMERO_GRUPO;
+// Antes disso o relógio ainda não foi acertado pelo NTP (2023-11-14).
+#define TS_MINIMO_VALIDO 1700000000
 
-#define BOTAO_PIN 27
-#define FILA_TAMANHO 10
-#define DEBOUNCE_MS 200
-
-WiFiClient wifiClient;
-PubSubClient mqtt(wifiClient);
-
-SemaphoreHandle_t xSemBotao = NULL;
-QueueHandle_t xFilaBotao = NULL;
-
-volatile TickType_t ultimoTickISR = 0;
-
-void IRAM_ATTR isrBotao() {
-    TickType_t agora = xTaskGetTickCountFromISR();
-
-    if ((TickType_t)(agora - ultimoTickISR) < pdMS_TO_TICKS(DEBOUNCE_MS)) {
-        return;
-    }
-
-    ultimoTickISR = agora;
-
-    BaseType_t tarefaDespertada = pdFALSE;
-    xSemaphoreGiveFromISR(xSemBotao, &tarefaDespertada);
-
-    if (tarefaDespertada == pdTRUE) {
-        portYIELD_FROM_ISR();
-    }
-}
-
-void TaskBotao(void *pvParameters) {
-    const int valor = 1;
-
-    for (;;) {
-        if (xSemaphoreTake(xSemBotao, portMAX_DELAY) == pdTRUE) {
-            vTaskDelay(pdMS_TO_TICKS(20));
-
-            if (digitalRead(BOTAO_PIN) == LOW) {
-                if (xQueueSend(xFilaBotao, &valor, pdMS_TO_TICKS(10)) == pdPASS) {
-                    Serial.println("[BOTAO] Pressionado: valor 1 enviado para a fila.");
-                } else {
-                    Serial.println("[ERRO] Fila cheia. Evento descartado.");
-                }
-
-                while (digitalRead(BOTAO_PIN) == LOW) {
-                    vTaskDelay(pdMS_TO_TICKS(10));
-                }
-
-                vTaskDelay(pdMS_TO_TICKS(DEBOUNCE_MS));
-                xSemaphoreTake(xSemBotao, 0);
-            }
-        }
-    }
-}
-
-bool conectarWiFi() {
-    if (WiFi.status() == WL_CONNECTED) {
-        return true;
-    }
-
-    Serial.print("[WiFi] Conectando");
-
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-    while (WiFi.status() != WL_CONNECTED) {
-        Serial.print(".");
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-
-    Serial.println();
-    Serial.print("[WiFi] Conectado. IP local: ");
-    Serial.println(WiFi.localIP());
-
-    return true;
-}
-
-bool conectarMQTT() {
-    if (mqtt.connected()) {
-        return true;
-    }
-
-    String clientId = "ESP32-GRUPO" NUMERO_GRUPO "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
-
-    while (WiFi.status() == WL_CONNECTED && !mqtt.connected()) {
-        Serial.print("[MQTT] Conectando ao broker: ");
-        Serial.println(MQTT_BROKER);
-
-        if (mqtt.connect(clientId.c_str())) {
-            Serial.println("[MQTT] Conectado ao broker.");
-            return true;
-        }
-
-        Serial.print("[MQTT] Falha na conexao. Estado: ");
-        Serial.println(mqtt.state());
-
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }
-
-    return mqtt.connected();
-}
+Botao botaoEntrada = {"ENTRADA", BOTAO_ENTRADA_PIN, EVENTO_ENTRADA, NULL};
+Botao botaoSaida   = {"SAIDA",   BOTAO_SAIDA_PIN,   EVENTO_SAIDA,   NULL};
 
 void TaskComunicacao(void *pvParameters) {
-    mqtt.setServer(MQTT_BROKER, MQTT_PORT);
-    mqtt.setSocketTimeout(3);
-    mqtt.setKeepAlive(30);
+    wifiMqttIniciar();
 
-    int valorRecebido;
+    EventoSilo ev;
+
+    // Só esta task consome a fila, então os contadores não precisam de mutex.
+    uint32_t entradas = 0;
+    uint32_t saidas = 0;
+    uint32_t seq = 0;
 
     for (;;) {
-        if (WiFi.status() != WL_CONNECTED) {
-            Serial.println("[WiFi] Conexao perdida.");
-            conectarWiFi();
+        verificarWiFi();
+        verificarMQTT();
+
+        if (!mqttConectado()) {
+            // Sem broker os eventos esperam na fila (até FILA_TAMANHO) e saem em ordem na volta.
+            vTaskDelay(pdMS_TO_TICKS(100));
+            continue;
         }
 
-        if (!mqtt.connected()) {
-            conectarMQTT();
+        mqttLoop();
+
+        // Peek em vez de receive: o evento só sai da fila depois de publicado,
+        // então uma queda no meio da publicação não perde o evento.
+        if (xQueuePeek(xFilaBotao, &ev, pdMS_TO_TICKS(100)) != pdPASS) {
+            continue;
         }
 
-        if (mqtt.connected()) {
-            mqtt.loop();
+        const char* tipo = NULL;
+        uint32_t novasEntradas = entradas;
+        uint32_t novasSaidas = saidas;
+
+        if (ev.tipo == EVENTO_ENTRADA) {
+            novasEntradas++;
+            tipo = "ENTRADA";
+        } else if (ev.tipo == EVENTO_SAIDA) {
+            novasSaidas++;
+            tipo = "SAIDA";
         }
 
-        if (xQueueReceive(xFilaBotao, &valorRecebido, pdMS_TO_TICKS(100)) == pdPASS) {
-            if (valorRecebido == 1) {
-                conectarWiFi();
-                conectarMQTT();
+        if (tipo == NULL) {
+            xQueueReceive(xFilaBotao, &ev, 0);
+            continue;
+        }
 
-                if (mqtt.connected()) {
-                    if (mqtt.publish(MQTT_TOPIC, MQTT_PAYLOAD)) {
-                        Serial.print("[MQTT] Publicado em ");
-                        Serial.print(MQTT_TOPIC);
-                        Serial.print(": ");
-                        Serial.println(MQTT_PAYLOAD);
-                    } else {
-                        Serial.println("[MQTT] Falha ao publicar mensagem.");
-                    }
-                } else {
-                    Serial.println("[MQTT] Broker indisponivel. Evento nao publicado.");
-                }
-            }
+        JsonDocument doc;
+        doc["device_id"] = deviceId();
+        if (ev.ts >= TS_MINIMO_VALIDO) {
+            doc["ts"] = (uint32_t)ev.ts;
+        } else {
+            doc["ts"] = nullptr;
+        }
+        doc["seq"] = seq + 1;
+        doc["evento"] = tipo;
+        doc["entradas"] = novasEntradas;
+        doc["saidas"] = novasSaidas;
+        doc["saldo"] = (long)novasEntradas - (long)novasSaidas;
+
+        char payload[160];
+        serializeJson(doc, payload, sizeof(payload));
+
+        if (mqttPublicar(MQTT_TOPIC, payload)) {
+            xQueueReceive(xFilaBotao, &ev, 0);
+            entradas = novasEntradas;
+            saidas = novasSaidas;
+            seq++;
+            logSerial("[MQTT] Publicado em %s: %s\n", MQTT_TOPIC, payload);
+        } else {
+            // Continua na fila; sai na próxima volta, depois da reconexão.
+            logSerial("[MQTT] Falha ao publicar. Evento mantido na fila.\n");
+            vTaskDelay(pdMS_TO_TICKS(500));
         }
 
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -164,7 +103,7 @@ void TaskComunicacao(void *pvParameters) {
 }
 
 void travar(const char* msg) {
-    Serial.println(msg);
+    logSerial("%s\n", msg);
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
@@ -174,26 +113,35 @@ void setup() {
     Serial.begin(9600);
     delay(1000);
 
-    pinMode(BOTAO_PIN, INPUT_PULLUP);
+    // Criado antes de qualquer task, para todas já encontrarem o mutex pronto.
+    xMutexSerial = xSemaphoreCreateMutex();
 
-    xSemBotao = xSemaphoreCreateBinary();
-    xFilaBotao = xQueueCreate(FILA_TAMANHO, sizeof(int));
+    pinMode(BOTAO_ENTRADA_PIN, INPUT_PULLUP);
+    pinMode(BOTAO_SAIDA_PIN, INPUT_PULLUP);
 
-    if (xSemBotao == NULL || xFilaBotao == NULL) {
-        travar("[ERRO] Falha ao criar semaforo ou fila.");
+    botaoEntrada.sem = xSemaphoreCreateBinary();
+    botaoSaida.sem = xSemaphoreCreateBinary();
+    xFilaBotao = xQueueCreate(FILA_TAMANHO, sizeof(EventoSilo));
+
+    if (xMutexSerial == NULL || botaoEntrada.sem == NULL || botaoSaida.sem == NULL || xFilaBotao == NULL) {
+        travar("[ERRO] Falha ao criar semaforos ou fila.");
     }
 
-    if (xTaskCreatePinnedToCore(TaskBotao, "TaskBotao", 3072, NULL, 2, NULL, 1) != pdPASS) {
-        travar("[ERRO] Falha ao criar TaskBotao.");
+    if (xTaskCreatePinnedToCore(TaskBotao, "TaskBotaoEntrada", 3072, &botaoEntrada, 2, NULL, 1) != pdPASS ||
+        xTaskCreatePinnedToCore(TaskBotao, "TaskBotaoSaida", 3072, &botaoSaida, 2, NULL, 1) != pdPASS) {
+        travar("[ERRO] Falha ao criar tasks dos botoes.");
     }
 
     if (xTaskCreatePinnedToCore(TaskComunicacao, "TaskComunicacao", 8192, NULL, 1, NULL, 0) != pdPASS) {
         travar("[ERRO] Falha ao criar TaskComunicacao.");
     }
 
-    attachInterrupt(digitalPinToInterrupt(BOTAO_PIN), isrBotao, FALLING);
+    tickInicio = xTaskGetTickCount();
 
-    Serial.println("[APP] Sistema iniciado com FreeRTOS.");
+    attachInterruptArg(digitalPinToInterrupt(BOTAO_ENTRADA_PIN), isrBotao, &botaoEntrada, FALLING);
+    attachInterruptArg(digitalPinToInterrupt(BOTAO_SAIDA_PIN), isrBotao, &botaoSaida, FALLING);
+
+    logSerial("[APP] Sistema iniciado com FreeRTOS.\n");
 }
 
 void loop() {

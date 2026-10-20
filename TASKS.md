@@ -3,7 +3,11 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M0 — Fundação
+**Marco atual:** M0 — Fundação (pendentes: T0.3, T0.4, T0.5) · firmware já avançou no M1 (ver abaixo)
+
+> **Nota (2026-10-20):** T1.2, T1.3, T1.4 e T1.5 foram implementadas na branch `m1/wip-botoes-silo`
+> enquanto este arquivo estava fora do repositório, e registradas aqui depois. Os commits dessa branch
+> não têm `Refs:` nem seguem a regra de uma branch por task.
 
 ---
 
@@ -61,6 +65,7 @@
 - **Responsável:** —
 - **Depende de:** —
 - **Descrição:** fechar o domínio do projeto e o(s) sensor(es)/atuador(es) usados; documentar a arquitetura em `docs/arquitetura.md`. Decisão do grupo.
+- **Proposta em uso no firmware (falta o grupo confirmar):** controle de lotes de um silo, com botão amarelo (GPIO 19) = entrada e vermelho (GPIO 21) = saída (ver T1.5).
 - **Critérios de aceite:**
   - [ ] Campo "Tema/domínio" do `CLAUDE.md` §1 preenchido
   - [ ] `docs/arquitetura.md` com diagrama, componentes, tasks FreeRTOS previstas e pinagem
@@ -68,20 +73,85 @@
 
 ### T0.6 — Criar docs/topicos-mqtt.md com contrato inicial
 - **Marco:** M0
-- **Status:** todo
-- **Responsável:** —
+- **Status:** review
+- **Responsável:** Davi
 - **Depende de:** T0.5
 - **Descrição:** registrar o contrato de tópicos e payloads (legado `/botao/status` + `/<grupo>/status`, `/<grupo>/telemetria`, `/<grupo>/cmd`) antes de qualquer implementação.
 - **Critérios de aceite:**
-  - [ ] Cada tópico com direção, QoS, retain e exemplo de payload JSON (`device_id`, `ts`, `seq`)
-  - [ ] Payload de telemetria reflete o sensor definido em T0.5
+  - [x] Cada tópico com direção, QoS, retain e exemplo de payload JSON (`device_id`, `ts`, `seq`)
+  - [ ] Payload de telemetria reflete o sensor definido em T0.5 — hoje a telemetria é `grupo3/silo/evento` (proposta da T0.5); fecha quando o tema for confirmado
+- **Observações:** `grupo3/cmd` ainda não foi definido; criar quando houver comando do servidor para a placa.
 - **Evidência:** `docs/topicos-mqtt.md`
 
 ---
 
 ## M1 — Firmware base robusto · tag `v0.1.0`
 
-_Tasks T1.1–T1.4 conforme `CLAUDE.md` §6. Detalhar ao fechar o M0._
+**Critério do marco:** desconectar o broker e reconectar sem reset; LWT visível no broker.
+
+### T1.1 — Modularizar o firmware em wifi_mqtt.* e botao.*
+- **Marco:** M1
+- **Status:** done
+- **Responsável:** Davi
+- **Depende de:** T1.3
+- **Descrição:** tirar do `main.cpp` a conexão Wi-Fi/MQTT e a leitura dos botões, sem mudar comportamento. Fica depois da T1.3 para não mover código que ainda vai mudar.
+- **Critérios de aceite:**
+  - [x] Módulos `wifi_mqtt.{h,cpp}`, `botao.{h,cpp}` e `log_serial.{h,cpp}` (headers em `include/`); `main.cpp` fica com o `setup()` e a `TaskComunicacao` (regra do silo: contadores e JSON)
+  - [x] `pio run` sem warnings novos
+  - [x] Mesmo teste da T1.5 na placa dá o mesmo resultado (3 entradas + 3 saídas → `saldo:0`)
+- **Evidência:** `docs/entregas/M1/t1.1-modularizacao.log`
+
+### T1.2 — Publicar eventos em JSON com ArduinoJson
+- **Marco:** M1
+- **Status:** done
+- **Responsável:** Davi
+- **Depende de:** T0.6
+- **Descrição:** trocar o payload de texto por JSON com `device_id`, `ts`, `seq` e `evento`, no tópico `grupo3/silo/evento`.
+- **Critérios de aceite:**
+  - [x] Contrato registrado em `docs/topicos-mqtt.md` antes do código
+  - [x] Payload com `device_id`, `ts`, `seq`, `evento` + contadores `entradas`, `saidas`, `saldo`
+  - [x] `seq` sobe de 1 em 1 sem buracos (log: 1 a 6)
+  - [x] Placa publica em `grupo3/silo/evento`; o legado `/botao/status` foi descontinuado
+- **Evidência:** `docs/entregas/M1/t1.2-t1.4-json-ntp.log` · commit `63305ac`
+
+### T1.3 — Reconexão Wi-Fi/MQTT resiliente + LWT
+- **Marco:** M1
+- **Status:** done
+- **Responsável:** Davi
+- **Depende de:** T1.2
+- **Descrição:** reconectar sem travar a `TaskComunicacao` (uma tentativa a cada 5 s) e publicar o estado da placa em `grupo3/status`, com o `offline` vindo do LWT. Evento só sai da fila depois de publicado, para não se perder numa queda.
+- **Critérios de aceite:**
+  - [x] Tópico `grupo3/status` registrado em `docs/topicos-mqtt.md`
+  - [x] `pio run` compila sem warnings novos
+  - [x] `{"status":"online"}` retido em `grupo3/status` ao conectar
+  - [x] Após a queda da conexão MQTT, a placa reconecta sozinha em ≤ 5 s, sem reset
+  - [x] Botão apertado durante a queda é publicado na volta, com o `seq` seguinte — verificado no boot, com o MQTT ainda conectando (`docs/entregas/M1/t1.1-modularizacao.log`)
+  - [x] Placa desligada → broker publica `{"status":"offline"}` em ≤ ~25 s (24 s no teste)
+- **Evidência:** `docs/entregas/M1/t1.3-reconexao-lwt.log` (monitor serial + mensagens do broker)
+
+### T1.4 — Sincronizar horário via NTP para o ts
+- **Marco:** M1
+- **Status:** done
+- **Responsável:** Davi
+- **Depende de:** T1.2
+- **Descrição:** acertar o relógio via SNTP (UTC) e marcar o `ts` no momento do aperto, levando-o pela fila junto com o evento.
+- **Critérios de aceite:**
+  - [x] `ts` em segundos Unix UTC, coerente com o horário real (log de 2026-10-20 ~11h46 BRT)
+  - [x] `ts` vai como `null` enquanto o NTP não sincronizou
+  - [x] `ts` é o horário do aperto, não o da publicação
+- **Evidência:** `docs/entregas/M1/t1.2-t1.4-json-ntp.log` · commit `63305ac`
+
+### T1.5 — Contar entrada e saída de lotes do silo com dois botões
+- **Marco:** M1
+- **Status:** done
+- **Responsável:** Davi
+- **Depende de:** T0.2
+- **Descrição:** estender o botão da AP02 para dois botões (entrada e saída), mantendo o padrão ISR → semáforo → task → fila → comunicação, com uma `TaskBotao` por botão. Task registrada depois de implementada; histórico em `docs/sessoes/2026-10-15-botoes-silo.md`.
+- **Critérios de aceite:**
+  - [x] Amarelo (GPIO 19) = entrada, vermelho (GPIO 21) = saída, ambos com `INPUT_PULLUP`
+  - [x] 3 entradas + 3 saídas na placa → `saldo=0`, sem eventos fantasmas
+  - [x] Modo de diagnóstico de pinos removido do firmware
+- **Evidência:** `docs/entregas/M1/t1.2-t1.4-json-ntp.log` · commits `1df4aa3`, `04d84a8`, `206418e`
 
 ## M2 — Sensoriamento · tag `v0.2.0`
 
