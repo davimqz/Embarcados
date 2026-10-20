@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <time.h>
 #include "freertos/FreeRTOS.h"
@@ -9,6 +7,9 @@
 #include "freertos/queue.h"
 
 #include "config.h"
+#include "log_serial.h"
+#include "botao.h"
+#include "wifi_mqtt.h"
 
 // O SDK do ESP32 tem outros "config.h" no include path; checa por um define nosso.
 #ifndef WIFI_SSID
@@ -17,210 +18,15 @@
 
 // Contrato em docs/topicos-mqtt.md.
 const char* MQTT_TOPIC = "grupo" NUMERO_GRUPO "/silo/evento";
-const char* MQTT_TOPIC_STATUS = "grupo" NUMERO_GRUPO "/status";
-
-#define RECONEXAO_MS 5000      // intervalo entre tentativas de reconectar Wi-Fi e MQTT
-#define MQTT_KEEPALIVE_S 15    // o broker publica o LWT ~1,5x isso depois de a placa sumir
-
-// Botões ligados entre o GPIO e o GND (INPUT_PULLUP).
-#define BOTAO_ENTRADA_PIN 19   // amarelo: entrada de lote no silo
-#define BOTAO_SAIDA_PIN   21   // vermelho: saída de lote do silo
-
-#define FILA_TAMANHO 10
-#define DEBOUNCE_MS 200
-#define CONFIRMA_MS 50          // o pino precisa ficar em LOW esse tempo todo para contar
-#define IGNORAR_INICIO_MS 2000  // o D19 vai a LOW sozinho logo após o boot; ignora esse período
-
-// Tipos de evento.
-#define EVENTO_ENTRADA 1
-#define EVENTO_SAIDA   2
 
 // Antes disso o relógio ainda não foi acertado pelo NTP (2023-11-14).
 #define TS_MINIMO_VALIDO 1700000000
 
-// Item trafegado na fila: o horário é marcado no aperto, não na publicação,
-// para eventos que esperaram o broker na fila manterem o ts correto.
-struct EventoSilo {
-    int tipo;
-    time_t ts;
-};
-
-WiFiClient wifiClient;
-PubSubClient mqtt(wifiClient);
-
-QueueHandle_t xFilaBotao = NULL;
-SemaphoreHandle_t xMutexSerial = NULL;
-
-// Serial compartilhado entre tasks dos dois núcleos: monta a mensagem inteira
-// num buffer local e só então escreve, segurando o mutex, para as linhas não se misturarem.
-void logSerial(const char* fmt, ...) {
-    char buf[160];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, args);
-    va_end(args);
-
-    if (xMutexSerial != NULL) {
-        xSemaphoreTake(xMutexSerial, portMAX_DELAY);
-    }
-    Serial.print(buf);
-    if (xMutexSerial != NULL) {
-        xSemaphoreGive(xMutexSerial);
-    }
-}
-
-struct Botao {
-    const char* nome;
-    uint8_t pino;
-    int evento;
-    SemaphoreHandle_t sem;
-};
-
 Botao botaoEntrada = {"ENTRADA", BOTAO_ENTRADA_PIN, EVENTO_ENTRADA, NULL};
 Botao botaoSaida   = {"SAIDA",   BOTAO_SAIDA_PIN,   EVENTO_SAIDA,   NULL};
 
-// Sem trava de tempo aqui: um pulso de ruído não pode bloquear o aperto real que vem logo depois.
-// Quem filtra é a TaskBotao (confirmarAperto + espera de DEBOUNCE_MS após soltar).
-void IRAM_ATTR isrBotao(void *arg) {
-    Botao *b = (Botao *)arg;
-    BaseType_t tarefaDespertada = pdFALSE;
-    xSemaphoreGiveFromISR(b->sem, &tarefaDespertada);
-
-    if (tarefaDespertada == pdTRUE) {
-        portYIELD_FROM_ISR();
-    }
-}
-
-// Marcado no fim do setup(); eventos antes de IGNORAR_INICIO_MS a partir daqui são descartados.
-volatile TickType_t tickInicio = 0;
-
-// Amostra o pino a cada 5 ms; um único HIGH na janela descarta o evento (toque acidental ou ruído).
-bool confirmarAperto(uint8_t pino) {
-    for (int i = 0; i < CONFIRMA_MS / 5; i++) {
-        if (digitalRead(pino) != LOW) {
-            return false;
-        }
-        vTaskDelay(pdMS_TO_TICKS(5));
-    }
-    return true;
-}
-
-void TaskBotao(void *pvParameters) {
-    Botao *b = (Botao *)pvParameters;
-
-    for (;;) {
-        if (xSemaphoreTake(b->sem, portMAX_DELAY) == pdTRUE) {
-            if ((TickType_t)(xTaskGetTickCount() - tickInicio) < pdMS_TO_TICKS(IGNORAR_INICIO_MS)) {
-                continue;
-            }
-
-            // Ruído é descartado em silêncio.
-            if (!confirmarAperto(b->pino)) {
-                continue;
-            }
-
-            EventoSilo ev = {b->evento, time(nullptr)};
-
-            if (xQueueSend(xFilaBotao, &ev, pdMS_TO_TICKS(10)) == pdPASS) {
-                logSerial("[BOTAO] %s pressionado: evento enviado para a fila.\n", b->nome);
-            } else {
-                logSerial("[ERRO] Fila cheia. Evento descartado.\n");
-            }
-
-            while (digitalRead(b->pino) == LOW) {
-                vTaskDelay(pdMS_TO_TICKS(10));
-            }
-
-            vTaskDelay(pdMS_TO_TICKS(DEBOUNCE_MS));
-            xSemaphoreTake(b->sem, 0);
-        }
-    }
-}
-
-// Preenchido no início da TaskComunicacao e só usado por ela.
-char deviceId[32];
-
-// Uma tentativa por chamada, sem laço: a TaskComunicacao não pode ficar presa aqui,
-// senão a fila enche e os eventos seguintes são descartados.
-void verificarWiFi() {
-    static bool conectado = false;
-    static TickType_t ultimaTentativa = 0;
-    static int tentativas = 0;
-
-    if (WiFi.status() == WL_CONNECTED) {
-        if (!conectado) {
-            conectado = true;
-            tentativas = 0;
-            logSerial("[WiFi] Conectado. IP local: %s\n", WiFi.localIP().toString().c_str());
-        }
-        return;
-    }
-
-    if (conectado) {
-        conectado = false;
-        logSerial("[WiFi] Conexao perdida.\n");
-    }
-
-    if ((TickType_t)(xTaskGetTickCount() - ultimaTentativa) < pdMS_TO_TICKS(RECONEXAO_MS)) {
-        return;
-    }
-    ultimaTentativa = xTaskGetTickCount();
-
-    // O auto-reconnect do ESP32 costuma resolver sozinho; a cada 30 s força uma nova tentativa.
-    // Status: 1 = rede nao encontrada, 4 = falha (senha), 6 = desconectado.
-    logSerial("[WiFi] Sem conexao, status = %d\n", WiFi.status());
-    if (++tentativas % 6 == 0) {
-        WiFi.reconnect();
-    }
-}
-
-void verificarMQTT() {
-    static TickType_t ultimaTentativa = 0;
-    static bool primeiraTentativa = true;
-
-    if (mqtt.connected() || WiFi.status() != WL_CONNECTED) {
-        return;
-    }
-
-    if (!primeiraTentativa &&
-        (TickType_t)(xTaskGetTickCount() - ultimaTentativa) < pdMS_TO_TICKS(RECONEXAO_MS)) {
-        return;
-    }
-    primeiraTentativa = false;
-    ultimaTentativa = xTaskGetTickCount();
-
-    char statusOnline[80];
-    char statusOffline[80];
-    snprintf(statusOnline, sizeof(statusOnline), "{\"device_id\":\"%s\",\"status\":\"online\"}", deviceId);
-    snprintf(statusOffline, sizeof(statusOffline), "{\"device_id\":\"%s\",\"status\":\"offline\"}", deviceId);
-
-    logSerial("[MQTT] Conectando ao broker: %s\n", MQTT_BROKER);
-
-    // LWT: se a conexão cair sem aviso, o próprio broker publica o "offline" (retido).
-    if (mqtt.connect(deviceId, MQTT_TOPIC_STATUS, 1, true, statusOffline)) {
-        logSerial("[MQTT] Conectado ao broker.\n");
-        mqtt.publish(MQTT_TOPIC_STATUS, statusOnline, true);
-    } else {
-        logSerial("[MQTT] Falha na conexao. Estado: %d (nova tentativa em %d s)\n",
-                  mqtt.state(), RECONEXAO_MS / 1000);
-    }
-}
-
 void TaskComunicacao(void *pvParameters) {
-    mqtt.setServer(MQTT_BROKER, MQTT_PORT);
-    mqtt.setSocketTimeout(3);
-    mqtt.setKeepAlive(MQTT_KEEPALIVE_S);
-
-    snprintf(deviceId, sizeof(deviceId), "esp32-grupo%s-%llx", NUMERO_GRUPO,
-             (unsigned long long)ESP.getEfuseMac());
-
-    logSerial("[WiFi] Conectando a %s...\n", WIFI_SSID);
-    WiFi.mode(WIFI_STA);
-    WiFi.setAutoReconnect(true);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-    // Horário em UTC; o SNTP sincroniza sozinho assim que o Wi-Fi conectar.
-    configTime(0, 0, "pool.ntp.org", "a.st1.ntp.br");
+    wifiMqttIniciar();
 
     EventoSilo ev;
 
@@ -233,13 +39,13 @@ void TaskComunicacao(void *pvParameters) {
         verificarWiFi();
         verificarMQTT();
 
-        if (!mqtt.connected()) {
+        if (!mqttConectado()) {
             // Sem broker os eventos esperam na fila (até FILA_TAMANHO) e saem em ordem na volta.
             vTaskDelay(pdMS_TO_TICKS(100));
             continue;
         }
 
-        mqtt.loop();
+        mqttLoop();
 
         // Peek em vez de receive: o evento só sai da fila depois de publicado,
         // então uma queda no meio da publicação não perde o evento.
@@ -265,7 +71,7 @@ void TaskComunicacao(void *pvParameters) {
         }
 
         JsonDocument doc;
-        doc["device_id"] = deviceId;
+        doc["device_id"] = deviceId();
         if (ev.ts >= TS_MINIMO_VALIDO) {
             doc["ts"] = (uint32_t)ev.ts;
         } else {
@@ -280,7 +86,7 @@ void TaskComunicacao(void *pvParameters) {
         char payload[160];
         serializeJson(doc, payload, sizeof(payload));
 
-        if (mqtt.publish(MQTT_TOPIC, payload)) {
+        if (mqttPublicar(MQTT_TOPIC, payload)) {
             xQueueReceive(xFilaBotao, &ev, 0);
             entradas = novasEntradas;
             saidas = novasSaidas;
