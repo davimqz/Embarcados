@@ -5,7 +5,7 @@ PS C:\Users\Davi Oliveira\CESAR\Projeto-Embarcados\firmware> pio device monitor
 --- Terminal on COM4 | 9600 8-N-1
 [APP] Sistema iniciado com FreeRTOS.
 [WiFi] Sem conexao.
-[WiFi] Conectando a uaifai-tiradentes...
+[WiFi] Conectando a <SSID>...
 [WiFi] Conectado. IP local: 172.26.64.234
 [MQTT] Conectando ao broker: test.mosquitto.org
 [MQTT] Conectado ao broker.

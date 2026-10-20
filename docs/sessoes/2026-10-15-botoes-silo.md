@@ -19,7 +19,7 @@
 | # | Problema | Causa | Resolução |
 |---|---|---|---|
 | 1 | Upload falhava: `Wrong boot mode detected (0x13)` | Auto-reset da placa não entra em modo download | Segurar **BOOT** durante `Connecting...` (sem mudança de código) |
-| 2 | Wi-Fi não conectava | SSID errado: a rede disponível é `uaifai-tiradentes`, não `uaifai-brum` | `config.h` atualizado; adicionado log de `WiFi.status()` a cada 5 s |
+| 2 | Wi-Fi não conectava | SSID errado no `config.h` (nome de outra rede) | `config.h` atualizado; adicionado log de `WiFi.status()` a cada 5 s |
 | 3 | MQTT `Estado: -2` (TCP não abre) | Broker da turma `172.26.113.122:1883` fora do ar — o PC na mesma rede também não alcança (ping e TCP falham) | `MQTT_BROKER` trocado para `test.mosquitto.org` (alcançável pela rede do CESAR) |
 | 4 | Usuário tem 2 botões e quer contar entrada/saída de lotes do silo | — | Firmware estendido para 2 botões (ver §3) |
 | 5 | LED de energia piscava ao apertar o vermelho; `␀` no serial | Botão vermelho em **curto 3V3–GND** (diagnóstico confirmado pelo professor) | Fiação refeita; pinos trocados para D19/D18 |

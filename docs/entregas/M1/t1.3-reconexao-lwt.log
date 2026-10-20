@@ -6,7 +6,7 @@
 
 ## Monitor serial (bytes ilegíveis do boot removidos)
 [APP] Sistema iniciado com FreeRTOS.
-[WiFi] Conectando a uaifai-tiradentes...
+[WiFi] Conectando a <SSID>...
 [WiFi] Conectado. IP local: 172.26.64.234
 [MQTT] Conectando ao broker: test.mosquitto.org
 [MQTT] Conectado ao broker.
@@ -33,7 +33,7 @@
 
 ## Monitor serial
 [APP] Sistema iniciado com FreeRTOS.
-[WiFi] Conectando a uaifai-tiradentes...
+[WiFi] Conectando a <SSID>...
 [WiFi] Conectado. IP local: 172.26.64.234
 [MQTT] Conectando ao broker: test.mosquitto.org
 [MQTT] Conectado ao broker.

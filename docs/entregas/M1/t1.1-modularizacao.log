@@ -5,7 +5,7 @@
 # ts = null em todos: o NTP ainda não tinha sincronizado (ver T1.4).
 # Os bytes ilegíveis do boot (antes de [APP]) foram removidos.
 [APP] Sistema iniciado com FreeRTOS.
-[WiFi] Conectando a uaifai-tiradentes...
+[WiFi] Conectando a <SSID>...
 [WiFi] Sem conexao, status = 0
 [WiFi] Conectado. IP local: 172.26.64.234
 [MQTT] Conectando ao broker: test.mosquitto.org
