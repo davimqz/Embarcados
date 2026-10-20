@@ -10,9 +10,9 @@
 - **Disciplina:** Sistemas Embarcados — CESAR School (Profs. Bella / Jymmy)
 - **Tipo:** projeto acadêmico em grupo
 - **Objetivo:** sistema IoT com **ESP32 + FreeRTOS + MQTT + dashboard**, com uma camada de **blockchain** que garante a integridade dos dados coletados (prova de que a telemetria não foi adulterada).
-- **Tema/domínio do sensor:** `<<PREENCHER: ex. monitoramento de temperatura de carga, controle de acesso, consumo de energia>>`
+- **Tema/domínio do sensor:** controle de lotes de um **silo de grãos** (botões de entrada/saída + sensor do silo, a definir — ver `docs/decisoes-pendentes.md`)
 - **Grupo:** `GRUPO3` · Participantes: `<<nomes>>`
-- **Rede blockchain:** `<<PREENCHER: Cardano Preprod | EVM testnet (Sepolia/Amoy)>>` — decidida no M0, nunca mainnet.
+- **Rede blockchain:** **Cardano Preprod** (ADR 0001) — nunca mainnet.
 
 ### Ponto de partida
 Já existe uma base funcional da Atividade Prática 02 (`firmware/src/main.cpp`): ISR de botão com debounce → semáforo binário → TaskBotao → fila (10 ints) → TaskComunicacao (Wi-Fi + MQTT) publicando em `/botao/status`. **Essa arquitetura (ISR → semáforo → task → fila → task de comunicação) é o padrão do projeto e deve ser preservada e estendida, não reescrita.**
@@ -41,9 +41,9 @@ Já existe uma base funcional da Atividade Prática 02 (`firmware/src/main.cpp`)
 |---|---|
 | Firmware | ESP32 · PlatformIO · Arduino framework · FreeRTOS · PubSubClient · ArduinoJson |
 | Broker | Mosquitto (ou Node-RED com aedes) |
-| Backend | Node.js (TypeScript) · mqtt.js · SQLite |
-| Dashboard | Node-RED Dashboard **ou** web simples (decidir no M0) |
-| Blockchain | SDK da rede escolhida (Mesh/Lucid para Cardano · ethers.js para EVM) |
+| Backend | Node.js (TypeScript) · Fastify · mqtt.js · SQLite (better-sqlite3) |
+| Dashboard | Web: Vite + React + TypeScript · Tailwind CSS · shadcn/ui · Recharts; dados via WebSocket do backend (ADR 0002) |
+| Blockchain | Cardano Preprod · Mesh SDK · Blockfrost; Merkle root na metadata da tx (ADR 0001) |
 
 ### Estrutura do repositório
 ```
