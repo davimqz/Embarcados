@@ -116,7 +116,7 @@
 
 ### T1.3 — Reconexão Wi-Fi/MQTT resiliente + LWT
 - **Marco:** M1
-- **Status:** review
+- **Status:** done
 - **Responsável:** Davi
 - **Depende de:** T1.2
 - **Descrição:** reconectar sem travar a `TaskComunicacao` (uma tentativa a cada 5 s) e publicar o estado da placa em `grupo3/status`, com o `offline` vindo do LWT. Evento só sai da fila depois de publicado, para não se perder numa queda.
@@ -126,9 +126,8 @@
   - [x] `{"status":"online"}` retido em `grupo3/status` ao conectar
   - [x] Após a queda da conexão MQTT, a placa reconecta sozinha em ≤ 5 s, sem reset
   - [x] Botão apertado durante a queda é publicado na volta, com o `seq` seguinte — verificado no boot, com o MQTT ainda conectando (`docs/entregas/M1/t1.1-modularizacao.log`)
-  - [ ] Placa desligada → broker publica `{"status":"offline"}` em ≤ ~25 s — **não testado** (o LWT apareceu na queda simulada)
+  - [x] Placa desligada → broker publica `{"status":"offline"}` em ≤ ~25 s (24 s no teste)
 - **Evidência:** `docs/entregas/M1/t1.3-reconexao-lwt.log` (monitor serial + mensagens do broker)
-- **Observações:** em 2026-10-20 o grupo decidiu seguir para as próximas tasks sem os dois testes pendentes. Fazer antes de fechar o M1 (tag `v0.1.0`).
 
 ### T1.4 — Sincronizar horário via NTP para o ts
 - **Marco:** M1
