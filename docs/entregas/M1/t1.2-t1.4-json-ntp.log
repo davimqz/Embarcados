@@ -1,0 +1,29 @@
+# Evidência T1.2 + T1.4 + T1.5 — 2026-10-20, firmware do commit 63305ac
+# Placa: ESP32 DevKit, COM4, broker test.mosquitto.org. Teste: 3x amarelo (entrada) + 3x vermelho (saída).
+# Os bytes ilegíveis do boot (antes de [APP]) foram removidos.
+PS C:\Users\Davi Oliveira\CESAR\Projeto-Embarcados\firmware> pio device monitor
+--- Terminal on COM4 | 9600 8-N-1
+[APP] Sistema iniciado com FreeRTOS.
+[WiFi] Sem conexao.
+[WiFi] Conectando a uaifai-tiradentes...
+[WiFi] Conectado. IP local: 172.26.64.234
+[MQTT] Conectando ao broker: test.mosquitto.org
+[MQTT] Conectado ao broker.
+[BOTAO] ENTRADA pressionado: evento enviado para a fila.
+[SILO] {"device_id":"esp32-grupo3-84f49529e748","ts":1792507574,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792507574,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+[BOTAO] ENTRADA pressionado: evento enviado para a fila.
+[SILO] {"device_id":"esp32-grupo3-84f49529e748","ts":1792507578,"seq":2,"evento":"ENTRADA","entradas":2,"saidas":0,"saldo":2}
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792507578,"seq":2,"evento":"ENTRADA","entradas":2,"saidas":0,"saldo":2}
+[BOTAO] ENTRADA pressionado: evento enviado para a fila.
+[SILO] {"device_id":"esp32-grupo3-84f49529e748","ts":1792507580,"seq":3,"evento":"ENTRADA","entradas":3,"saidas":0,"saldo":3}
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792507580,"seq":3,"evento":"ENTRADA","entradas":3,"saidas":0,"saldo":3}
+[BOTAO] SAIDA pressionado: evento enviado para a fila.
+[SILO] {"device_id":"esp32-grupo3-84f49529e748","ts":1792507590,"seq":4,"evento":"SAIDA","entradas":3,"saidas":1,"saldo":2}
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792507590,"seq":4,"evento":"SAIDA","entradas":3,"saidas":1,"saldo":2}
+[BOTAO] SAIDA pressionado: evento enviado para a fila.
+[SILO] {"device_id":"esp32-grupo3-84f49529e748","ts":1792507592,"seq":5,"evento":"SAIDA","entradas":3,"saidas":2,"saldo":1}
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792507592,"seq":5,"evento":"SAIDA","entradas":3,"saidas":2,"saldo":1}
+[BOTAO] SAIDA pressionado: evento enviado para a fila.
+[SILO] {"device_id":"esp32-grupo3-84f49529e748","ts":1792507593,"seq":6,"evento":"SAIDA","entradas":3,"saidas":3,"saldo":0}
+[MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-84f49529e748","ts":1792507593,"seq":6,"evento":"SAIDA","entradas":3,"saidas":3,"saldo":0}
