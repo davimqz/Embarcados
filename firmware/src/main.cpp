@@ -18,8 +18,6 @@ const char* MQTT_TOPIC = "/botao/status";
 // Botões ligados entre o GPIO e o GND (INPUT_PULLUP).
 #define BOTAO_ENTRADA_PIN 19   // amarelo: entrada de lote no silo
 #define BOTAO_SAIDA_PIN   21   // vermelho: saída de lote do silo
-// 1 = imprime o nível dos pinos dos botões a cada 200 ms (diagnóstico de fiação).
-#define MODO_TESTE_PINOS 1
 
 #define FILA_TAMANHO 10
 #define DEBOUNCE_MS 200
@@ -59,11 +57,10 @@ struct Botao {
     uint8_t pino;
     int evento;
     SemaphoreHandle_t sem;
-    uint32_t ruidos;   // pulsos descartados por confirmarAperto()
 };
 
-Botao botaoEntrada = {"ENTRADA", BOTAO_ENTRADA_PIN, EVENTO_ENTRADA, NULL, 0};
-Botao botaoSaida   = {"SAIDA",   BOTAO_SAIDA_PIN,   EVENTO_SAIDA,   NULL, 0};
+Botao botaoEntrada = {"ENTRADA", BOTAO_ENTRADA_PIN, EVENTO_ENTRADA, NULL};
+Botao botaoSaida   = {"SAIDA",   BOTAO_SAIDA_PIN,   EVENTO_SAIDA,   NULL};
 
 // Sem trava de tempo aqui: um pulso de ruído não pode bloquear o aperto real que vem logo depois.
 // Quem filtra é a TaskBotao (confirmarAperto + espera de DEBOUNCE_MS após soltar).
@@ -100,9 +97,8 @@ void TaskBotao(void *pvParameters) {
                 continue;
             }
 
-            // Ruído é contado em silêncio; o total aparece na linha [TESTE].
+            // Ruído é descartado em silêncio.
             if (!confirmarAperto(b->pino)) {
-                b->ruidos++;
                 continue;
             }
 
@@ -121,18 +117,6 @@ void TaskBotao(void *pvParameters) {
         }
     }
 }
-
-#if MODO_TESTE_PINOS
-// Solto = 1 (pull-up), pressionado = 0.
-void TaskTestePinos(void *pvParameters) {
-    for (;;) {
-        logSerial("[TESTE] D19(amarelo)=%d D18(vermelho)=%d | ruidos: amarelo=%lu vermelho=%lu\n",
-             digitalRead(BOTAO_ENTRADA_PIN), digitalRead(BOTAO_SAIDA_PIN),
-             (unsigned long)botaoEntrada.ruidos, (unsigned long)botaoSaida.ruidos);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-#endif
 
 bool conectarWiFi() {
     if (WiFi.status() == WL_CONNECTED) {
@@ -275,10 +259,6 @@ void setup() {
         xTaskCreatePinnedToCore(TaskBotao, "TaskBotaoSaida", 3072, &botaoSaida, 2, NULL, 1) != pdPASS) {
         travar("[ERRO] Falha ao criar tasks dos botoes.");
     }
-
-#if MODO_TESTE_PINOS
-    xTaskCreatePinnedToCore(TaskTestePinos, "TaskTestePinos", 2048, NULL, 1, NULL, 1);
-#endif
 
     if (xTaskCreatePinnedToCore(TaskComunicacao, "TaskComunicacao", 8192, NULL, 1, NULL, 0) != pdPASS) {
         travar("[ERRO] Falha ao criar TaskComunicacao.");
