@@ -2,6 +2,13 @@
 
 Projeto da disciplina **Sistemas Embarcados** (CESAR School) · Grupo 3.
 
+## Integrantes
+
+| Nome | GitHub |
+|---|---|
+| Davi Marques Oliveira | [@davimqz](https://github.com/davimqz) |
+| _a preencher_ | |
+
 Sistema IoT com **ESP32 + FreeRTOS + MQTT + dashboard**, com uma camada de **blockchain**
 (testnet) que ancora a Merkle root de lotes de telemetria para provar que os dados não
 foram adulterados.
@@ -31,7 +38,9 @@ Broker ──► Ingestão (valida + SQLite) ──► Ancoragem (Merkle root �
 
 - **[`CLAUDE.md`](CLAUDE.md)**: regras do projeto (segredos, FreeRTOS, commits, branches, roadmap).
 - **[`TASKS.md`](TASKS.md)**: backlog. Nenhum código entra sem uma task.
+- Regras detalhadas de [tasks](docs/regras/tasks.md) · [commits](docs/regras/commits.md) · [marcos](docs/regras/marcos.md).
 - Commits em Conventional Commits em português, com `Refs: T<marco>.<n>`.
+  Template: `git config commit.template .gitmessage`.
 - Uma branch por task: `m<x>/t<x>.<n>-slug`.
 
 ## Como rodar

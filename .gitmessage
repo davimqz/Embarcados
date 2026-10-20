@@ -1,0 +1,9 @@
+# <tipo>(<escopo>): <descrição no imperativo, minúscula, ≤ 72 chars>
+#
+# [corpo opcional: o porquê, não o como]
+#
+# Refs: T<marco>.<n>
+#
+# Tipos:   feat | fix | refactor | docs | test | chore | perf
+# Escopos: firmware | rtos | mqtt | ingest | anchor | dashboard | chain | docs | infra
+# Regras completas: docs/regras/commits.md

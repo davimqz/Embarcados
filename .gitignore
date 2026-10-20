@@ -13,10 +13,10 @@ keystore/
 
 # --- Firmware / PlatformIO ---
 .pio/
-.vscode/.browse.c_cpp.db*
-.vscode/c_cpp_properties.json
-.vscode/launch.json
-.vscode/ipch
+**/.vscode/.browse.c_cpp.db*
+**/.vscode/c_cpp_properties.json
+**/.vscode/launch.json
+**/.vscode/ipch
 
 # --- Node ---
 node_modules/
@@ -34,6 +34,9 @@ npm-debug.log*
 .node-red/
 .config.*.json
 .flows*.backup
+
+# --- Ferramentas locais ---
+.claude/
 
 # --- SO / editores ---
 .DS_Store
