@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M0 — Fundação (pendente: T0.5 em review, T0.6) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M0 — Fundação (pendente: T0.6) · M1 fechado em 2026-10-20 (`v0.1.0`)
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -63,7 +63,7 @@
 
 ### T0.5 — Definir tema/sensor e escrever docs/arquitetura.md
 - **Marco:** M0
-- **Status:** review
+- **Status:** done
 - **Responsável:** Davi
 - **Depende de:** —
 - **Descrição:** fechar o domínio do projeto e o(s) sensor(es)/atuador(es) usados; documentar a arquitetura em `docs/arquitetura.md`. Decisão do grupo.
@@ -72,7 +72,7 @@
 - **Critérios de aceite:**
   - [x] Campo "Tema/domínio" do `CLAUDE.md` §1 preenchido
   - [x] `docs/arquitetura.md` com diagrama, componentes, tasks FreeRTOS previstas e pinagem
-- **Em review:** o grupo confere a pinagem e preenche as medidas reais das peças (§3 do `arquitetura.md`) para a impressão 3D.
+- **Medidas para a impressão 3D:** o grupo optou por usar as medidas padrão das peças, sem medir (§3 do `arquitetura.md`), com folgas maiores e uma peça de teste antes do silo. A pinagem é conferida na montagem (M2).
 - **Evidência:** `docs/arquitetura.md`
 
 ### T0.6 — Criar docs/topicos-mqtt.md com contrato inicial

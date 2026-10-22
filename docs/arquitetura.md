@@ -73,17 +73,20 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 
 ## 3. Medidas para a impressão 3D
 
-> **Valores nominais dos modelos mais comuns. Meça cada peça com paquímetro antes de modelar** e registre a medida real
-> na coluna "Medido". Folga sugerida para furos e encaixes: +0,3 a 0,5 mm.
+> **Medidas padrão dos modelos mais comuns, adotadas sem medir as peças do grupo** (decisão de 2026-10-22). Como
+> podem variar ±1 mm entre fabricantes, o modelo usa folgas maiores que o normal: **+0,5 mm em furos** e **+1 mm em
+> bolsos e encaixes**. Antes de imprimir o silo, imprimir uma **plaquinha de teste** (~10 min) com os furos do HC-SR04,
+> de um LED e de um botão, e conferir com as peças reais.
 
-| Peça | Nominal (mm) | Medido (mm) | Observação |
+| Peça | Medida adotada (mm) | Furo / bolso no modelo (mm) | Observação |
 |---|---|---|---|
-| ESP32 DevKit V1 (30 pinos) | 51,5 × 28,3 · ~13 de altura com os pinos | _a medir_ | Micro-USB num dos lados curtos: deixar passagem para o cabo e acesso aos botões BOOT/EN. Normalmente não tem furos de fixação: prender com trilho ou bolso |
-| HC-SR04 | Placa 45 × 20 · transdutores Ø16, ~12 de altura, centros a ~26 | _a medir_ | Os transdutores atravessam a tampa: furos de Ø16 + folga |
-| DHT11 (módulo) | Placa ~28–32 × 12–14 · sensor 15,5 × 12 × 5,5 | _a medir_ | Alguns módulos têm furo de Ø3 para parafuso |
-| LED 5 mm | Corpo Ø5 · aba Ø5,8 · ~8,6 de altura | _a medir_ | Furo do tamanho do corpo (Ø5 + folga), a aba segura |
-| Botão táctil | 6 × 6 ou 12 × 12 | _a medir_ | Confirmar qual modelo e a altura da haste |
-| Protoboard | 170 pontos ~47 × 35 × 8,5 · 400 pontos ~82 × 55 × 8,5 | _a medir_ | Confirmar qual vai na base |
+| ESP32 DevKit V1 (30 pinos) | Placa 51,5 × 28,3 · altura 13 (pinos embaixo + módulo em cima) · micro-USB centralizado num lado curto | Bolso 52,5 × 29,3 · abertura do USB 12 × 8 | Sem furos de fixação: prender por trilho ou bolso. Deixar acesso aos botões BOOT/EN, ao lado do USB |
+| HC-SR04 | Placa 45 × 20 × 1,6 · transdutores Ø16, 12 de altura, centros a 26 · 4 pinos num lado longo | 2 furos Ø16,5 com centros a 26 · rebaixo 46 × 21 para a placa | Os transdutores atravessam a tampa virados para baixo; os pinos ficam para cima, dentro da capa |
+| DHT11 (módulo azul, 3 pinos) | Placa 32 × 14 × 1,6 · sensor 15,5 × 12 × 5,5 · furo Ø3 | Bolso 33 × 15 · janela 16 × 12,5 na frente do sensor | Janela ou grade para o ar do silo chegar no sensor |
+| Protoboard 400 pontos | 82 × 55 × 8,5 | Bolso 83 × 56 | Fica na base, ao lado do ESP32 |
+| Botão táctil 12 × 12 com capa redonda | Base 12 × 12 · capa Ø11,5 · altura total 13 | Furo Ø12,5 para a capa | Fica por dentro da parede, só a capa aparece |
+| LED 5 mm | Corpo Ø5 · aba Ø5,8 · altura 8,6 | Furo Ø5,5 | A aba segura o LED por dentro |
+| Jumper (conector) | +12 de altura acima do pino | — | Somar em toda peça com jumper encaixado |
 
 ### Restrições do silo
 
