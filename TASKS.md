@@ -87,6 +87,20 @@
 - **Observações:** `grupo3/cmd` ainda não foi definido; criar quando houver comando do servidor para a placa.
 - **Evidência:** `docs/topicos-mqtt.md`
 
+### T0.7 — Modelar o silo em 3D e gerar os STLs
+- **Marco:** M0
+- **Status:** review
+- **Responsável:** Davi
+- **Depende de:** T0.5
+- **Descrição:** gerar as peças do silo para a impressora do grupo (12 × 12 × 12 cm) a partir das medidas do §3 de `docs/arquitetura.md`, com o modelo paramétrico versionado em `hardware/silo-3d/`. Pedido do grupo, fora do roadmap original.
+- **Critérios de aceite:**
+  - [x] Script gera base, tampa da base, corpo, tampa do silo, capa do sensor, escotilha e peça de teste em STL
+  - [x] Toda peça cabe em 120 × 120 × 120 mm e é sólida fechada (manifold)
+  - [x] README com orientação de impressão, quantidade de cada peça e montagem
+  - [ ] Peça de teste impressa e conferida com o HC-SR04, um LED e um botão
+- **Em review:** falta imprimir a peça de teste e conferir os encaixes com as peças reais.
+- **Evidência:** `hardware/silo-3d/stl/`, `docs/entregas/M0/t0.7-silo-3d.png` (prévia) e foto da peça de teste
+
 ---
 
 ## M1 — Firmware base robusto · tag `v0.1.0` · **fechado em 2026-10-20**

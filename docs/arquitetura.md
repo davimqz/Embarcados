@@ -93,26 +93,27 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 
 ### Restrições do silo
 
-- **Volume da impressora: 12 × 12 × 12 cm.** Cada peça impressa cabe nesse cubo. Sugestão de divisão em três peças:
+Modelo pronto em [`hardware/silo-3d/`](../hardware/silo-3d/) (T0.7): STLs, script paramétrico e instruções de
+impressão e montagem.
 
-  | Peça | Medida externa máx. | Conteúdo |
+- **Volume da impressora: 12 × 12 × 12 cm.** O silo foi dividido em peças que cabem nesse cubo:
+
+  | Peça | Medida externa | Conteúdo |
   |---|---|---|
-  | Base | 12 × 12 × ~4,5 cm | Protoboard com o ESP32 encaixado; altura interna de ~35 mm (protoboard 8,5 + ESP32 ~9 acima dela + jumpers ~12 + folga) |
-  | Corpo do silo | Ø ~11,5 × até 12 cm | Grão, escotilha manual, DHT11 na parte de cima, furos dos LEDs e botões |
-  | Tampa | Ø ~11,5 × ~3 cm | HC-SR04 com os transdutores atravessando a tampa para baixo; capa por cima dos pinos e dos jumpers |
+  | Base + tampa da base | 112 × 112 × 45 + 7 mm | Protoboard com o ESP32 (altura interna de ~40 mm); **botões e LEDs no painel da frente**; USB na lateral |
+  | Corpo do silo | Ø104 × 112 mm (parede de 2 mm) | Grão; escotilha de entrada (em cima) e de saída (embaixo), deslizantes; conduíte externo para os fios |
+  | Tampa do silo + capa | Ø104 × 8 mm + 57 × 52 × 17 mm | HC-SR04 com os transdutores atravessando a tampa; DHT11 num bolso embaixo da tampa |
 
-  Montados, os três ficam com ~19 cm de altura. A protoboard de 400 pontos (82 × 55) ocupa a base e sobra espaço
-  (~116 mm úteis) para os fios chegarem pelas laterais.
-- **Passagem dos fios:** HC-SR04 (4 fios) e DHT11 (3 fios) ficam em cima e o ESP32 fica na base. Prever um canal ao longo
-  da parede do corpo (sulco externo ou tubo interno) para os 7 fios descerem.
+  Montado, o silo fica com ~18 cm de altura. Botões e LEDs ficaram na base, e não no corpo, para os fios não passarem
+  pelo grão.
+- **Passagem dos fios:** HC-SR04 (4 fios) e DHT11 (3 fios) descem por um conduíte (Ø8 por dentro) atrás do corpo até a
+  base.
 - **HC-SR04 na tampa, apontando para baixo.** Ele não mede a menos de ~2–3 cm: o grão cheio precisa ficar pelo menos 3 cm
-  abaixo dos transdutores. Com o corpo de 12 cm, sobram **~8–9 cm de coluna útil de grão**. O HC-SR04 tem resolução de
-  ~3 mm, o que dá ~30 níveis distintos, suficiente para mostrar o nível em % no dashboard. O feixe abre ~15°: com ~11 cm
-  de diâmetro interno e 12 cm de altura, o som não bate na parede. Parede interna lisa ajuda.
-- **DHT11 dentro do silo, na parte de cima**, com furos ou grade na frente do sensor e longe do ESP32 (que esquenta).
-- **ESP32 e protoboard numa base separada do grão**, com acesso ao USB para gravar e alimentar.
-- **LEDs e botões na face externa**, visíveis na demo.
-- **Escotilha manual.** Sem sensor nem atuador; os botões registram a entrada e a saída de cada lote.
+  abaixo dos transdutores. Sobram **~8 cm de coluna útil de grão**. O HC-SR04 tem resolução de ~3 mm, o que dá ~25
+  níveis distintos, suficiente para mostrar o nível em % no dashboard. O feixe abre ~15°: com 10 cm de diâmetro interno
+  e ~11 cm de altura, o som não bate na parede.
+- **DHT11 embaixo da tampa**, virado para dentro do silo, acima do grão e longe do ESP32 (que esquenta).
+- **Escotilhas manuais.** Sem sensor nem atuador; os botões registram a entrada e a saída de cada lote.
 
 ## 4. Tasks FreeRTOS
 
