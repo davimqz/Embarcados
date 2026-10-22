@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M0 — Fundação (pendente: T0.5, bloqueada pela escolha do sensor) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M0 — Fundação (pendente: T0.5 em review, T0.6) · M1 fechado em 2026-10-20 (`v0.1.0`)
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -63,15 +63,16 @@
 
 ### T0.5 — Definir tema/sensor e escrever docs/arquitetura.md
 - **Marco:** M0
-- **Status:** blocked
+- **Status:** review
 - **Responsável:** Davi
 - **Depende de:** —
 - **Descrição:** fechar o domínio do projeto e o(s) sensor(es)/atuador(es) usados; documentar a arquitetura em `docs/arquitetura.md`. Decisão do grupo.
 - **Tema confirmado em 2026-10-20:** controle de lotes de um silo de grãos, com botão amarelo (GPIO 19) = entrada e vermelho (GPIO 21) = saída (ver T1.5).
-- **Bloqueio:** falta escolher o sensor, o atuador e a pinagem. **Destrava:** itens 1–3 de [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md).
+- **Hardware decidido em 2026-10-22:** DHT11 + HC-SR04, LED de alerta e LED de ventilação (itens 1–5 de [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md)). Escotilha do silo manual, sem eletrônica.
 - **Critérios de aceite:**
   - [x] Campo "Tema/domínio" do `CLAUDE.md` §1 preenchido
-  - [ ] `docs/arquitetura.md` com diagrama, componentes, tasks FreeRTOS previstas e pinagem
+  - [x] `docs/arquitetura.md` com diagrama, componentes, tasks FreeRTOS previstas e pinagem
+- **Em review:** o grupo confere a pinagem e preenche as medidas reais das peças (§3 do `arquitetura.md`) para a impressão 3D.
 - **Evidência:** `docs/arquitetura.md`
 
 ### T0.6 — Criar docs/topicos-mqtt.md com contrato inicial
