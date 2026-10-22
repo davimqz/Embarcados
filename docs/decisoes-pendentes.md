@@ -103,7 +103,8 @@ atrapalham o boot ou não servem para todo uso.
 servem apenas para leitura).
 
 **Decisão (2026-10-22, confirmar depois de montar):** DHT11 → GPIO 4 · LED ventilação → GPIO 23 · LED alerta → GPIO 22 ·
-HC-SR04 TRIG → GPIO 26, ECHO → GPIO 27 (com divisor de tensão). LEDs com resistor de 220–330 Ω.
+HC-SR04 TRIG → GPIO 26, ECHO → GPIO 27 (com divisor de tensão). Os LEDs do grupo são RGB de cátodo comum: usar só
+um canal de cada (vermelho com 220 Ω no alerta; azul ou verde com 100 Ω na ventilação).
 
 ## 4. Intervalo de leitura do sensor 🟡
 

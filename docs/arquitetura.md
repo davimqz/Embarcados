@@ -39,9 +39,10 @@ seguindo o mesmo padrão: **ISR/periódico → task → fila → TaskComunicacao
 | 1 | DHT11 (módulo de 3 pinos) | Temperatura e umidade do grão |
 | 1 | HC-SR04 | Nível de grão (distância do topo até a superfície) |
 | 2 | Botão táctil | Amarelo = entrada de lote · vermelho = saída de lote |
-| 1 | LED vermelho | Alerta local de temperatura/umidade |
-| 1 | LED verde ou azul | Ventilação do silo (comando remoto, sempre manual) |
-| 2 | Resistor 220–330 Ω | Limitar a corrente dos LEDs |
+| 1 | LED RGB 5 mm, cátodo comum (só o canal vermelho) | Alerta local de temperatura/umidade |
+| 1 | LED RGB 5 mm, cátodo comum (só o canal azul ou verde) | Ventilação do silo (comando remoto, sempre manual) |
+| 1 | Resistor 220 Ω | Canal vermelho do LED de alerta |
+| 1 | Resistor 100 Ω | Canal azul/verde do LED de ventilação (com 220 Ω ele fica fraco a 3,3 V) |
 | 2 | Resistor 1 kΩ + 2 kΩ (ou 1 kΩ + 2 × 1 kΩ em série) | Divisor de tensão do ECHO do HC-SR04 |
 | — | Protoboard, jumpers | Montagem |
 
@@ -55,8 +56,8 @@ Ficam de fora: TCRT5000 (reserva) e potenciômetro. A escotilha **abre com a mã
 | Botão saída (vermelho) | um lado / outro lado | GPIO 21 / GND (`INPUT_PULLUP`) |
 | DHT11 | VCC · DATA · GND | 3V3 · **GPIO 4** · GND |
 | HC-SR04 | VCC · TRIG · ECHO · GND | **VIN (5 V)** · **GPIO 26** · divisor → **GPIO 27** · GND |
-| LED alerta | ânodo (perna longa) | **GPIO 22** → resistor 220–330 Ω → LED → GND |
-| LED ventilação | ânodo (perna longa) | **GPIO 23** → resistor 220–330 Ω → LED → GND |
+| LED alerta (RGB) | perna R · perna mais longa (cátodo) | **GPIO 22** → 220 Ω → R · cátodo → GND · G e B sem ligação |
+| LED ventilação (RGB) | perna B (ou G) · perna mais longa (cátodo) | **GPIO 23** → 100 Ω → B · cátodo → GND · R e G sem ligação |
 
 **Divisor do ECHO** (o HC-SR04 responde com 5 V e o ESP32 aceita até 3,3 V):
 
@@ -73,19 +74,20 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 
 ## 3. Medidas para a impressão 3D
 
-> **Medidas padrão dos modelos mais comuns, adotadas sem medir as peças do grupo** (decisão de 2026-10-22). Como
+> **Medidas dos anúncios da Casa da Robótica, onde o grupo comprou as peças; o que o anúncio não informa usa a medida
+> padrão do modelo mais comum** (marcado como "padrão"; o HC-SR04, a protoboard e a placa do ESP32 não têm medida no anúncio). Como
 > podem variar ±1 mm entre fabricantes, o modelo usa folgas maiores que o normal: **+0,5 mm em furos** e **+1 mm em
 > bolsos e encaixes**. Antes de imprimir o silo, imprimir uma **plaquinha de teste** (~10 min) com os furos do HC-SR04,
 > de um LED e de um botão, e conferir com as peças reais.
 
 | Peça | Medida adotada (mm) | Furo / bolso no modelo (mm) | Observação |
 |---|---|---|---|
-| ESP32 DevKit V1 (30 pinos) | Placa 51,5 × 28,3 · altura 13 (pinos embaixo + módulo em cima) · micro-USB centralizado num lado curto | Bolso 52,5 × 29,3 · abertura do USB 12 × 8 | Sem furos de fixação: prender por trilho ou bolso. Deixar acesso aos botões BOOT/EN, ao lado do USB |
+| ESP32 DevKit V1 (30 pinos, micro-USB — anúncio) | Placa 51,5 × 28,3 · altura 13 (pinos embaixo + módulo em cima) · micro-USB centralizado num lado curto | Bolso 52,5 × 29,3 · abertura do USB 12 × 8 | Sem furos de fixação: prender por trilho ou bolso. Deixar acesso aos botões BOOT/EN, ao lado do USB |
 | HC-SR04 | Placa 45 × 20 × 1,6 · transdutores Ø16, 12 de altura, centros a 26 · 4 pinos num lado longo | 2 furos Ø16,5 com centros a 26 · rebaixo 46 × 21 para a placa | Os transdutores atravessam a tampa virados para baixo; os pinos ficam para cima, dentro da capa |
-| DHT11 (módulo azul, 3 pinos) | Placa 32 × 14 × 1,6 · sensor 15,5 × 12 × 5,5 · furo Ø3 | Bolso 33 × 15 · janela 16 × 12,5 na frente do sensor | Janela ou grade para o ar do silo chegar no sensor |
+| DHT11 (módulo, com cabos) | **23 × 12 × 5 com terminais (anúncio)** | Bolso 24 × 13 × 6 · janela 16 × 12,5 na frente do sensor | Janela ou grade para o ar do silo chegar no sensor. Se a peça real tiver plaquinha maior (~32 × 14), aumentar o bolso para 33 × 15 |
 | Protoboard 400 pontos | 82 × 55 × 8,5 | Bolso 83 × 56 | Fica na base, ao lado do ESP32 |
-| Botão táctil 12 × 12 com capa redonda | Base 12 × 12 · capa Ø11,5 · altura total 13 | Furo Ø12,5 para a capa | Fica por dentro da parede, só a capa aparece |
-| LED 5 mm | Corpo Ø5 · aba Ø5,8 · altura 8,6 | Furo Ø5,5 | A aba segura o LED por dentro |
+| Botão táctil 12 × 12 com capa (kit KP25) | **Corpo 12 × 12 × 7 (anúncio)** · capa Ø11,5 e altura total ~13 (padrão, o anúncio não informa) | Furo Ø12,5 para a capa | Fica por dentro da parede, só a capa aparece |
+| LED RGB 5 mm, 4 pernas | **Ø5 (anúncio)** · aba Ø5,8 · altura 8,6 (padrão) | Furo Ø5,5 | A aba segura o LED por dentro; prever espaço atrás para as 4 pernas |
 | Jumper (conector) | +12 de altura acima do pino | — | Somar em toda peça com jumper encaixado |
 
 ### Restrições do silo
