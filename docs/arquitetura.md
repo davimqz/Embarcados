@@ -87,11 +87,22 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 
 ### Restrições do silo
 
-- **Mesa da impressora: 12 × 12 cm.** Silo cilíndrico com diâmetro externo de até ~11,5 cm (parede de 2 mm → ~11 cm por
-  dentro). Se precisar de mais altura que a impressora permite, imprimir em anéis encaixados.
+- **Volume da impressora: 12 × 12 × 12 cm.** Cada peça impressa cabe nesse cubo. Sugestão de divisão em três peças:
+
+  | Peça | Medida externa máx. | Conteúdo |
+  |---|---|---|
+  | Base | 12 × 12 × ~4,5 cm | ESP32 e protoboard; altura interna de ~35–40 mm (protoboard 8,5 + ESP32 com pinos ~13 + jumpers) |
+  | Corpo do silo | Ø ~11,5 × até 12 cm | Grão, escotilha manual, DHT11 na parte de cima, furos dos LEDs e botões |
+  | Tampa | Ø ~11,5 × ~3 cm | HC-SR04 com os transdutores atravessando a tampa para baixo; capa por cima dos pinos e dos jumpers |
+
+  Montados, os três ficam com ~19 cm de altura. Na base, a protoboard de 400 pontos (82 × 55) e o ESP32 (51,5 × 28,3)
+  cabem lado a lado (55 + 28,3 ≈ 83 mm, em ~116 mm úteis).
+- **Passagem dos fios:** HC-SR04 (4 fios) e DHT11 (3 fios) ficam em cima e o ESP32 fica na base. Prever um canal ao longo
+  da parede do corpo (sulco externo ou tubo interno) para os 7 fios descerem.
 - **HC-SR04 na tampa, apontando para baixo.** Ele não mede a menos de ~2–3 cm: o grão cheio precisa ficar pelo menos 3 cm
-  abaixo dos transdutores. O feixe abre ~15°: com ~11 cm de diâmetro interno e até ~20 cm de altura, o som não bate na
-  parede. Parede interna lisa ajuda.
+  abaixo dos transdutores. Com o corpo de 12 cm, sobram **~8–9 cm de coluna útil de grão**. O HC-SR04 tem resolução de
+  ~3 mm, o que dá ~30 níveis distintos, suficiente para mostrar o nível em % no dashboard. O feixe abre ~15°: com ~11 cm
+  de diâmetro interno e 12 cm de altura, o som não bate na parede. Parede interna lisa ajuda.
 - **DHT11 dentro do silo, na parte de cima**, com furos ou grade na frente do sensor e longe do ESP32 (que esquenta).
 - **ESP32 e protoboard numa base separada do grão**, com acesso ao USB para gravar e alimentar.
 - **LEDs e botões na face externa**, visíveis na demo.
