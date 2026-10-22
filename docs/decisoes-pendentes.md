@@ -1,6 +1,6 @@
 # Decisões pendentes para fechar o projeto
 
-> Atualizado em 2026-10-22: itens 1–5 decididos. Criado em 2026-10-20, com o M1 fechado (tag `v0.1.0`).
+> Atualizado em 2026-10-22: itens 1–10 e 12 decididos; falta o 11 (integrantes). Criado em 2026-10-20, com o M1 fechado (tag `v0.1.0`).
 > Cada item diz **o que decidir**, **por que importa**, **as opções**, **a recomendação** e **o que fica travado** até a decisão.
 > Ao decidir um item, registre a resposta aqui (campo **Decisão**) e, se for estrutural, numa ADR em `docs/decisoes/`.
 
@@ -23,13 +23,13 @@
 | 3 | ~~Pinagem~~ ✅ (confirmar na montagem) | — | `docs/arquitetura.md`, T2.1 |
 | 4 | ~~Intervalo de leitura~~ ✅ 5 s | — | T2.1, critério do M2 |
 | 5 | ~~Limiar do alerta~~ ✅ 30 °C / 70% | — | T2.3 |
-| 6 | Broker MQTT usado na apresentação | 🟡 antes do M3 | M3, demo |
-| 7 | Onde o sistema roda na apresentação | 🟡 antes do M3 | M3, M4 |
-| 8 | Saldo do silo depois de um reboot | 🟢 antes do M4 | T4.x |
-| 9 | Tamanho do lote ancorado na blockchain | 🟢 antes do M5 | T5.1 |
-| 10 | Fonte oficial das regras (`CLAUDE.md` × `docs/regras/`) | 🟢 quando der | consistência |
+| 6 | ~~Broker~~ ✅ Mosquitto no notebook + hotspot | — | M3, demo |
+| 7 | ~~Onde roda~~ ✅ tudo no notebook | — | M3, M4 |
+| 8 | ~~Saldo após reboot~~ ✅ backend recalcula | — | T4.x |
+| 9 | ~~Tamanho do lote~~ ✅ 5 min ou 50 leituras | — | T5.1 |
+| 10 | ~~Fonte das regras~~ ✅ `docs/regras/` | — | consistência |
 | 11 | Integrantes do grupo | 🟢 antes do M6 | README, apresentação |
-| 12 | Design system completo no repositório | 🟢 antes do M4 | M4 |
+| 12 | ~~Design system~~ ✅ só os tokens | — | M4 |
 
 ---
 
@@ -151,7 +151,7 @@ ar em 2026-10-20.
 **Mosquitto no notebook** na apresentação, de preferência com o notebook e a placa num hotspot de celular, para o IP
 não mudar.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** **Mosquitto no notebook do Davi**, com o notebook e a placa no **hotspot de um celular** (IP estável, sem depender do Wi-Fi da faculdade). O IP do notebook vai no `config.h`, e o firewall do Windows libera a porta 1883.
 
 ## 7. Onde o sistema roda na apresentação 🟡
 
@@ -164,7 +164,7 @@ das hospedagens gratuitas desliga o serviço quando ninguém acessa e não guard
 Cardano Preprod, acessada pela Blockfrost. Se quiserem um link público depois, dá para hospedar só o dashboard, mas não
 é necessário para avaliar.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** **tudo local no notebook** (broker, backend, SQLite e dashboard). Só a Cardano Preprod, via Blockfrost, fica externa.
 
 ## 8. Saldo do silo depois de um reboot 🟢
 
@@ -181,7 +181,7 @@ silo "vazio" depois de uma queda de energia.
 **Recomendação:** **backend recalcula**. Os eventos já vão para o banco no M3, e a blockchain vai provar exatamente
 esses eventos. A fonte de verdade fica no lugar que é auditado.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** **o backend recalcula** o saldo a partir dos eventos no SQLite. Os contadores da placa viram diagnóstico.
 
 ## 9. Tamanho do lote ancorado na blockchain 🟢
 
@@ -193,7 +193,7 @@ Lotes pequenos geram muitas transações; lotes grandes demoram para aparecer na
 **Recomendação:** **fechar um lote a cada 5 minutos ou 50 leituras, o que vier primeiro**. Com leitura a cada 5 s, a
 demo do M5 mostra um lote novo a cada ~4 minutos. Dá para reduzir na hora da apresentação.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** fechar um lote a cada **5 minutos ou 50 leituras**, o que vier primeiro.
 
 ## 10. Fonte oficial das regras 🟢
 
@@ -206,7 +206,7 @@ demo do M5 mostra um lote novo a cada ~4 minutos. Dá para reduzir na hora da ap
 **Recomendação:** `docs/regras/` como fonte oficial (é público e organizado por assunto), e o `CLAUDE.md` com um resumo
 que aponta para lá. Depois, renomear as evidências do M1 para o padrão.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** **`docs/regras/` é a fonte oficial**; o `CLAUDE.md` passa a resumir e apontar para lá (ajuste e renomeação das evidências do M1 ainda a fazer).
 
 ## 11. Integrantes do grupo 🟢
 
@@ -226,7 +226,7 @@ descreve outro produto (com o nome e a marca dele). Se ele for de uso restrito, 
 
 **Recomendação:** guardar só os tokens adaptados, em `dashboard/` e no tema do Tailwind, sem o nome do produto original.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** **só os tokens adaptados** vão para o repositório, sem o nome nem a marca do produto original.
 
 ---
 
