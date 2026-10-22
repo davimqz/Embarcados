@@ -44,7 +44,8 @@ seguindo o mesmo padrão: **ISR/periódico → task → fila → TaskComunicacao
 | 1 | Resistor 220 Ω | Canal vermelho do LED de alerta |
 | 1 | Resistor 100 Ω | Canal azul/verde do LED de ventilação (com 220 Ω ele fica fraco a 3,3 V) |
 | 2 | Resistor 1 kΩ + 2 kΩ (ou 1 kΩ + 2 × 1 kΩ em série) | Divisor de tensão do ECHO do HC-SR04 |
-| — | Protoboard, jumpers | Montagem |
+| 1 | Protoboard de 400 pontos (com trilhos de alimentação) | ESP32 encaixado nela + resistores. Um trilho com 3,3 V (DHT11) e o outro com 5 V do VIN (HC-SR04) |
+| — | Jumpers | Ligações até os sensores, LEDs e botões, que ficam no corpo e na tampa do silo |
 
 Ficam de fora: TCRT5000 (reserva) e potenciômetro. A escotilha **abre com a mão** e não tem eletrônica.
 
@@ -85,7 +86,7 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 | ESP32 DevKit V1 (30 pinos, micro-USB — anúncio) | Placa 51,5 × 28,3 · altura 13 (pinos embaixo + módulo em cima) · micro-USB centralizado num lado curto | Bolso 52,5 × 29,3 · abertura do USB 12 × 8 | Sem furos de fixação: prender por trilho ou bolso. Deixar acesso aos botões BOOT/EN, ao lado do USB |
 | HC-SR04 | Placa 45 × 20 × 1,6 · transdutores Ø16, 12 de altura, centros a 26 · 4 pinos num lado longo | 2 furos Ø16,5 com centros a 26 · rebaixo 46 × 21 para a placa | Os transdutores atravessam a tampa virados para baixo; os pinos ficam para cima, dentro da capa |
 | DHT11 (módulo, com cabos) | **23 × 12 × 5 com terminais (anúncio)** | Bolso 24 × 13 × 6 · janela 16 × 12,5 na frente do sensor | Janela ou grade para o ar do silo chegar no sensor. Se a peça real tiver plaquinha maior (~32 × 14), aumentar o bolso para 33 × 15 |
-| Protoboard 400 pontos | 82 × 55 × 8,5 | Bolso 83 × 56 | Fica na base, ao lado do ESP32 |
+| Protoboard 400 pontos | 82 × 55 × 8,5 (padrão) | Bolso 83 × 56 | Fica na base com o ESP32 encaixado nela, o USB virado para a parede da base |
 | Botão táctil 12 × 12 com capa (kit KP25) | **Corpo 12 × 12 × 7 (anúncio)** · capa Ø11,5 e altura total ~13 (padrão, o anúncio não informa) | Furo Ø12,5 para a capa | Fica por dentro da parede, só a capa aparece |
 | LED RGB 5 mm, 4 pernas | **Ø5 (anúncio)** · aba Ø5,8 · altura 8,6 (padrão) | Furo Ø5,5 | A aba segura o LED por dentro; prever espaço atrás para as 4 pernas |
 | Jumper (conector) | +12 de altura acima do pino | — | Somar em toda peça com jumper encaixado |
@@ -96,12 +97,12 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 
   | Peça | Medida externa máx. | Conteúdo |
   |---|---|---|
-  | Base | 12 × 12 × ~4,5 cm | ESP32 e protoboard; altura interna de ~35–40 mm (protoboard 8,5 + ESP32 com pinos ~13 + jumpers) |
+  | Base | 12 × 12 × ~4,5 cm | Protoboard com o ESP32 encaixado; altura interna de ~35 mm (protoboard 8,5 + ESP32 ~9 acima dela + jumpers ~12 + folga) |
   | Corpo do silo | Ø ~11,5 × até 12 cm | Grão, escotilha manual, DHT11 na parte de cima, furos dos LEDs e botões |
   | Tampa | Ø ~11,5 × ~3 cm | HC-SR04 com os transdutores atravessando a tampa para baixo; capa por cima dos pinos e dos jumpers |
 
-  Montados, os três ficam com ~19 cm de altura. Na base, a protoboard de 400 pontos (82 × 55) e o ESP32 (51,5 × 28,3)
-  cabem lado a lado (55 + 28,3 ≈ 83 mm, em ~116 mm úteis).
+  Montados, os três ficam com ~19 cm de altura. A protoboard de 400 pontos (82 × 55) ocupa a base e sobra espaço
+  (~116 mm úteis) para os fios chegarem pelas laterais.
 - **Passagem dos fios:** HC-SR04 (4 fios) e DHT11 (3 fios) ficam em cima e o ESP32 fica na base. Prever um canal ao longo
   da parede do corpo (sulco externo ou tubo interno) para os 7 fios descerem.
 - **HC-SR04 na tampa, apontando para baixo.** Ele não mede a menos de ~2–3 cm: o grão cheio precisa ficar pelo menos 3 cm
