@@ -1,6 +1,6 @@
 # Decisões pendentes para fechar o projeto
 
-> Atualizado em 2026-10-20, com o M1 fechado (tag `v0.1.0`).
+> Atualizado em 2026-10-22: itens 1–5 decididos. Criado em 2026-10-20, com o M1 fechado (tag `v0.1.0`).
 > Cada item diz **o que decidir**, **por que importa**, **as opções**, **a recomendação** e **o que fica travado** até a decisão.
 > Ao decidir um item, registre a resposta aqui (campo **Decisão**) e, se for estrutural, numa ADR em `docs/decisoes/`.
 
@@ -18,11 +18,11 @@
 
 | # | Decisão | Urgência | Trava |
 |---|---|---|---|
-| 1 | Qual sensor | 🔴 agora | T0.5, T0.6, todo o M2 |
-| 2 | Qual atuador | 🔴 agora | T2.4, T4.3 |
-| 3 | Pinagem do sensor e do atuador | 🔴 agora (sai do 1 e do 2) | `docs/arquitetura.md`, T2.1 |
-| 4 | Intervalo de leitura do sensor | 🟡 antes do M2 | T2.1, critério do M2 |
-| 5 | Limiar do alerta | 🟡 antes da T2.3 | T2.3 |
+| 1 | ~~Qual sensor~~ ✅ DHT11 + HC-SR04 | — | T0.5, T0.6, todo o M2 |
+| 2 | ~~Qual atuador~~ ✅ dois LEDs | — | T2.4, T4.3 |
+| 3 | ~~Pinagem~~ ✅ (confirmar na montagem) | — | `docs/arquitetura.md`, T2.1 |
+| 4 | ~~Intervalo de leitura~~ ✅ 5 s | — | T2.1, critério do M2 |
+| 5 | ~~Limiar do alerta~~ ✅ 30 °C / 70% | — | T2.3 |
 | 6 | Broker MQTT usado na apresentação | 🟡 antes do M3 | M3, demo |
 | 7 | Onde o sistema roda na apresentação | 🟡 antes do M3 | M3, M4 |
 | 8 | Saldo do silo depois de um reboot | 🟢 antes do M4 | T4.x |
@@ -53,7 +53,9 @@ mais simples de ligar. O HC-SR04 pode entrar depois como extra, se sobrar tempo.
 
 **Destrava:** T0.5 (`docs/arquitetura.md`), T0.6 (payload de `grupo3/telemetria`) e T2.1–T2.3.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** **DHT11 (módulo) + HC-SR04**, os dois já no M2. O grupo tem o DHT11, não o DHT22: a precisão
+cai para ±2 °C, o que basta para o alerta. O HC-SR04 mede o nível de grão (distância do topo). O TCRT5000 que o grupo
+tem fica de reserva, sem uso previsto.
 
 ## 2. Qual atuador 🔴
 
@@ -74,7 +76,10 @@ O buzzer pode ser usado junto, como alarme local do limiar (T2.3).
 
 **Destrava:** T2.4, T4.3, contrato de `grupo3/cmd`.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** **dois LEDs**, sem relé nem buzzer (o grupo não tem):
+- **LED de ventilação** (verde/azul): aciona só por comando remoto em `grupo3/cmd`. Ventilação **sempre manual**, sem modo
+  automático.
+- **LED de alerta** (vermelho): a própria placa acende quando passa do limiar (T2.3), mesmo sem rede.
 
 ## 3. Pinagem 🔴
 
@@ -97,7 +102,8 @@ atrapalham o boot ou não servem para todo uso.
 **Evitar:** GPIO 0, 2, 5, 12 e 15 (definem o modo de boot), 6–11 (memória flash), 1 e 3 (Serial) e 34–39 (só entrada,
 servem apenas para leitura).
 
-**Decisão:** _a preencher (confirmar depois de montar)_
+**Decisão (2026-10-22, confirmar depois de montar):** DHT11 → GPIO 4 · LED ventilação → GPIO 23 · LED alerta → GPIO 22 ·
+HC-SR04 TRIG → GPIO 26, ECHO → GPIO 27 (com divisor de tensão). LEDs com resistor de 220–330 Ω.
 
 ## 4. Intervalo de leitura do sensor 🟡
 
@@ -112,7 +118,7 @@ para um silo, mas a demo fica parada).
 **Recomendação:** **5 s**. O gráfico se mexe na apresentação, e o volume continua pequeno. Fica num `#define`, fácil de
 mudar.
 
-**Decisão:** _a preencher_
+**Decisão (2026-10-22):** **5 s**.
 
 ## 5. Limiar do alerta 🟡
 
@@ -124,7 +130,7 @@ mudar.
 basta segurar o sensor na mão ou soprar nele para passar do limiar. Para evitar que o alerta fique ligando e desligando
 perto do limite, ele só volta ao normal 2 °C ou 5% abaixo do limiar.
 
-**Decisão:** _a preencher (ou confirmar com o professor se há um valor esperado)_
+**Decisão (2026-10-22):** alerta com **temperatura > 30 °C ou umidade > 70%**; volta ao normal abaixo de **28 °C e 65%**.
 
 ## 6. Broker MQTT da apresentação 🟡
 
