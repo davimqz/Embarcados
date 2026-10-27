@@ -178,17 +178,18 @@ _Tasks T2.1–T2.4. Detalhar ao fechar o M1 (depende do sensor de T0.5)._
 
 ### T3.0 — Criar o simulador da placa e o broker de desenvolvimento
 - **Marco:** M3
-- **Status:** doing
+- **Status:** done
 - **Responsável:** Davi
 - **Depende de:** T0.6
 - **Descrição:** projeto Node.js + TypeScript em `backend/` com um simulador que publica o que o firmware do M2 publica (status com LWT, telemetria a cada 5 s, eventos dos botões, alerta com histerese, resposta a `grupo3/cmd`) e um broker MQTT local para desenvolver sem instalar o Mosquitto. Pedida pela exceção acima, fora do roadmap original.
 - **Critérios de aceite:**
-  - [ ] `npm run broker` sobe um broker em `localhost:1883`
-  - [ ] `npm run simulador` publica nos 5 tópicos da placa, com payloads iguais aos exemplos do contrato
-  - [ ] Comando `LIGAR` em `grupo3/cmd` volta em `grupo3/ventilacao` com o `cmd_seq`
-  - [ ] Opções para simular perda e repetição de mensagens (para testar a T3.3)
-  - [ ] `npm run build` (checagem de tipos) sem erros
-- **Evidência:** `docs/entregas/M3/t3.0-simulador.log` (mensagens recebidas no broker)
+  - [x] `npm run broker` sobe um broker em `localhost:1883`
+  - [x] `npm run simulador` publica nos 5 tópicos da placa, com payloads iguais aos exemplos do contrato
+  - [x] Comando `LIGAR` em `grupo3/cmd` volta em `grupo3/ventilacao` com o `cmd_seq`; comandos inválidos são descartados
+  - [x] Opções para simular perda e repetição de mensagens (para testar a T3.3)
+  - [x] `npm run build` (checagem de tipos) sem erros
+- **Observações:** teclas (ou linhas na entrada) aquecem, esfriam e apertam os botões, para a demo e para roteiros de teste. Como rodar: `backend/README.md`.
+- **Evidência:** `docs/entregas/M3/t3.0-simulador.log` (logs do simulador e do broker: telemetria, perda, repetição, falha de sensor, comandos, alerta com histerese, retidos e LWT)
 
 ### T3.1 — Assinar os tópicos da placa e validar o schema no serviço ingest
 - **Marco:** M3

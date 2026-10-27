@@ -1,0 +1,218 @@
+# T3.0 — Simulador da placa e broker de desenvolvimento (2026-10-27)
+# Gerado com o simulador (exceção do M3 no TASKS.md), não com a placa.
+
+## Teste 1 — npm run simulador -- --intervalo 2000 --perda 0.15 --repeticao 0.15 --falha-sensor 0.1
+## Comandos enviados à mão em grupo3/cmd: LIGAR válido (seq 1), texto não JSON, device_id de outra placa, valor TALVEZ.
+
+### Log do simulador
+2026-10-27 11:52:10 [MQTT] Conectado a mqtt://localhost:1883 como esp32-grupo3-sim0001
+2026-10-27 11:52:10 [MQTT] Publicado em grupo3/ventilacao: {"device_id":"esp32-grupo3-sim0001","ts":1793112730,"seq":1,"ventilacao":"DESLIGADA","cmd_seq":null}
+2026-10-27 11:52:10 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112730,"seq":1,"temperatura":26,"umidade":61,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:52:10 [ALERTA] NORMAL (LED vermelho apagado)
+2026-10-27 11:52:10 [SIM] Perdida de propósito em grupo3/alerta: {"device_id":"esp32-grupo3-sim0001","ts":1793112730,"seq":1,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":61}
+2026-10-27 11:52:10 [MQTT] Assinado: grupo3/cmd
+2026-10-27 11:52:12 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112732,"seq":2,"temperatura":26,"umidade":61,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:52:14 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112734,"seq":3,"temperatura":26,"umidade":61,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:52:16 [ATUADOR] Ventilacao LIGADA (seq 1).
+2026-10-27 11:52:16 [MQTT] Publicado em grupo3/ventilacao (2x, repetida de propósito): {"device_id":"esp32-grupo3-sim0001","ts":1793112736,"seq":2,"ventilacao":"LIGADA","cmd_seq":1}
+2026-10-27 11:52:16 [CMD] Descartado: JSON invalido.
+2026-10-27 11:52:16 [CMD] Descartado: device_id de outra placa.
+2026-10-27 11:52:16 [CMD] Descartado: valor desconhecido.
+2026-10-27 11:52:16 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112736,"seq":4,"temperatura":25,"umidade":59,"distancia_cm":null,"nivel_pct":null}
+2026-10-27 11:52:18 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112738,"seq":5,"temperatura":25,"umidade":57,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:52:20 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112740,"seq":6,"temperatura":null,"umidade":null,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:52:22 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112742,"seq":7,"temperatura":25,"umidade":57,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:52:24 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112744,"seq":8,"temperatura":25,"umidade":55,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:52:26 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112746,"seq":9,"temperatura":25,"umidade":56,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:52:29 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112749,"seq":10,"temperatura":25,"umidade":56,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:52:29 [MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-sim0001","ts":1793112749,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+2026-10-27 11:52:31 [SIM] Perdida de propósito em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112751,"seq":11,"temperatura":25,"umidade":56,"distancia_cm":6.9,"nivel_pct":57}
+2026-10-27 11:52:33 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112753,"seq":12,"temperatura":25,"umidade":55,"distancia_cm":6.8,"nivel_pct":58}
+2026-10-27 11:52:35 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112755,"seq":13,"temperatura":null,"umidade":null,"distancia_cm":6.8,"nivel_pct":58}
+
+### Log do broker
+2026-10-27 11:52:08 [BROKER] Ouvindo em mqtt://localhost:1883
+2026-10-27 11:52:10 [BROKER] Conectado: esp32-grupo3-sim0001
+2026-10-27 11:52:10 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112730,"seq":1,"temperatura":26,"umidade":61,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:52:10 [MQTT] grupo3/ventilacao [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112730,"seq":1,"ventilacao":"DESLIGADA","cmd_seq":null}
+2026-10-27 11:52:10 [MQTT] grupo3/status [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","status":"online"}
+2026-10-27 11:52:10 [BROKER] esp32-grupo3-sim0001 assinou grupo3/cmd (QoS 1)
+2026-10-27 11:52:12 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112732,"seq":2,"temperatura":26,"umidade":61,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:52:14 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112734,"seq":3,"temperatura":26,"umidade":61,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:52:16 [BROKER] Conectado: teste-cmd
+2026-10-27 11:52:16 [MQTT] grupo3/cmd de teste-cmd: {"device_id":"esp32-grupo3-sim0001","ts":1793112736,"seq":1,"comando":"VENTILACAO","valor":"LIGAR"}
+2026-10-27 11:52:16 [MQTT] grupo3/cmd de teste-cmd: isto nao e json
+2026-10-27 11:52:16 [MQTT] grupo3/cmd de teste-cmd: {"device_id":"outra-placa","ts":0,"seq":2,"comando":"VENTILACAO","valor":"LIGAR"}
+2026-10-27 11:52:16 [MQTT] grupo3/cmd de teste-cmd: {"device_id":"esp32-grupo3-sim0001","ts":0,"seq":3,"comando":"VENTILACAO","valor":"TALVEZ"}
+2026-10-27 11:52:16 [MQTT] grupo3/ventilacao [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112736,"seq":2,"ventilacao":"LIGADA","cmd_seq":1}
+2026-10-27 11:52:16 [MQTT] grupo3/ventilacao [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112736,"seq":2,"ventilacao":"LIGADA","cmd_seq":1}
+2026-10-27 11:52:16 [BROKER] Desconectado: teste-cmd
+2026-10-27 11:52:16 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112736,"seq":4,"temperatura":25,"umidade":59,"distancia_cm":null,"nivel_pct":null}
+2026-10-27 11:52:18 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112738,"seq":5,"temperatura":25,"umidade":57,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:52:20 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112740,"seq":6,"temperatura":null,"umidade":null,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:52:22 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112742,"seq":7,"temperatura":25,"umidade":57,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:52:24 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112744,"seq":8,"temperatura":25,"umidade":55,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:52:26 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112746,"seq":9,"temperatura":25,"umidade":56,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:52:29 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112749,"seq":10,"temperatura":25,"umidade":56,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:52:29 [MQTT] grupo3/silo/evento de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112749,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+2026-10-27 11:52:33 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112753,"seq":12,"temperatura":25,"umidade":55,"distancia_cm":6.8,"nivel_pct":58}
+2026-10-27 11:52:35 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112755,"seq":13,"temperatura":null,"umidade":null,"distancia_cm":6.8,"nivel_pct":58}
+2026-10-27 11:52:36 [BROKER] Desconectado: esp32-grupo3-sim0001
+2026-10-27 11:52:36 [MQTT] grupo3/status [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","status":"offline"}
+
+## Teste 2 — alerta com histerese, botões e retidos (roteiro pela entrada: 1, 2, a, e, q; --intervalo 1000 --sem-botoes)
+
+### Log do simulador
+2026-10-27 11:53:41 [MQTT] Conectado a mqtt://localhost:1884 como esp32-grupo3-sim0001
+2026-10-27 11:53:41 [MQTT] Publicado em grupo3/ventilacao: {"device_id":"esp32-grupo3-sim0001","ts":1793112821,"seq":1,"ventilacao":"DESLIGADA","cmd_seq":null}
+2026-10-27 11:53:41 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112821,"seq":1,"temperatura":26,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:41 [ALERTA] NORMAL (LED vermelho apagado)
+2026-10-27 11:53:41 [MQTT] Publicado em grupo3/alerta: {"device_id":"esp32-grupo3-sim0001","ts":1793112821,"seq":1,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":59}
+2026-10-27 11:53:41 [MQTT] Assinado: grupo3/cmd
+2026-10-27 11:53:42 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112822,"seq":2,"temperatura":26,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:43 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112823,"seq":3,"temperatura":26,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:44 [MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-sim0001","ts":1793112824,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+2026-10-27 11:53:44 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112824,"seq":4,"temperatura":26,"umidade":60,"distancia_cm":6.9,"nivel_pct":57}
+2026-10-27 11:53:45 [MQTT] Publicado em grupo3/silo/evento: {"device_id":"esp32-grupo3-sim0001","ts":1793112825,"seq":2,"evento":"SAIDA","entradas":1,"saidas":1,"saldo":0}
+2026-10-27 11:53:45 [SIM] Aquecendo o silo (alvo 34 C).
+2026-10-27 11:53:45 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112825,"seq":5,"temperatura":29,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:46 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112826,"seq":6,"temperatura":30,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:47 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112827,"seq":7,"temperatura":31,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:47 [ALERTA] ATIVO (LED vermelho aceso)
+2026-10-27 11:53:47 [MQTT] Publicado em grupo3/alerta: {"device_id":"esp32-grupo3-sim0001","ts":1793112827,"seq":2,"alerta":"ATIVO","motivos":["TEMPERATURA"],"temperatura":31,"umidade":59}
+2026-10-27 11:53:48 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112828,"seq":8,"temperatura":32,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:49 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112829,"seq":9,"temperatura":33,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:50 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112830,"seq":10,"temperatura":33,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:51 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112831,"seq":11,"temperatura":33,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:52 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112832,"seq":12,"temperatura":33,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:53 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112833,"seq":13,"temperatura":34,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:54 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112834,"seq":14,"temperatura":34,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:55 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112835,"seq":15,"temperatura":34,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:56 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112836,"seq":16,"temperatura":34,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:57 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112837,"seq":17,"temperatura":34,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:58 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112838,"seq":18,"temperatura":34,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:59 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112839,"seq":19,"temperatura":34,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:00 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112840,"seq":20,"temperatura":34,"umidade":58,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:01 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112841,"seq":21,"temperatura":34,"umidade":58,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:02 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112842,"seq":22,"temperatura":34,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:03 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112843,"seq":23,"temperatura":34,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:04 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112844,"seq":24,"temperatura":34,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:05 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112845,"seq":25,"temperatura":34,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:06 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112846,"seq":26,"temperatura":34,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:07 [SIM] Esfriando o silo (alvo 24 C).
+2026-10-27 11:54:07 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112847,"seq":27,"temperatura":31,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:08 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112848,"seq":28,"temperatura":29,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:09 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112849,"seq":29,"temperatura":28,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:10 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112850,"seq":30,"temperatura":26,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:10 [ALERTA] NORMAL (LED vermelho apagado)
+2026-10-27 11:54:10 [MQTT] Publicado em grupo3/alerta: {"device_id":"esp32-grupo3-sim0001","ts":1793112850,"seq":3,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":60}
+2026-10-27 11:54:11 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112851,"seq":31,"temperatura":26,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:12 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112852,"seq":32,"temperatura":25,"umidade":61,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:13 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112853,"seq":33,"temperatura":25,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:14 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112854,"seq":34,"temperatura":25,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:15 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112855,"seq":35,"temperatura":25,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:16 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112856,"seq":36,"temperatura":24,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:17 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112857,"seq":37,"temperatura":24,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:18 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112858,"seq":38,"temperatura":24,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:20 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112860,"seq":39,"temperatura":24,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:21 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112861,"seq":40,"temperatura":24,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:22 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112862,"seq":41,"temperatura":24,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:23 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112863,"seq":42,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:24 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112864,"seq":43,"temperatura":24,"umidade":61,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:25 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112865,"seq":44,"temperatura":24,"umidade":61,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:26 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112866,"seq":45,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:27 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112867,"seq":46,"temperatura":24,"umidade":61,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:28 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112868,"seq":47,"temperatura":24,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:29 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112869,"seq":48,"temperatura":24,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:30 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112870,"seq":49,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:31 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112871,"seq":50,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:32 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112872,"seq":51,"temperatura":24,"umidade":61,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:33 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112873,"seq":52,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:34 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112874,"seq":53,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:35 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112875,"seq":54,"temperatura":24,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:36 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112876,"seq":55,"temperatura":24,"umidade":61,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:37 [MQTT] Publicado em grupo3/telemetria: {"device_id":"esp32-grupo3-sim0001","ts":1793112877,"seq":56,"temperatura":24,"umidade":61,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:37 [SIM] Saindo sem desconectar: o broker deve publicar o offline (LWT).
+
+### Log do broker
+2026-10-27 11:53:39 [BROKER] Ouvindo em mqtt://localhost:1884
+2026-10-27 11:53:41 [BROKER] Conectado: esp32-grupo3-sim0001
+2026-10-27 11:53:41 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112821,"seq":1,"temperatura":26,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:41 [MQTT] grupo3/status [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","status":"online"}
+2026-10-27 11:53:41 [MQTT] grupo3/ventilacao [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112821,"seq":1,"ventilacao":"DESLIGADA","cmd_seq":null}
+2026-10-27 11:53:41 [MQTT] grupo3/alerta [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112821,"seq":1,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":59}
+2026-10-27 11:53:41 [BROKER] esp32-grupo3-sim0001 assinou grupo3/cmd (QoS 1)
+2026-10-27 11:53:42 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112822,"seq":2,"temperatura":26,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:43 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112823,"seq":3,"temperatura":26,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:44 [MQTT] grupo3/silo/evento de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112824,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+2026-10-27 11:53:44 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112824,"seq":4,"temperatura":26,"umidade":60,"distancia_cm":6.9,"nivel_pct":57}
+2026-10-27 11:53:45 [MQTT] grupo3/silo/evento de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112825,"seq":2,"evento":"SAIDA","entradas":1,"saidas":1,"saldo":0}
+2026-10-27 11:53:45 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112825,"seq":5,"temperatura":29,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:46 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112826,"seq":6,"temperatura":30,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:47 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112827,"seq":7,"temperatura":31,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:47 [MQTT] grupo3/alerta [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112827,"seq":2,"alerta":"ATIVO","motivos":["TEMPERATURA"],"temperatura":31,"umidade":59}
+2026-10-27 11:53:48 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112828,"seq":8,"temperatura":32,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:49 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112829,"seq":9,"temperatura":33,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:50 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112830,"seq":10,"temperatura":33,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:51 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112831,"seq":11,"temperatura":33,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:52 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112832,"seq":12,"temperatura":33,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:53 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112833,"seq":13,"temperatura":34,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:54 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112834,"seq":14,"temperatura":34,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:55 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112835,"seq":15,"temperatura":34,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:56 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112836,"seq":16,"temperatura":34,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:53:57 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112837,"seq":17,"temperatura":34,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:53:58 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112838,"seq":18,"temperatura":34,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:53:59 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112839,"seq":19,"temperatura":34,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:00 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112840,"seq":20,"temperatura":34,"umidade":58,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:01 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112841,"seq":21,"temperatura":34,"umidade":58,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:02 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112842,"seq":22,"temperatura":34,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:03 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112843,"seq":23,"temperatura":34,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:04 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112844,"seq":24,"temperatura":34,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:05 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112845,"seq":25,"temperatura":34,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:06 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112846,"seq":26,"temperatura":34,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:07 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112847,"seq":27,"temperatura":31,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:08 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112848,"seq":28,"temperatura":29,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:09 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112849,"seq":29,"temperatura":28,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:10 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112850,"seq":30,"temperatura":26,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:10 [MQTT] grupo3/alerta [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112850,"seq":3,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":60}
+2026-10-27 11:54:11 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112851,"seq":31,"temperatura":26,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:12 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112852,"seq":32,"temperatura":25,"umidade":61,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:13 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112853,"seq":33,"temperatura":25,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:14 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112854,"seq":34,"temperatura":25,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:15 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112855,"seq":35,"temperatura":25,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:16 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112856,"seq":36,"temperatura":24,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:17 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112857,"seq":37,"temperatura":24,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:18 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112858,"seq":38,"temperatura":24,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:20 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112860,"seq":39,"temperatura":24,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:21 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112861,"seq":40,"temperatura":24,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:22 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112862,"seq":41,"temperatura":24,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:23 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112863,"seq":42,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:24 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112864,"seq":43,"temperatura":24,"umidade":61,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:25 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112865,"seq":44,"temperatura":24,"umidade":61,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:26 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112866,"seq":45,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:27 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112867,"seq":46,"temperatura":24,"umidade":61,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:28 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112868,"seq":47,"temperatura":24,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:29 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112869,"seq":48,"temperatura":24,"umidade":59,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:30 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112870,"seq":49,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:31 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112871,"seq":50,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:32 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112872,"seq":51,"temperatura":24,"umidade":61,"distancia_cm":7.5,"nivel_pct":50}
+2026-10-27 11:54:33 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112873,"seq":52,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:34 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112874,"seq":53,"temperatura":24,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:35 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112875,"seq":54,"temperatura":24,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:36 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112876,"seq":55,"temperatura":24,"umidade":61,"distancia_cm":7.4,"nivel_pct":51}
+2026-10-27 11:54:37 [MQTT] grupo3/telemetria de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","ts":1793112877,"seq":56,"temperatura":24,"umidade":61,"distancia_cm":7.6,"nivel_pct":49}
+2026-10-27 11:54:37 [BROKER] Desconectado: esp32-grupo3-sim0001
+2026-10-27 11:54:37 [MQTT] grupo3/status [retido] de esp32-grupo3-sim0001: {"device_id":"esp32-grupo3-sim0001","status":"offline"}
+2026-10-27 11:54:39 [BROKER] Conectado: assinante-tardio
+2026-10-27 11:54:39 [BROKER] assinante-tardio assinou grupo3/# (QoS 0)
+2026-10-27 11:54:41 [BROKER] Desconectado: assinante-tardio
+
+### Assinante que conectou depois de a placa cair (recebe só os retidos)
+[RETIDO] grupo3/status {"device_id":"esp32-grupo3-sim0001","status":"offline"}
+[RETIDO] grupo3/ventilacao {"device_id":"esp32-grupo3-sim0001","ts":1793112821,"seq":1,"ventilacao":"DESLIGADA","cmd_seq":null}
+[RETIDO] grupo3/alerta {"device_id":"esp32-grupo3-sim0001","ts":1793112850,"seq":3,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":60}
+
+## npm run build
+> silo-backend@0.0.0 build
+> tsc
+exit: 0
