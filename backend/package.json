@@ -1,0 +1,23 @@
+{
+  "name": "silo-backend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Backend do silo IoT (GRUPO3): ingestão, ancoragem e ferramentas de desenvolvimento",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc",
+    "broker": "node --env-file-if-exists=.env broker/broker-dev.ts",
+    "simulador": "node --env-file-if-exists=.env simulador/simulador.ts"
+  },
+  "dependencies": {
+    "mqtt": "^5.16.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "aedes": "^1.2.0",
+    "typescript": "~6.0.3"
+  }
+}
