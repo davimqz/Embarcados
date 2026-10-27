@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M2 — Sensoriamento (T2.1 e T2.2 em review, aguardando o protótipo) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M2 — Sensoriamento (T2.1–T2.3 em review, aguardando o protótipo) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -197,14 +197,15 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T2.3 — Acender o LED de alerta por limiar e publicar em grupo3/alerta
 - **Marco:** M2
-- **Status:** todo
-- **Responsável:** —
+- **Status:** review
+- **Responsável:** Davi
 - **Depende de:** T2.2
 - **Descrição:** ao cruzar 30 °C / 70% (volta em 28 °C / 65%), a placa acende o LED vermelho (GPIO 22), mesmo sem rede, e publica a mudança de estado em `grupo3/alerta` (retido).
 - **Critérios de aceite:**
   - [ ] Segurar/soprar o DHT11 acende o LED e publica `"ATIVO"` com o motivo
   - [ ] Ao esfriar abaixo de 28 °C e 65%, o LED apaga e sai `"NORMAL"`, sem piscar perto do limite
   - [ ] Com o broker fora, o LED continua respondendo ao limiar
+- **Em review:** código compilado (`pio run` sem warnings, `docs/entregas/M2/t2.3-pio-run.log`); falta testar na placa com o DHT11 e o LED. O alerta roda dentro da `TaskSensores`, sem notify (motivo em `docs/arquitetura.md` §4).
 - **Evidência:** `docs/entregas/M2/t2.3-alerta.log` + foto/vídeo do LED
 
 ### T2.4 — Ligar a ventilação por comando em grupo3/cmd
