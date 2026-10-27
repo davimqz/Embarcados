@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M2 — Sensoriamento (T2.1–T2.3 em review, aguardando o protótipo) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M2 — Sensoriamento (T2.1–T2.4 em review, aguardando o protótipo) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -210,14 +210,15 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T2.4 — Ligar a ventilação por comando em grupo3/cmd
 - **Marco:** M2
-- **Status:** todo
-- **Responsável:** —
+- **Status:** review
+- **Responsável:** Davi
 - **Depende de:** T2.2
 - **Descrição:** a placa assina `grupo3/cmd`, a `TaskComunicacao` repassa o comando por fila à `TaskAtuador`, que liga/desliga o LED de ventilação (GPIO 23) e confirma em `grupo3/ventilacao` (retido).
 - **Critérios de aceite:**
   - [ ] `LIGAR`/`DESLIGAR` publicado à mão no broker muda o LED em < 1 s e volta em `grupo3/ventilacao` com o `cmd_seq`
   - [ ] Comando com JSON inválido, `device_id` de outra placa ou valor desconhecido é descartado com log
   - [ ] Depois de um reboot a ventilação começa desligada e publica `"DESLIGADA"`
+- **Em review:** código compilado (`pio run` sem warnings, `docs/entregas/M2/t2.4-pio-run.log`); falta testar na placa com o LED. Dá para testar só com a ESP32: o `cmd_seq` volta em `grupo3/ventilacao` mesmo sem o LED ligado.
 - **Evidência:** `docs/entregas/M2/t2.4-comando.log` + vídeo do LED
 
 ## M3 — Ingestão e persistência · tag `v0.3.0`
