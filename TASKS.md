@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M0 — Fundação (T0.1–T0.6 done) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M2 — Sensoriamento (T2.1 em andamento) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -162,7 +162,60 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ## M2 — Sensoriamento · tag `v0.2.0`
 
-_Tasks T2.1–T2.4. Detalhar ao fechar o M1 (depende do sensor de T0.5)._
+**Critério do marco:** telemetria contínua com `seq` sem buracos por 10 min.
+
+> O protótipo ainda não foi montado: o código das tasks do M2 é escrito e compilado antes, e cada task fica em
+> `review` até ser testada na placa, com a evidência salva em `docs/entregas/M2/`.
+
+### T2.1 — Ler o DHT11 e o HC-SR04 numa task periódica
+- **Marco:** M2
+- **Status:** doing
+- **Responsável:** Davi
+- **Depende de:** T0.6
+- **Descrição:** criar a `TaskSensores` (módulo `sensores.*`), que a cada 5 s lê temperatura e umidade (DHT11, GPIO 4) e a distância até o grão (HC-SR04, TRIG 26 / ECHO 27), calcula o nível em % e registra a leitura no log serial. A publicação fica para a T2.2.
+- **Critérios de aceite:**
+  - [ ] `pio run` sem warnings novos
+  - [ ] Na placa, uma linha `[SENSOR]` a cada 5 s com temperatura, umidade, distância e nível coerentes (mão no DHT11 sobe a umidade; objeto perto do HC-SR04 sobe o nível)
+  - [ ] Com o DHT11 ou o HC-SR04 desligado, o campo dele sai como falha, sem travar a task
+  - [ ] Os botões continuam contando entradas e saídas com a `TaskSensores` rodando
+  - [ ] Prioridade, stack e núcleo justificados em `docs/arquitetura.md` §4; folga de stack registrada no log
+- **Evidência:** `docs/entregas/M2/t2.1-sensores.log`
+
+### T2.2 — Publicar a telemetria em grupo3/telemetria
+- **Marco:** M2
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T2.1
+- **Descrição:** a `TaskSensores` põe cada leitura numa fila própria, e a `TaskComunicacao` publica em `grupo3/telemetria` conforme o contrato, com `seq` próprio do tópico e o `ts` da leitura.
+- **Critérios de aceite:**
+  - [ ] Payload igual ao de `docs/topicos-mqtt.md` (campos com falha saem como `null`)
+  - [ ] 10 min de telemetria no broker com `seq` sem buracos (~120 mensagens)
+  - [ ] Leituras feitas durante uma queda do broker são publicadas na volta, em ordem, até o tamanho da fila
+- **Evidência:** `docs/entregas/M2/t2.2-telemetria.log` (mensagens do broker)
+
+### T2.3 — Acender o LED de alerta por limiar e publicar em grupo3/alerta
+- **Marco:** M2
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T2.2
+- **Descrição:** ao cruzar 30 °C / 70% (volta em 28 °C / 65%), a placa acende o LED vermelho (GPIO 22), mesmo sem rede, e publica a mudança de estado em `grupo3/alerta` (retido).
+- **Critérios de aceite:**
+  - [ ] Segurar/soprar o DHT11 acende o LED e publica `"ATIVO"` com o motivo
+  - [ ] Ao esfriar abaixo de 28 °C e 65%, o LED apaga e sai `"NORMAL"`, sem piscar perto do limite
+  - [ ] Com o broker fora, o LED continua respondendo ao limiar
+- **Evidência:** `docs/entregas/M2/t2.3-alerta.log` + foto/vídeo do LED
+
+### T2.4 — Ligar a ventilação por comando em grupo3/cmd
+- **Marco:** M2
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T2.2
+- **Descrição:** a placa assina `grupo3/cmd`, a `TaskComunicacao` repassa o comando por fila à `TaskAtuador`, que liga/desliga o LED de ventilação (GPIO 23) e confirma em `grupo3/ventilacao` (retido).
+- **Critérios de aceite:**
+  - [ ] `LIGAR`/`DESLIGAR` publicado à mão no broker muda o LED em < 1 s e volta em `grupo3/ventilacao` com o `cmd_seq`
+  - [ ] Comando com JSON inválido, `device_id` de outra placa ou valor desconhecido é descartado com log
+  - [ ] Depois de um reboot a ventilação começa desligada e publica `"DESLIGADA"`
+- **Evidência:** `docs/entregas/M2/t2.4-comando.log` + vídeo do LED
 
 ## M3 — Ingestão e persistência · tag `v0.3.0`
 
