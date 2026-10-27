@@ -114,8 +114,8 @@ void mqttLoop() {
     mqtt.loop();
 }
 
-bool mqttPublicar(const char* topico, const char* payload) {
-    return mqtt.publish(topico, payload);
+bool mqttPublicar(const char* topico, const char* payload, bool retido) {
+    return mqtt.publish(topico, payload, retido);
 }
 
 const char* deviceId() {

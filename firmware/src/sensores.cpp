@@ -7,6 +7,7 @@
 #include "config.h"  // pode sobrescrever SILO_DIST_VAZIO_CM / SILO_DIST_CHEIO_CM
 #include "sensores.h"
 #include "log_serial.h"
+#include "alerta.h"
 
 #define SONAR_AMOSTRAS 3          // mediana de 3 medidas descarta um eco perdido ou refletido
 #define SONAR_PAUSA_MS 60         // o HC-SR04 pede >= 60 ms entre medidas, para o eco anterior sumir
@@ -126,6 +127,9 @@ void TaskSensores(void *pvParameters) {
         }
         logSerial("[SENSOR] seq=%u temperatura=%s umidade=%s distancia=%s nivel=%s\n",
                   (unsigned)leitura.seq, temp, umid, dist, nivel);
+
+        // O LED de alerta responde aqui, sem depender da rede.
+        alertaAvaliar(&leitura);
 
         // Fila cheia (broker fora há mais de 1 min): descarta a leitura nova, e o buraco aparece no seq.
         if (xQueueSend(xFilaTelemetria, &leitura, 0) != pdPASS) {

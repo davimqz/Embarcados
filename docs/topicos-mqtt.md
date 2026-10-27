@@ -8,8 +8,8 @@ Todo tópico ou payload novo é registrado aqui antes de ser implementado.
 |---|---|---|---|---|
 | `grupo3/silo/evento` | ESP32 → broker | 0 | não | ✅ M1 |
 | `grupo3/status` | ESP32 / broker (LWT) → assinantes | 1 | sim | ✅ M1 |
-| `grupo3/telemetria` | ESP32 → broker | 0 | não | M2 (T2.1/T2.2) |
-| `grupo3/alerta` | ESP32 → broker | 0 | sim | M2 (T2.3) |
+| `grupo3/telemetria` | ESP32 → broker | 0 | não | M2 (T2.2), falta testar na placa |
+| `grupo3/alerta` | ESP32 → broker | 0 | sim | M2 (T2.3), falta testar na placa |
 | `grupo3/cmd` | backend → ESP32 | 1 | não | M2 (T2.4) |
 | `grupo3/ventilacao` | ESP32 → broker | 0 | sim | M2 (T2.4) |
 

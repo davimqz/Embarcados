@@ -12,6 +12,7 @@
 #include "botao.h"
 #include "wifi_mqtt.h"
 #include "sensores.h"
+#include "alerta.h"
 
 // O SDK do ESP32 tem outros "config.h" no include path; checa por um define nosso.
 #ifndef WIFI_SSID
@@ -21,6 +22,7 @@
 // Contrato em docs/topicos-mqtt.md.
 const char* MQTT_TOPIC = "grupo" NUMERO_GRUPO "/silo/evento";
 const char* MQTT_TOPIC_TELEMETRIA = "grupo" NUMERO_GRUPO "/telemetria";
+const char* MQTT_TOPIC_ALERTA = "grupo" NUMERO_GRUPO "/alerta";
 
 // Antes disso o relógio ainda não foi acertado pelo NTP (2023-11-14).
 #define TS_MINIMO_VALIDO 1700000000
@@ -138,6 +140,43 @@ static bool publicarTelemetria() {
     return true;
 }
 
+// Publica a mudança de estado do alerta mais antiga da fila (retida). Retorna false se a fila estava vazia.
+static bool publicarAlerta() {
+    AlertaSilo a;
+
+    if (xQueuePeek(xFilaAlerta, &a, 0) != pdPASS) {
+        return false;
+    }
+
+    JsonDocument doc;
+    doc["device_id"] = deviceId();
+    preencherTs(doc, a.ts);
+    doc["seq"] = a.seq;
+    doc["alerta"] = a.ativo ? "ATIVO" : "NORMAL";
+    JsonArray motivos = doc["motivos"].to<JsonArray>();
+    if (a.motivoTemperatura) {
+        motivos.add("TEMPERATURA");
+    }
+    if (a.motivoUmidade) {
+        motivos.add("UMIDADE");
+    }
+    doc["temperatura"] = a.temperatura;
+    doc["umidade"] = a.umidade;
+
+    char payload[200];
+    serializeJson(doc, payload, sizeof(payload));
+
+    // Retido: quem assinar depois recebe o estado atual do alerta na hora.
+    if (mqttPublicar(MQTT_TOPIC_ALERTA, payload, true)) {
+        xQueueReceive(xFilaAlerta, &a, 0);
+        logSerial("[MQTT] Publicado em %s: %s\n", MQTT_TOPIC_ALERTA, payload);
+    } else {
+        logSerial("[MQTT] Falha ao publicar. Alerta mantido na fila.\n");
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+    return true;
+}
+
 void TaskComunicacao(void *pvParameters) {
     wifiMqttIniciar();
 
@@ -156,7 +195,11 @@ void TaskComunicacao(void *pvParameters) {
         mqttLoop();
 
         // Botões primeiro: um aperto não espera as leituras acumuladas de uma queda.
+        // O alerta vem antes da telemetria pelo mesmo motivo.
         bool publicou = publicarEventoBotao(&eventos);
+        if (!publicou) {
+            publicou = publicarAlerta();
+        }
         if (!publicou) {
             publicou = publicarTelemetria();
         }
@@ -183,14 +226,16 @@ void setup() {
     pinMode(BOTAO_ENTRADA_PIN, INPUT_PULLUP);
     pinMode(BOTAO_SAIDA_PIN, INPUT_PULLUP);
     sensoresIniciar();
+    alertaIniciar();
 
     botaoEntrada.sem = xSemaphoreCreateBinary();
     botaoSaida.sem = xSemaphoreCreateBinary();
     xFilaBotao = xQueueCreate(FILA_TAMANHO, sizeof(EventoSilo));
     xFilaTelemetria = xQueueCreate(FILA_TELEMETRIA_TAMANHO, sizeof(LeituraSilo));
+    xFilaAlerta = xQueueCreate(FILA_ALERTA_TAMANHO, sizeof(AlertaSilo));
 
     if (xMutexSerial == NULL || botaoEntrada.sem == NULL || botaoSaida.sem == NULL || xFilaBotao == NULL ||
-        xFilaTelemetria == NULL) {
+        xFilaTelemetria == NULL || xFilaAlerta == NULL) {
         travar("[ERRO] Falha ao criar semaforos ou fila.");
     }
 

@@ -12,7 +12,8 @@ void verificarMQTT();
 
 bool mqttConectado();
 void mqttLoop();
-bool mqttPublicar(const char* topico, const char* payload);
+// retido: o broker guarda a última mensagem e a entrega a quem assinar depois.
+bool mqttPublicar(const char* topico, const char* payload, bool retido = false);
 
 // "esp32-grupo<N>-<MAC em hex>"; válido depois de wifiMqttIniciar().
 const char* deviceId();
