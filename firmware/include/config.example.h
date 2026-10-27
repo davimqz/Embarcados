@@ -16,3 +16,9 @@
 
 // --- Identificação ---
 #define NUMERO_GRUPO    "3"
+
+// --- Calibração do nível do silo (opcional) ---
+// Distância do HC-SR04 até o grão com o silo vazio e cheio, medida na montagem.
+// Sem estas linhas valem os padrões de sensores.h (12 cm e 3 cm).
+// #define SILO_DIST_VAZIO_CM 12.0f
+// #define SILO_DIST_CHEIO_CM 3.0f

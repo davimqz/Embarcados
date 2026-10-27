@@ -121,12 +121,24 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 | `TaskBotaoEntrada` | 1 | 2 | 3072 | ✅ M1 | Espera o semáforo da ISR do GPIO 19, confirma o aperto e põe o evento na fila |
 | `TaskBotaoSaida` | 1 | 2 | 3072 | ✅ M1 | Idem, GPIO 21 |
 | `TaskComunicacao` | 0 | 1 | 8192 | ✅ M1 | Wi-Fi, MQTT, LWT, NTP; tira da fila e publica; vai assinar `grupo3/cmd` |
-| `TaskSensores` | 1 | a definir na T2.1 | a definir | M2 (T2.1/T2.2) | A cada 5 s lê o DHT11 e o HC-SR04 e põe a leitura na fila de telemetria |
+| `TaskSensores` | 1 | 1 | 4096 | M2 (T2.1) código pronto, falta testar na placa | A cada 5 s lê o DHT11 e o HC-SR04 (mediana de 3 medidas) e calcula o nível; na T2.2 põe a leitura na fila de telemetria |
 | alerta por limiar | — | — | — | M2 (T2.3) | Ao cruzar 30 °C / 70% (volta em 28 °C / 65%), avisa por notify, acende o LED vermelho e gera o evento de alerta |
 | `TaskAtuador` | 1 | a definir na T2.4 | a definir | M2 (T2.4) | Recebe da `TaskComunicacao`, por fila, o comando de `grupo3/cmd`, aciona o LED de ventilação e confirma o estado |
 
 As prioridades, stacks e a divisão entre tasks do M2 são fixadas e justificadas em cada task, ao implementar. Os
 botões ficam acima da comunicação para não perder apertos enquanto a rede reconecta.
+
+**`TaskSensores` (T2.1):**
+
+- **Prioridade 1, abaixo dos botões (2):** um aperto nunca espera uma leitura. A leitura tolera atraso: o período é de
+  5 s, e o `vTaskDelayUntil` mantém a cadência mesmo que uma volta atrase.
+- **Núcleo 1:** o núcleo 0 fica com a pilha do Wi-Fi e a `TaskComunicacao`. O `pulseIn` do HC-SR04 fica em espera
+  ativa por até ~30 ms por medida e não pode competir com a rede.
+- **Stack de 4096 bytes:** a biblioteca do DHT11 e o `vsnprintf` do log usam pouco. A folga real é registrada no log
+  da primeira leitura e conferida na placa. Se sobrar mais de 2 KB, dá para reduzir.
+- **Efeito nos botões:** a biblioteca DHTesp lê o DHT11 numa seção crítica de ~5 ms, com as interrupções desligadas
+  no núcleo 1. A borda do botão não se perde, porque o GPIO a guarda e a ISR roda logo depois. Um botão apertado no
+  meio de uma medida do HC-SR04 pode atrasar o `pulseIn` e estragar aquela medida, mas a mediana de 3 a descarta.
 
 ## 5. Tópicos MQTT
 

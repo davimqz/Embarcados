@@ -10,6 +10,7 @@
 #include "log_serial.h"
 #include "botao.h"
 #include "wifi_mqtt.h"
+#include "sensores.h"
 
 // O SDK do ESP32 tem outros "config.h" no include path; checa por um define nosso.
 #ifndef WIFI_SSID
@@ -118,6 +119,7 @@ void setup() {
 
     pinMode(BOTAO_ENTRADA_PIN, INPUT_PULLUP);
     pinMode(BOTAO_SAIDA_PIN, INPUT_PULLUP);
+    sensoresIniciar();
 
     botaoEntrada.sem = xSemaphoreCreateBinary();
     botaoSaida.sem = xSemaphoreCreateBinary();
@@ -134,6 +136,11 @@ void setup() {
 
     if (xTaskCreatePinnedToCore(TaskComunicacao, "TaskComunicacao", 8192, NULL, 1, NULL, 0) != pdPASS) {
         travar("[ERRO] Falha ao criar TaskComunicacao.");
+    }
+
+    // Abaixo dos botões, para um aperto nunca esperar uma leitura; no núcleo 1, longe do Wi-Fi.
+    if (xTaskCreatePinnedToCore(TaskSensores, "TaskSensores", 4096, NULL, 1, NULL, 1) != pdPASS) {
+        travar("[ERRO] Falha ao criar TaskSensores.");
     }
 
     tickInicio = xTaskGetTickCount();
