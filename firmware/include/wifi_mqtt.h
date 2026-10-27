@@ -10,6 +10,10 @@ void wifiMqttIniciar();
 void verificarWiFi();
 void verificarMQTT();
 
+// Assina o tópico com QoS 1 a cada conexão (a sessão não é persistente, então a assinatura se perde
+// numa queda). O callback roda dentro do mqttLoop(), na TaskComunicacao.
+void mqttAssinar(const char* topico, void (*callback)(char*, uint8_t*, unsigned int));
+
 bool mqttConectado();
 void mqttLoop();
 // retido: o broker guarda a última mensagem e a entrega a quem assinar depois.

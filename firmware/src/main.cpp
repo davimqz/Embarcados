@@ -13,6 +13,7 @@
 #include "wifi_mqtt.h"
 #include "sensores.h"
 #include "alerta.h"
+#include "atuador.h"
 
 // O SDK do ESP32 tem outros "config.h" no include path; checa por um define nosso.
 #ifndef WIFI_SSID
@@ -23,6 +24,8 @@
 const char* MQTT_TOPIC = "grupo" NUMERO_GRUPO "/silo/evento";
 const char* MQTT_TOPIC_TELEMETRIA = "grupo" NUMERO_GRUPO "/telemetria";
 const char* MQTT_TOPIC_ALERTA = "grupo" NUMERO_GRUPO "/alerta";
+const char* MQTT_TOPIC_CMD = "grupo" NUMERO_GRUPO "/cmd";
+const char* MQTT_TOPIC_VENTILACAO = "grupo" NUMERO_GRUPO "/ventilacao";
 
 // Antes disso o relógio ainda não foi acertado pelo NTP (2023-11-14).
 #define TS_MINIMO_VALIDO 1700000000
@@ -177,8 +180,42 @@ static bool publicarAlerta() {
     return true;
 }
 
+// Publica o estado do LED de ventilação mais antigo da fila (retido). Retorna false se a fila estava vazia.
+static bool publicarVentilacao() {
+    EstadoVentilacao est;
+
+    if (xQueuePeek(xFilaVentilacao, &est, 0) != pdPASS) {
+        return false;
+    }
+
+    JsonDocument doc;
+    doc["device_id"] = deviceId();
+    preencherTs(doc, est.ts);
+    doc["seq"] = est.seq;
+    doc["ventilacao"] = est.ligada ? "LIGADA" : "DESLIGADA";
+    if (est.temCmd) {
+        doc["cmd_seq"] = est.cmdSeq;
+    } else {
+        doc["cmd_seq"] = nullptr;
+    }
+
+    char payload[160];
+    serializeJson(doc, payload, sizeof(payload));
+
+    // Retido: o dashboard sabe o estado do LED assim que assina.
+    if (mqttPublicar(MQTT_TOPIC_VENTILACAO, payload, true)) {
+        xQueueReceive(xFilaVentilacao, &est, 0);
+        logSerial("[MQTT] Publicado em %s: %s\n", MQTT_TOPIC_VENTILACAO, payload);
+    } else {
+        logSerial("[MQTT] Falha ao publicar. Estado da ventilacao mantido na fila.\n");
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+    return true;
+}
+
 void TaskComunicacao(void *pvParameters) {
     wifiMqttIniciar();
+    mqttAssinar(MQTT_TOPIC_CMD, atuadorReceberComando);
 
     EstadoEventos eventos = {0, 0, 0};
 
@@ -199,6 +236,9 @@ void TaskComunicacao(void *pvParameters) {
         bool publicou = publicarEventoBotao(&eventos);
         if (!publicou) {
             publicou = publicarAlerta();
+        }
+        if (!publicou) {
+            publicou = publicarVentilacao();
         }
         if (!publicou) {
             publicou = publicarTelemetria();
@@ -227,15 +267,18 @@ void setup() {
     pinMode(BOTAO_SAIDA_PIN, INPUT_PULLUP);
     sensoresIniciar();
     alertaIniciar();
+    atuadorIniciar();
 
     botaoEntrada.sem = xSemaphoreCreateBinary();
     botaoSaida.sem = xSemaphoreCreateBinary();
     xFilaBotao = xQueueCreate(FILA_TAMANHO, sizeof(EventoSilo));
     xFilaTelemetria = xQueueCreate(FILA_TELEMETRIA_TAMANHO, sizeof(LeituraSilo));
     xFilaAlerta = xQueueCreate(FILA_ALERTA_TAMANHO, sizeof(AlertaSilo));
+    xFilaComando = xQueueCreate(FILA_COMANDO_TAMANHO, sizeof(ComandoVentilacao));
+    xFilaVentilacao = xQueueCreate(FILA_VENTILACAO_TAMANHO, sizeof(EstadoVentilacao));
 
     if (xMutexSerial == NULL || botaoEntrada.sem == NULL || botaoSaida.sem == NULL || xFilaBotao == NULL ||
-        xFilaTelemetria == NULL || xFilaAlerta == NULL) {
+        xFilaTelemetria == NULL || xFilaAlerta == NULL || xFilaComando == NULL || xFilaVentilacao == NULL) {
         travar("[ERRO] Falha ao criar semaforos ou fila.");
     }
 
@@ -251,6 +294,11 @@ void setup() {
     // Abaixo dos botões, para um aperto nunca esperar uma leitura; no núcleo 1, longe do Wi-Fi.
     if (xTaskCreatePinnedToCore(TaskSensores, "TaskSensores", 4096, NULL, 1, NULL, 1) != pdPASS) {
         travar("[ERRO] Falha ao criar TaskSensores.");
+    }
+
+    // Trabalho mínimo (um digitalWrite por comando); a latência vem da rede, então fica abaixo dos botões.
+    if (xTaskCreatePinnedToCore(TaskAtuador, "TaskAtuador", 3072, NULL, 1, NULL, 1) != pdPASS) {
+        travar("[ERRO] Falha ao criar TaskAtuador.");
     }
 
     tickInicio = xTaskGetTickCount();

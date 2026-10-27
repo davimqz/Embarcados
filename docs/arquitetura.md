@@ -120,10 +120,10 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 |---|---|---|---|---|---|
 | `TaskBotaoEntrada` | 1 | 2 | 3072 | ✅ M1 | Espera o semáforo da ISR do GPIO 19, confirma o aperto e põe o evento na fila |
 | `TaskBotaoSaida` | 1 | 2 | 3072 | ✅ M1 | Idem, GPIO 21 |
-| `TaskComunicacao` | 0 | 1 | 8192 | ✅ M1 · M2 (T2.2) | Wi-Fi, MQTT, LWT, NTP; esvazia a fila dos botões e depois a de telemetria, publicando cada item antes de tirá-lo da fila; vai assinar `grupo3/cmd` |
+| `TaskComunicacao` | 0 | 1 | 8192 | ✅ M1 · M2 (T2.2–T2.4) | Wi-Fi, MQTT, LWT, NTP; esvazia as filas na ordem botões → alerta → ventilação → telemetria, publicando cada item antes de tirá-lo da fila; assina `grupo3/cmd` (QoS 1) a cada conexão, e o callback valida o comando e o põe na fila de comandos |
 | `TaskSensores` | 1 | 1 | 4096 | M2 (T2.1/T2.2) código pronto, falta testar na placa | A cada 5 s lê o DHT11 e o HC-SR04 (mediana de 3 medidas), calcula o nível, numera a leitura (`seq`) e a põe na fila de telemetria (12 leituras = 1 min de queda do broker) |
 | alerta por limiar (`alerta.*`) | — | — | — | M2 (T2.3) código pronto, falta testar na placa | Roda dentro da `TaskSensores`: ao cruzar 30 °C / 70% (volta em 28 °C / 65%) acende o LED vermelho e põe a mudança de estado na fila de alerta (4 itens) |
-| `TaskAtuador` | 1 | a definir na T2.4 | a definir | M2 (T2.4) | Recebe da `TaskComunicacao`, por fila, o comando de `grupo3/cmd`, aciona o LED de ventilação e confirma o estado |
+| `TaskAtuador` | 1 | 1 | 3072 | M2 (T2.4) código pronto, falta testar na placa | Recebe da `TaskComunicacao`, por fila, o comando de `grupo3/cmd`, aciona o LED de ventilação e põe o estado (com o `cmd_seq`) na fila de ventilação |
 
 As prioridades, stacks e a divisão entre tasks do M2 são fixadas e justificadas em cada task, ao implementar. Os
 botões ficam acima da comunicação para não perder apertos enquanto a rede reconecta.
@@ -146,6 +146,11 @@ carrega 32 bits, e o evento precisa da leitura inteira (ts, temperatura, umidade
 jeito, mais uma stack, só para repassar dados. A mudança de estado vai por fila para a `TaskComunicacao`, que publica o
 alerta antes da telemetria.
 
+**`TaskAtuador` (T2.4):** prioridade 1 e núcleo 1, como a `TaskSensores`. O trabalho por comando é um `digitalWrite`,
+e a latência do comando vem da rede, não da task. Por isso ela fica abaixo dos botões. A stack de 3072 é a mesma
+dos botões: a task só copia structs pequenas e chama o log. O JSON do comando é lido no callback do MQTT, que roda
+na stack da `TaskComunicacao` (8192).
+
 ## 5. Tópicos MQTT
 
 | Tópico | Direção | Situação |
@@ -154,7 +159,7 @@ alerta antes da telemetria.
 | `grupo3/status` (LWT) | ESP32/broker → assinantes | ✅ M1 |
 | `grupo3/telemetria` | ESP32 → broker | M2 (T2.2) código pronto, falta testar na placa: leitura a cada 5 s |
 | `grupo3/alerta` (retido) | ESP32 → broker | M2 (T2.3) código pronto, falta testar na placa: mudança de estado do alerta |
-| `grupo3/cmd` | backend → ESP32 | M2 (T2.4): ligar/desligar a ventilação |
-| `grupo3/ventilacao` (retido) | ESP32 → broker | M2 (T2.4): estado do LED, confirma o comando |
+| `grupo3/cmd` | backend → ESP32 | M2 (T2.4) código pronto, falta testar na placa: ligar/desligar a ventilação |
+| `grupo3/ventilacao` (retido) | ESP32 → broker | M2 (T2.4) código pronto, falta testar na placa: estado do LED, confirma o comando |
 
 Detalhes e exemplos em [`topicos-mqtt.md`](topicos-mqtt.md).
