@@ -14,6 +14,8 @@
 #define SONAR_MIN_CM 2.0f         // abaixo disso o HC-SR04 não mede
 #define SONAR_MAX_CM 400.0f
 
+QueueHandle_t xFilaTelemetria = NULL;
+
 static DHTesp dht;
 
 void sensoresIniciar() {
@@ -101,12 +103,14 @@ static void lerSensores(LeituraSilo *l) {
 void TaskSensores(void *pvParameters) {
     LeituraSilo leitura;
     bool folgaRegistrada = false;
+    uint32_t seq = 0;
 
     // Período fixo pelo relógio do RTOS: o tempo gasto na leitura (~200 ms) não acumula atraso.
     TickType_t proximaLeitura = xTaskGetTickCount();
 
     for (;;) {
         lerSensores(&leitura);
+        leitura.seq = ++seq;
 
         char temp[8] = "falha";
         char umid[8] = "falha";
@@ -120,7 +124,13 @@ void TaskSensores(void *pvParameters) {
             snprintf(dist, sizeof(dist), "%.1f cm", leitura.distanciaCm);
             snprintf(nivel, sizeof(nivel), "%d%%", leitura.nivelPct);
         }
-        logSerial("[SENSOR] temperatura=%s umidade=%s distancia=%s nivel=%s\n", temp, umid, dist, nivel);
+        logSerial("[SENSOR] seq=%u temperatura=%s umidade=%s distancia=%s nivel=%s\n",
+                  (unsigned)leitura.seq, temp, umid, dist, nivel);
+
+        // Fila cheia (broker fora há mais de 1 min): descarta a leitura nova, e o buraco aparece no seq.
+        if (xQueueSend(xFilaTelemetria, &leitura, 0) != pdPASS) {
+            logSerial("[ERRO] Fila de telemetria cheia. Leitura %u descartada.\n", (unsigned)leitura.seq);
+        }
 
         // Uma vez só, depois da primeira leitura completa: quanto do stack nunca foi usado.
         if (!folgaRegistrada) {

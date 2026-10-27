@@ -120,8 +120,8 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 |---|---|---|---|---|---|
 | `TaskBotaoEntrada` | 1 | 2 | 3072 | ✅ M1 | Espera o semáforo da ISR do GPIO 19, confirma o aperto e põe o evento na fila |
 | `TaskBotaoSaida` | 1 | 2 | 3072 | ✅ M1 | Idem, GPIO 21 |
-| `TaskComunicacao` | 0 | 1 | 8192 | ✅ M1 | Wi-Fi, MQTT, LWT, NTP; tira da fila e publica; vai assinar `grupo3/cmd` |
-| `TaskSensores` | 1 | 1 | 4096 | M2 (T2.1) código pronto, falta testar na placa | A cada 5 s lê o DHT11 e o HC-SR04 (mediana de 3 medidas) e calcula o nível; na T2.2 põe a leitura na fila de telemetria |
+| `TaskComunicacao` | 0 | 1 | 8192 | ✅ M1 · M2 (T2.2) | Wi-Fi, MQTT, LWT, NTP; esvazia a fila dos botões e depois a de telemetria, publicando cada item antes de tirá-lo da fila; vai assinar `grupo3/cmd` |
+| `TaskSensores` | 1 | 1 | 4096 | M2 (T2.1/T2.2) código pronto, falta testar na placa | A cada 5 s lê o DHT11 e o HC-SR04 (mediana de 3 medidas), calcula o nível, numera a leitura (`seq`) e a põe na fila de telemetria (12 leituras = 1 min de queda do broker) |
 | alerta por limiar | — | — | — | M2 (T2.3) | Ao cruzar 30 °C / 70% (volta em 28 °C / 65%), avisa por notify, acende o LED vermelho e gera o evento de alerta |
 | `TaskAtuador` | 1 | a definir na T2.4 | a definir | M2 (T2.4) | Recebe da `TaskComunicacao`, por fila, o comando de `grupo3/cmd`, aciona o LED de ventilação e confirma o estado |
 
@@ -146,7 +146,7 @@ botões ficam acima da comunicação para não perder apertos enquanto a rede re
 |---|---|---|
 | `grupo3/silo/evento` | ESP32 → broker | ✅ M1 |
 | `grupo3/status` (LWT) | ESP32/broker → assinantes | ✅ M1 |
-| `grupo3/telemetria` | ESP32 → broker | M2 (T2.1/T2.2): leitura a cada 5 s |
+| `grupo3/telemetria` | ESP32 → broker | M2 (T2.2) código pronto, falta testar na placa: leitura a cada 5 s |
 | `grupo3/alerta` (retido) | ESP32 → broker | M2 (T2.3): mudança de estado do alerta |
 | `grupo3/cmd` | backend → ESP32 | M2 (T2.4): ligar/desligar a ventilação |
 | `grupo3/ventilacao` (retido) | ESP32 → broker | M2 (T2.4): estado do LED, confirma o comando |
