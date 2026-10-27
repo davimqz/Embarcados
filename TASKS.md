@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M2 — Sensoriamento (T2.1 em review, aguardando o protótipo) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M2 — Sensoriamento (T2.1 e T2.2 em review, aguardando o protótipo) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -184,14 +184,15 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T2.2 — Publicar a telemetria em grupo3/telemetria
 - **Marco:** M2
-- **Status:** todo
-- **Responsável:** —
+- **Status:** review
+- **Responsável:** Davi
 - **Depende de:** T2.1
 - **Descrição:** a `TaskSensores` põe cada leitura numa fila própria, e a `TaskComunicacao` publica em `grupo3/telemetria` conforme o contrato, com `seq` próprio do tópico e o `ts` da leitura.
 - **Critérios de aceite:**
   - [ ] Payload igual ao de `docs/topicos-mqtt.md` (campos com falha saem como `null`)
   - [ ] 10 min de telemetria no broker com `seq` sem buracos (~120 mensagens)
   - [ ] Leituras feitas durante uma queda do broker são publicadas na volta, em ordem, até o tamanho da fila
+- **Em review:** código compilado (`pio run` sem warnings, `docs/entregas/M2/t2.2-pio-run.log`); falta rodar 10 min na placa. Dá para testar sem os sensores ligados: temperatura e umidade saem `null`; ligar o ECHO ao GND para a distância também sair `null` em vez de ruído do pino solto.
 - **Evidência:** `docs/entregas/M2/t2.2-telemetria.log` (mensagens do broker)
 
 ### T2.3 — Acender o LED de alerta por limiar e publicar em grupo3/alerta
