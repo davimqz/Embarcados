@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M0 — Fundação (pendente: T0.6) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M0 — Fundação (T0.1–T0.6 done) · M1 fechado em 2026-10-20 (`v0.1.0`)
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -77,14 +77,15 @@
 
 ### T0.6 — Criar docs/topicos-mqtt.md com contrato inicial
 - **Marco:** M0
-- **Status:** review
+- **Status:** done
 - **Responsável:** Davi
 - **Depende de:** T0.5
 - **Descrição:** registrar o contrato de tópicos e payloads (legado `/botao/status` + `/<grupo>/status`, `/<grupo>/telemetria`, `/<grupo>/cmd`) antes de qualquer implementação.
 - **Critérios de aceite:**
   - [x] Cada tópico com direção, QoS, retain e exemplo de payload JSON (`device_id`, `ts`, `seq`)
-  - [ ] Payload de telemetria reflete o sensor definido em T0.5 — hoje a telemetria é `grupo3/silo/evento` (proposta da T0.5); fecha quando o tema for confirmado
-- **Observações:** `grupo3/cmd` ainda não foi definido; criar quando houver comando do servidor para a placa.
+  - [x] Payload de telemetria reflete o sensor definido em T0.5: `grupo3/telemetria` com temperatura e umidade (DHT11) e distância/nível (HC-SR04)
+  - [x] `grupo3/cmd` definido (ventilação manual), com confirmação em `grupo3/ventilacao`; alerta por limiar em `grupo3/alerta`
+- **Observações:** cada tópico tem o seu próprio `seq`; o `ts` da telemetria é o da leitura. O PubSubClient só publica em QoS 0.
 - **Evidência:** `docs/topicos-mqtt.md`
 
 ---
