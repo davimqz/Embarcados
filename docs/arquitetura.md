@@ -134,7 +134,9 @@ botões ficam acima da comunicação para não perder apertos enquanto a rede re
 |---|---|---|
 | `grupo3/silo/evento` | ESP32 → broker | ✅ M1 |
 | `grupo3/status` (LWT) | ESP32/broker → assinantes | ✅ M1 |
-| `grupo3/telemetria` | ESP32 → broker | M2: payload a registrar na T0.6 |
-| `grupo3/cmd` | dashboard/backend → ESP32 | M2: payload a registrar antes da T2.4 |
+| `grupo3/telemetria` | ESP32 → broker | M2 (T2.1/T2.2): leitura a cada 5 s |
+| `grupo3/alerta` (retido) | ESP32 → broker | M2 (T2.3): mudança de estado do alerta |
+| `grupo3/cmd` | backend → ESP32 | M2 (T2.4): ligar/desligar a ventilação |
+| `grupo3/ventilacao` (retido) | ESP32 → broker | M2 (T2.4): estado do LED, confirma o comando |
 
 Detalhes e exemplos em [`topicos-mqtt.md`](topicos-mqtt.md).
