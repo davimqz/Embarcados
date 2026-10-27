@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M0 — Fundação (T0.1–T0.6 done) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M2 — Sensoriamento (código nas branches `m2/*`, aguardando o protótipo) · M3 adiantado com simulador (exceção, ver M3) · M0 (`v0.0.0`) e M1 (`v0.1.0`) fechados
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -166,7 +166,78 @@ _Tasks T2.1–T2.4. Detalhar ao fechar o M1 (depende do sensor de T0.5)._
 
 ## M3 — Ingestão e persistência · tag `v0.3.0`
 
-_Tasks T3.1–T3.4._
+**Critério do marco:** 100% das mensagens do M2 persistidas; testes passando.
+
+> **Exceção à regra "não pular marco" (decidida pelo grupo em 2026-10-27):** o M3 começou antes de o M2 ser testado
+> na placa, porque o protótipo ainda não foi montado e o backend não depende do hardware, só do contrato MQTT
+> (`docs/topicos-mqtt.md`). Até a placa ficar pronta, um **simulador** (T3.0) publica as mesmas mensagens que o firmware
+> do M2. Condições:
+> - o M3 só **fecha** (tag `v0.3.0`) depois de o M2 fechar (`v0.2.0`) e de o critério acima ser repetido com a placa real;
+> - evidências feitas com o simulador ficam marcadas como `-simulador` no nome do arquivo;
+> - o simulador segue o contrato, não o contrário: se o firmware e o simulador divergirem, vale o contrato.
+
+### T3.0 — Criar o simulador da placa e o broker de desenvolvimento
+- **Marco:** M3
+- **Status:** doing
+- **Responsável:** Davi
+- **Depende de:** T0.6
+- **Descrição:** projeto Node.js + TypeScript em `backend/` com um simulador que publica o que o firmware do M2 publica (status com LWT, telemetria a cada 5 s, eventos dos botões, alerta com histerese, resposta a `grupo3/cmd`) e um broker MQTT local para desenvolver sem instalar o Mosquitto. Pedida pela exceção acima, fora do roadmap original.
+- **Critérios de aceite:**
+  - [ ] `npm run broker` sobe um broker em `localhost:1883`
+  - [ ] `npm run simulador` publica nos 5 tópicos da placa, com payloads iguais aos exemplos do contrato
+  - [ ] Comando `LIGAR` em `grupo3/cmd` volta em `grupo3/ventilacao` com o `cmd_seq`
+  - [ ] Opções para simular perda e repetição de mensagens (para testar a T3.3)
+  - [ ] `npm run build` (checagem de tipos) sem erros
+- **Evidência:** `docs/entregas/M3/t3.0-simulador.log` (mensagens recebidas no broker)
+
+### T3.1 — Assinar os tópicos da placa e validar o schema no serviço ingest
+- **Marco:** M3
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T3.0
+- **Descrição:** o serviço `ingest` assina os tópicos publicados pela placa e valida cada payload contra o contrato; mensagem inválida é rejeitada com o motivo no log.
+- **Critérios de aceite:**
+  - [ ] Assina `grupo3/silo/evento`, `grupo3/telemetria`, `grupo3/alerta`, `grupo3/ventilacao` e `grupo3/status`
+  - [ ] Payload fora do contrato (JSON inválido, campo faltando, tipo errado) é rejeitado com o motivo no log
+  - [ ] Reconecta sozinho se o broker cair
+- **Evidência:** `docs/entregas/M3/t3.1-ingest-simulador.log`
+
+### T3.2 — Persistir as mensagens no SQLite com hash SHA-256
+- **Marco:** M3
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T3.1
+- **Descrição:** gravar cada mensagem válida na tabela `leituras`, com o payload bruto exatamente como chegou e o SHA-256 dele, base da Merkle root do M5.
+- **Critérios de aceite:**
+  - [ ] Tabela `leituras` com tópico, `device_id`, `seq`, `ts`, horário de recebimento, payload bruto e hash
+  - [ ] O hash gravado bate com o SHA-256 do payload recalculado a partir do banco
+  - [ ] O banco é criado sozinho na primeira execução e fica fora do git
+- **Evidência:** `docs/entregas/M3/t3.2-dump-simulador.txt`
+
+### T3.3 — Detectar seq faltante ou duplicado e registrar
+- **Marco:** M3
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T3.2
+- **Descrição:** por placa e por tópico, comparar o `seq` com o anterior e registrar buracos, duplicatas e reboots (seq que volta a 1).
+- **Critérios de aceite:**
+  - [ ] Buraco (ex.: 7 → 9) registrado com o intervalo faltante
+  - [ ] Duplicata (mesmo `seq` e mesmo payload) registrada e não gravada de novo
+  - [ ] Reboot (`seq` menor que o anterior) registrado como reboot, não como erro
+- **Evidência:** `docs/entregas/M3/t3.3-seq-simulador.log` (simulador com perda e repetição ligadas)
+
+### T3.4 — Testar o validador, o hash e a detecção de seq
+- **Marco:** M3
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T3.3
+- **Descrição:** testes automáticos (`npm test`) do validador do contrato, do hash e da detecção de `seq`, sem precisar de broker externo.
+- **Critérios de aceite:**
+  - [ ] Um caso válido e casos inválidos para cada tópico
+  - [ ] Hash conhecido para um payload fixo
+  - [ ] Buraco, duplicata e reboot cobertos
+  - [ ] `npm test` passa
+- **Evidência:** `docs/entregas/M3/t3.4-npm-test.log`
 
 ## M4 — Dashboard · tag `v0.4.0`
 

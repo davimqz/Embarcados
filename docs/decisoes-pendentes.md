@@ -13,6 +13,7 @@
 | Dashboard | **Web própria**: Vite + React + TS + Tailwind + shadcn/ui + Recharts, alimentada pelo backend via WebSocket | [ADR 0002](decisoes/0002-dashboard.md) |
 | Backend | Node.js + TypeScript · Fastify · mqtt.js · better-sqlite3 | [ADR 0002](decisoes/0002-dashboard.md), `CLAUDE.md` §2 |
 | Contrato MQTT dos botões | `grupo3/silo/evento` e `grupo3/status` (LWT) | [`topicos-mqtt.md`](topicos-mqtt.md) |
+| Adiantar o M3 sem a placa | Sim, com um simulador da placa; o M3 só fecha depois do M2 testado na placa (2026-10-27) | `TASKS.md`, seção M3 |
 
 ## Resumo do que falta
 
