@@ -22,23 +22,19 @@ BASE_LADO = 112.0
 BASE_ALT = 42.0
 BASE_PAREDE = 2.4
 BASE_PISO = 2.0
-PINO_CANTO_D = 3.0     # pinos nos cantos que encaixam na tampa da base
-PINO_CANTO_H = 3.0
-COLUNA = 9.0           # colunas nos cantos: pinos em cima, parafuso da ventoinha embaixo
-PINO_CANTO_C = BASE_LADO / 2 - 3.0   # centro dos pinos, em X e Y
-FURO_AR_D, FURO_AR_PASSO = 5.0, 8.0  # furos de ar no piso da base, fora da protoboard
+COLUNA = 9.0           # colunas nos cantos, onde entram os parafusos da ventoinha
+# entrada de ar: rasgos verticais nas paredes +X e de trás (a frente tem o painel; a -X, o USB e a protoboard)
+RASGO_LARG, RASGO_PASSO, RASGO_Z = 4.0, 8.0, (8.0, 30.0)
+FIOS_RASGO = (14.0, 8.0)       # passagem dos fios no topo da parede de trás: largura, profundidade
 
-# ventoinha 120 x 120 x 25 embaixo da base, soprando para cima; o ar entra entre os pés
+# ventoinha 120 x 120 x 25 entre a base e a tampa da base, soprando para cima:
+# puxa o ar de dentro da base e empurra para o silo
 FAN_LADO, FAN_ALT = 120.0, 25.0
 FAN_FURO_C = 105.0 / 2         # furos dos cantos: 105 mm entre centros
 FAN_R_PAS = 58.0               # raio da área das pás
 FAN_R_CUBO = 20.0              # cubo do motor (não passa ar)
-PE_LADO, PE_ALT = 22.0, 12.0   # 4 pés nos cantos, levantam a ventoinha para o ar entrar
-PE_ABA_ALT, PE_ABA_ESP, PE_FOLGA = 3.0, 1.6, 0.3   # aba em L que abraça o canto da ventoinha
-PARAF_FOLGA_D = 3.4            # parafuso M3 x 40: pé + ventoinha + 8 mm na coluna da base
-PARAF_CABECA = (6.5, 5.0)      # rebaixo da cabeça embaixo do pé (Ø, profundidade)
-PARAF_GUIA_D, PARAF_GUIA_PROF = 2.6, 12.0   # furo-guia na coluna, para o M3 abrir rosca
-CABO_FAN = (30.0, 10.0, 6.0)   # rasgo do cabo na parede de trás, embaixo: x, largura, altura
+PARAF_FOLGA_D = 3.4            # parafuso M3 x 40: tampa da base (4) + ventoinha (25) + 11 mm na coluna
+PARAF_GUIA_D, PARAF_GUIA_PROF = 2.6, 14.0   # furo-guia no topo da coluna, para o M3 abrir rosca
 
 # protoboard 400 pontos e ESP32 (arquitetura.md §3)
 PROTO_X, PROTO_Y = 83.0, 56.0   # bolso já com folga
@@ -54,7 +50,6 @@ PAINEL_Z = 24.0
 
 # tampa da base
 TB_ESP = 4.0
-TB_FURO_PINO_D = 3.6
 TB_REBAIXO_R, TB_REBAIXO_PROF = 47.0, 2.0   # câmara de ar entre a tampa e o piso furado do silo
 TB_FURO_D, TB_FURO_PASSO = 6.0, 9.0
 ABA_ALT, ABA_ESP, ABA_ANG = 4.0, 2.0, 20.0   # abas que centralizam o silo
@@ -67,10 +62,12 @@ ALT_SILO = 112.0
 FURO_PISO_D, FURO_PISO_PASSO = 2.0, 5.0   # piso de aeração: menor que o grão
 FURO_PISO_R = 45.0                         # só sobre a câmara da tampa da base
 
-# conduíte externo para os fios dos sensores (7 fios)
-COND_ANG = 45.0
-COND_R_CENTRO = 56.2
+# conduíte externo para os fios dos sensores (7 fios), atrás (+Y). Fica afastado do silo para
+# os fios descerem por fora da ventoinha (borda em 60 mm) até a passagem no topo da base
+COND_ANG = 90.0
+COND_R_CENTRO = 66.0
 COND_R_EXT, COND_R_INT = 5.5, 4.0
+COND_NERVURA = 5.0     # largura da nervura que liga o conduíte ao silo
 
 # escotilhas (entrada em cima, saída embaixo), ambas na frente (-Y)
 FRENTE = -90.0
@@ -175,14 +172,14 @@ def base():
     di = BASE_LADO / 2 - BASE_PAREDE
     m -= caixa(-di, di, -di, di, BASE_PISO, BASE_ALT + 1)
 
-    # colunas nos cantos, com os pinos que encaixam na tampa da base
-    h, c = BASE_LADO / 2, PINO_CANTO_C
+    # colunas nos cantos, com o furo-guia dos parafusos da ventoinha em cima
+    h, c = BASE_LADO / 2, FAN_FURO_C
     for sx in (-1, 1):
         for sy in (-1, 1):
             xs = sorted((sx * h, sx * (h - COLUNA)))
             ys = sorted((sy * h, sy * (h - COLUNA)))
             m += caixa(xs[0], xs[1], ys[0], ys[1], 0, BASE_ALT)
-            m += cilindro(PINO_CANTO_D / 2, BASE_ALT - 0.01, BASE_ALT + PINO_CANTO_H, sx * c, sy * c, SEG_P)
+            m -= cilindro(PARAF_GUIA_D / 2, BASE_ALT - PARAF_GUIA_PROF, BASE_ALT + 1, sx * c, sy * c, SEG_P)
 
     # guias da protoboard: encostada na parede -X, onde fica o USB do ESP32
     x0 = -di + 0.5
@@ -209,41 +206,32 @@ def base():
         m -= cilindro(LED_FURO_D / 2, -1, BASE_PAREDE + 2, seg=SEG_P).rotate((-90, 0, 0)) \
             .translate((x, yf - 1, PAINEL_Z))
 
-    # furos-guia dos parafusos da ventoinha, por baixo das colunas
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            m -= cilindro(PARAF_GUIA_D / 2, -1, PARAF_GUIA_PROF, sx * FAN_FURO_C, sy * FAN_FURO_C, SEG_P)
+    # entrada de ar da ventoinha: rasgos na parede +X e na de trás (fora da passagem dos fios)
+    z0, z1 = RASGO_Z
+    n = int((BASE_LADO / 2 - COLUNA - RASGO_LARG) // RASGO_PASSO)
+    for i in range(-n, n + 1):
+        t = i * RASGO_PASSO
+        m -= caixa(di - 1, BASE_LADO / 2 + 1, t - RASGO_LARG / 2, t + RASGO_LARG / 2, z0, z1)
+        if abs(t) > FIOS_RASGO[0] / 2 + RASGO_LARG:
+            m -= caixa(t - RASGO_LARG / 2, t + RASGO_LARG / 2, di - 1, BASE_LADO / 2 + 1, z0, z1)
 
-    # furos de ar no piso: sobre as pás, fora da protoboard e das colunas
-    r = FURO_AR_D / 2 + 1.0
-    canto = BASE_LADO / 2 - COLUNA - r
-
-    def livre(x, y):
-        sob_proto = x0 - r < x < x1 + GUIA_ESP + r and abs(y) < PROTO_Y / 2 + GUIA_ESP + r
-        no_canto = abs(x) > canto and abs(y) > canto
-        return (not sob_proto and not no_canto and math.hypot(x, y) > FAN_R_CUBO + r
-                and max(abs(x), abs(y)) < di - r)
-    m -= furos(grade_hex(FURO_AR_PASSO, FAN_R_PAS - r, livre), FURO_AR_D, -1, BASE_PISO + 1)
-
-    # rasgo do cabo da ventoinha, embaixo da parede de trás
-    cx_cabo, larg, alt = CABO_FAN
-    m -= caixa(cx_cabo - larg / 2, cx_cabo + larg / 2, di - 1, BASE_LADO / 2 + 1, -1, alt)
+    # passagem dos fios dos sensores e da ventoinha, no topo da parede de trás (fica embaixo da ventoinha)
+    larg, prof = FIOS_RASGO
+    m -= caixa(-larg / 2, larg / 2, di - 1, BASE_LADO / 2 + 1, BASE_ALT - prof, BASE_ALT + 1)
     return m
 
 
 def tampa_base():
     m = caixa(-BASE_LADO / 2, BASE_LADO / 2, -BASE_LADO / 2, BASE_LADO / 2, 0, TB_ESP)
-    c = PINO_CANTO_C
+    # furos dos parafusos que prendem a tampa e a ventoinha na base
+    c = FAN_FURO_C
     for sx in (-1, 1):
         for sy in (-1, 1):
-            m -= cilindro(TB_FURO_PINO_D / 2, -1, TB_ESP + 1, sx * c, sy * c, SEG_P)
-    # passagem dos fios do conduíte
-    cx, cy = polar(COND_R_CENTRO, COND_ANG)
-    m -= cilindro(COND_R_INT + 0.5, -1, TB_ESP + 1, cx, cy, SEG_P)
+            m -= cilindro(PARAF_FOLGA_D / 2, -1, TB_ESP + 1, sx * c, sy * c, SEG_P)
     # câmara de ar: o piso do silo apoia na borda e o ar se espalha embaixo de todos os furos dele
     m -= cilindro(TB_REBAIXO_R, TB_ESP - TB_REBAIXO_PROF, TB_ESP + 1)
     m -= furos(grade_hex(TB_FURO_PASSO, TB_REBAIXO_R - TB_FURO_D / 2 - 2), TB_FURO_D, -1, TB_ESP + 1, SEG_P)
-    # abas que centralizam o silo, longe do conduíte (45°) e da escotilha (-90°)
+    # abas que centralizam o silo, longe do conduíte (90°) e da escotilha (-90°)
     r0 = R_SILO + 0.4
     for a in (0.0, 135.0, -135.0):
         m += arco(r0, r0 + ABA_ESP, a - ABA_ANG / 2, a + ABA_ANG / 2, TB_ESP, TB_ESP + ABA_ALT)
@@ -269,6 +257,8 @@ def corpo():
     pecas = [tubo(R_SILO, R_SILO - PAREDE, 0, ALT_SILO), cilindro(R_SILO - PAREDE + 0.01, 0, PISO)]
     cx, cy = polar(COND_R_CENTRO, COND_ANG)
     pecas.append(cilindro(COND_R_EXT, 0, ALT_SILO, cx, cy, SEG_P))
+    nerv = caixa(-COND_NERVURA / 2, COND_NERVURA / 2, R_SILO - PAREDE / 2, COND_R_CENTRO, 0, ALT_SILO)
+    pecas.append(nerv.rotate((0, 0, COND_ANG - 90)))
     pecas += trilhos(*ENT_TRILHO_Z) + trilhos(*SAI_TRILHO_Z)
     pecas.append(arco(R_SILO - 0.5, TRILHO_R_EXT, FRENTE - PORTA_ANG - 0.6, FRENTE + PORTA_ANG + 0.6,
                       *ENT_APOIO_Z))
@@ -321,21 +311,6 @@ def tampa_silo():
     return m
 
 
-def pe_ventoinha():
-    """Pé de canto: parafuso M3 de baixo para cima, aba em L por fora do canto da ventoinha.
-    Modelado no canto (+X, +Y), com a face de cima em Z = PE_ALT."""
-    f = FAN_LADO / 2
-    m = caixa(f - PE_LADO, f, f - PE_LADO, f, 0, PE_ALT)
-    a0, a1 = f + PE_FOLGA, f + PE_FOLGA + PE_ABA_ESP
-    m += caixa(f - PE_LADO, a1, f, a1, 0, PE_ALT + PE_ABA_ALT)
-    m += caixa(f, a1, f - PE_LADO, a1, 0, PE_ALT + PE_ABA_ALT)
-    m -= caixa(f - PE_LADO - 1, a0, f - PE_LADO - 1, a0, PE_ALT, PE_ALT + PE_ABA_ALT + 1)
-    c = FAN_FURO_C
-    m -= cilindro(PARAF_FOLGA_D / 2, -1, PE_ALT + 1, c, c, SEG_P)
-    m -= cilindro(PARAF_CABECA[0] / 2, -1, PARAF_CABECA[1], c, c, SEG_P)
-    return m
-
-
 def ventoinha_ref():
     """Ventoinha 120 x 120 x 25 simplificada, só para conferir a montagem (não imprime)."""
     f = FAN_LADO / 2
@@ -361,8 +336,8 @@ def capa_sensor():
     alt = CAPA_ALT_INT + CAPA_TOPO
     m = caixa(x0, x1, y0, y1, 0, alt)
     m -= caixa(x0 + e, x1 - e, y0 + e, y1 - e, -1, CAPA_ALT_INT)
-    # saída dos fios na parede +X, perto do conduíte
-    m -= caixa(x1 - e - 1, x1 + 1, 20.0, 32.0, -1, 8.0)
+    # saída dos fios na parede de trás (+Y), virada para o conduíte
+    m -= caixa(-6.0, 6.0, y1 - e - 1, y1 + 1, -1, 8.0)
     for x, y in CAPA_PINOS:
         m += cilindro(CAPA_PINO_D / 2, -CAPA_PINO_H, 0.01, x, y, SEG_P)
     return m
@@ -410,29 +385,27 @@ def pecas_impressao():
     return {
         "1_base": base(),
         "2_tampa_base": tampa_base(),
-        "3_corpo": corpo(),
+        "3_corpo": corpo().rotate((0, 0, 45)),   # na diagonal da mesa, por causa do conduíte
         "4_tampa_silo": virar(tampa_silo()),
         "5_capa_sensor": virar(capa_sensor()),
         "6_escotilha": escotilha(),
-        "7_pe_ventoinha": no_chao(pe_ventoinha().translate((-(FAN_LADO / 2 - PE_LADO / 2),) * 2 + (0,))),
         "0_peca_teste": peca_teste(),
     }
 
 
-Z_BASE = PE_ALT + FAN_ALT   # a base fica em cima dos pés e da ventoinha
+Z_FAN = BASE_ALT   # a ventoinha apoia no topo da base
 
 
 def montagem():
     """Peças na posição de uso, para conferência visual."""
-    z_tb = Z_BASE + BASE_ALT
+    z_tb = Z_FAN + FAN_ALT
     z_silo = z_tb + TB_ESP
     z_tampa = z_silo + ALT_SILO
     porta = arco(PORTA_R_INT, PORTA_R_EXT, FRENTE - PORTA_ANG, FRENTE + PORTA_ANG, 0, PORTA_ALT)
     porta += arco(PORTA_R_EXT - 0.01, PORTA_R_EXT + 2.5, FRENTE - 4, FRENTE + 4, 0, PORTA_ALT)
     return {
-        "pes": uniao([pe_ventoinha().rotate((0, 0, 90 * i)) for i in range(4)]),
-        "ventoinha": ventoinha_ref().translate((0, 0, PE_ALT)),
-        "base": base().translate((0, 0, Z_BASE)),
+        "base": base(),
+        "ventoinha": ventoinha_ref().translate((0, 0, Z_FAN)),
         "tampa_base": tampa_base().translate((0, 0, z_tb)),
         "corpo": corpo().translate((0, 0, z_silo)),
         "porta_saida": porta.translate((0, 0, z_silo)),
