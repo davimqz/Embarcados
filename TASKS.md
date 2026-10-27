@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M2 — Sensoriamento (T2.1 em andamento) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M2 — Sensoriamento (T2.1 em review, aguardando o protótipo) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -169,17 +169,18 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T2.1 — Ler o DHT11 e o HC-SR04 numa task periódica
 - **Marco:** M2
-- **Status:** doing
+- **Status:** review
 - **Responsável:** Davi
 - **Depende de:** T0.6
 - **Descrição:** criar a `TaskSensores` (módulo `sensores.*`), que a cada 5 s lê temperatura e umidade (DHT11, GPIO 4) e a distância até o grão (HC-SR04, TRIG 26 / ECHO 27), calcula o nível em % e registra a leitura no log serial. A publicação fica para a T2.2.
 - **Critérios de aceite:**
-  - [ ] `pio run` sem warnings novos
+  - [x] `pio run` sem warnings novos (`docs/entregas/M2/t2.1-pio-run.log`)
   - [ ] Na placa, uma linha `[SENSOR]` a cada 5 s com temperatura, umidade, distância e nível coerentes (mão no DHT11 sobe a umidade; objeto perto do HC-SR04 sobe o nível)
   - [ ] Com o DHT11 ou o HC-SR04 desligado, o campo dele sai como falha, sem travar a task
   - [ ] Os botões continuam contando entradas e saídas com a `TaskSensores` rodando
   - [ ] Prioridade, stack e núcleo justificados em `docs/arquitetura.md` §4; folga de stack registrada no log
-- **Evidência:** `docs/entregas/M2/t2.1-sensores.log`
+- **Em review:** código compilado; falta montar o protótipo, testar na placa e salvar o log serial. Calibrar `SILO_DIST_VAZIO_CM` / `SILO_DIST_CHEIO_CM` no `config.h` na montagem.
+- **Evidência:** `docs/entregas/M2/t2.1-pio-run.log` · falta `docs/entregas/M2/t2.1-sensores.log` (placa)
 
 ### T2.2 — Publicar a telemetria em grupo3/telemetria
 - **Marco:** M2
