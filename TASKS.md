@@ -97,6 +97,7 @@
   - [x] Script gera base, tampa da base, corpo, tampa do silo, capa do sensor, escotilha e peça de teste em STL
   - [x] Toda peça cabe em 120 × 120 × 120 mm e é sólida fechada (manifold)
   - [x] README com orientação de impressão, quantidade de cada peça e montagem
+  - [x] Ventoinha 120 × 120 × 25 embaixo da base (pés + parafusos M3) e caminho do ar: piso da base, tampa da base, piso do silo e respiros furados
   - [ ] Peça de teste impressa e conferida com o HC-SR04, um LED e um botão
 - **Em review:** falta imprimir a peça de teste e conferir os encaixes com as peças reais.
 - **Evidência:** `hardware/silo-3d/stl/`, `docs/entregas/M0/t0.7-silo-3d.png` (prévia) e foto da peça de teste

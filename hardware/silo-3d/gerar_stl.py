@@ -24,8 +24,21 @@ BASE_PAREDE = 2.4
 BASE_PISO = 2.0
 PINO_CANTO_D = 3.0     # pinos nos cantos que encaixam na tampa da base
 PINO_CANTO_H = 3.0
-COLUNA = 6.0           # colunas de reforço nos cantos, onde ficam os pinos
+COLUNA = 9.0           # colunas nos cantos: pinos em cima, parafuso da ventoinha embaixo
 PINO_CANTO_C = BASE_LADO / 2 - 3.0   # centro dos pinos, em X e Y
+FURO_AR_D, FURO_AR_PASSO = 5.0, 8.0  # furos de ar no piso da base, fora da protoboard
+
+# ventoinha 120 x 120 x 25 embaixo da base, soprando para cima; o ar entra entre os pés
+FAN_LADO, FAN_ALT = 120.0, 25.0
+FAN_FURO_C = 105.0 / 2         # furos dos cantos: 105 mm entre centros
+FAN_R_PAS = 58.0               # raio da área das pás
+FAN_R_CUBO = 20.0              # cubo do motor (não passa ar)
+PE_LADO, PE_ALT = 22.0, 12.0   # 4 pés nos cantos, levantam a ventoinha para o ar entrar
+PE_ABA_ALT, PE_ABA_ESP, PE_FOLGA = 3.0, 1.6, 0.3   # aba em L que abraça o canto da ventoinha
+PARAF_FOLGA_D = 3.4            # parafuso M3 x 40: pé + ventoinha + 8 mm na coluna da base
+PARAF_CABECA = (6.5, 5.0)      # rebaixo da cabeça embaixo do pé (Ø, profundidade)
+PARAF_GUIA_D, PARAF_GUIA_PROF = 2.6, 12.0   # furo-guia na coluna, para o M3 abrir rosca
+CABO_FAN = (30.0, 10.0, 6.0)   # rasgo do cabo na parede de trás, embaixo: x, largura, altura
 
 # protoboard 400 pontos e ESP32 (arquitetura.md §3)
 PROTO_X, PROTO_Y = 83.0, 56.0   # bolso já com folga
@@ -40,8 +53,10 @@ LED_FURO_D = 5.2       # justo, para a aba de Ø5,8 segurar o LED
 PAINEL_Z = 24.0
 
 # tampa da base
-TB_ESP = 3.0
+TB_ESP = 4.0
 TB_FURO_PINO_D = 3.6
+TB_REBAIXO_R, TB_REBAIXO_PROF = 47.0, 2.0   # câmara de ar entre a tampa e o piso furado do silo
+TB_FURO_D, TB_FURO_PASSO = 6.0, 9.0
 ABA_ALT, ABA_ESP, ABA_ANG = 4.0, 2.0, 20.0   # abas que centralizam o silo
 
 # corpo do silo
@@ -49,6 +64,8 @@ R_SILO = 52.0          # raio externo
 PAREDE = 2.0
 PISO = 2.0
 ALT_SILO = 112.0
+FURO_PISO_D, FURO_PISO_PASSO = 2.0, 5.0   # piso de aeração: menor que o grão
+FURO_PISO_R = 45.0                         # só sobre a câmara da tampa da base
 
 # conduíte externo para os fios dos sensores (7 fios)
 COND_ANG = 45.0
@@ -81,6 +98,8 @@ DHT_BOLSO = (24.0, 13.0)       # DHT11 com terminais: 23 x 12 x 5
 DHT_PROF = 6.0
 DHT_CENTRO = (0.0, 22.0)
 DHT_FURO = (17.0, 22.0, 6.0)   # x, y, diâmetro do furo dos fios do DHT11
+RESPIRO_D = 3.0                # saída do ar da ventoinha, fora da capa do sensor
+RESPIRO_R = (37.0, 43.5)
 
 # capa do HC-SR04 (os pinos saem para +Y)
 CAPA_X = (-28.0, 28.0)
@@ -120,6 +139,24 @@ def polar(r, ang):
 
 def uniao(pecas):
     return Manifold.batch_boolean(pecas, 0) if len(pecas) > 1 else pecas[0]
+
+
+def grade_hex(passo, raio, aceita=lambda x, y: True):
+    """Centros de uma grade hexagonal dentro do raio, filtrados por aceita(x, y)."""
+    pts, dy = [], passo * math.sqrt(3) / 2
+    n = int(raio / dy) + 1
+    for j in range(-n, n + 1):
+        y = j * dy
+        x0 = passo / 2 if j % 2 else 0.0
+        for i in range(-int(raio / passo) - 1, int(raio / passo) + 2):
+            x = x0 + i * passo
+            if math.hypot(x, y) <= raio and aceita(x, y):
+                pts.append((x, y))
+    return pts
+
+
+def furos(pts, d, z0, z1, seg=24):
+    return uniao([cilindro(d / 2, z0, z1, x, y, seg) for x, y in pts])
 
 
 def no_chao(m):
@@ -171,6 +208,26 @@ def base():
     for x in (12.0, 30.0):
         m -= cilindro(LED_FURO_D / 2, -1, BASE_PAREDE + 2, seg=SEG_P).rotate((-90, 0, 0)) \
             .translate((x, yf - 1, PAINEL_Z))
+
+    # furos-guia dos parafusos da ventoinha, por baixo das colunas
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            m -= cilindro(PARAF_GUIA_D / 2, -1, PARAF_GUIA_PROF, sx * FAN_FURO_C, sy * FAN_FURO_C, SEG_P)
+
+    # furos de ar no piso: sobre as pás, fora da protoboard e das colunas
+    r = FURO_AR_D / 2 + 1.0
+    canto = BASE_LADO / 2 - COLUNA - r
+
+    def livre(x, y):
+        sob_proto = x0 - r < x < x1 + GUIA_ESP + r and abs(y) < PROTO_Y / 2 + GUIA_ESP + r
+        no_canto = abs(x) > canto and abs(y) > canto
+        return (not sob_proto and not no_canto and math.hypot(x, y) > FAN_R_CUBO + r
+                and max(abs(x), abs(y)) < di - r)
+    m -= furos(grade_hex(FURO_AR_PASSO, FAN_R_PAS - r, livre), FURO_AR_D, -1, BASE_PISO + 1)
+
+    # rasgo do cabo da ventoinha, embaixo da parede de trás
+    cx_cabo, larg, alt = CABO_FAN
+    m -= caixa(cx_cabo - larg / 2, cx_cabo + larg / 2, di - 1, BASE_LADO / 2 + 1, -1, alt)
     return m
 
 
@@ -183,6 +240,9 @@ def tampa_base():
     # passagem dos fios do conduíte
     cx, cy = polar(COND_R_CENTRO, COND_ANG)
     m -= cilindro(COND_R_INT + 0.5, -1, TB_ESP + 1, cx, cy, SEG_P)
+    # câmara de ar: o piso do silo apoia na borda e o ar se espalha embaixo de todos os furos dele
+    m -= cilindro(TB_REBAIXO_R, TB_ESP - TB_REBAIXO_PROF, TB_ESP + 1)
+    m -= furos(grade_hex(TB_FURO_PASSO, TB_REBAIXO_R - TB_FURO_D / 2 - 2), TB_FURO_D, -1, TB_ESP + 1, SEG_P)
     # abas que centralizam o silo, longe do conduíte (45°) e da escotilha (-90°)
     r0 = R_SILO + 0.4
     for a in (0.0, 135.0, -135.0):
@@ -216,6 +276,8 @@ def corpo():
     m -= cilindro(COND_R_INT, -1, ALT_SILO + 1, cx, cy, SEG_P)
     m -= abertura(*ENT_ABERT_Z)
     m -= abertura(*SAI_ABERT_Z)
+    # piso de aeração: o ar da câmara da tampa da base sobe pelos furos e atravessa o grão
+    m -= furos(grade_hex(FURO_PISO_PASSO, FURO_PISO_R), FURO_PISO_D, -1, PISO + 1, 16)
     return m
 
 
@@ -248,7 +310,47 @@ def tampa_silo():
         m -= cilindro(HC_FURO_D / 2, -1, TAMPA_ESP + 1, s * HC_CENTROS / 2, 0, SEG_P)
     for x, y in CAPA_PINOS:
         m -= cilindro(CAPA_FURO_PINO_D / 2, -1, TAMPA_ESP + 1, x, y, SEG_P)
+
+    # respiros: saída do ar da ventoinha, em dois anéis fora da capa do sensor
+    def fora_da_capa(x, y):
+        return not (CAPA_X[0] - 3 < x < CAPA_X[1] + 3 and CAPA_Y[0] - 3 < y < CAPA_Y[1] + 3)
+    pts = []
+    for r, n in zip(RESPIRO_R, (24, 28)):
+        pts += [p for p in (polar(r, i * 360 / n) for i in range(n)) if fora_da_capa(*p)]
+    m -= furos(pts, RESPIRO_D, -1, TAMPA_ESP + 1)
     return m
+
+
+def pe_ventoinha():
+    """Pé de canto: parafuso M3 de baixo para cima, aba em L por fora do canto da ventoinha.
+    Modelado no canto (+X, +Y), com a face de cima em Z = PE_ALT."""
+    f = FAN_LADO / 2
+    m = caixa(f - PE_LADO, f, f - PE_LADO, f, 0, PE_ALT)
+    a0, a1 = f + PE_FOLGA, f + PE_FOLGA + PE_ABA_ESP
+    m += caixa(f - PE_LADO, a1, f, a1, 0, PE_ALT + PE_ABA_ALT)
+    m += caixa(f, a1, f - PE_LADO, a1, 0, PE_ALT + PE_ABA_ALT)
+    m -= caixa(f - PE_LADO - 1, a0, f - PE_LADO - 1, a0, PE_ALT, PE_ALT + PE_ABA_ALT + 1)
+    c = FAN_FURO_C
+    m -= cilindro(PARAF_FOLGA_D / 2, -1, PE_ALT + 1, c, c, SEG_P)
+    m -= cilindro(PARAF_CABECA[0] / 2, -1, PARAF_CABECA[1], c, c, SEG_P)
+    return m
+
+
+def ventoinha_ref():
+    """Ventoinha 120 x 120 x 25 simplificada, só para conferir a montagem (não imprime)."""
+    f = FAN_LADO / 2
+    m = caixa(-f, f, -f, f, 0, FAN_ALT) - cilindro(FAN_R_PAS, -1, FAN_ALT + 1)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            m -= cilindro(2.2, -1, FAN_ALT + 1, sx * FAN_FURO_C, sy * FAN_FURO_C, SEG_P)
+    m += cilindro(FAN_R_CUBO, 0, FAN_ALT - 2)
+    for i in range(4):   # hastes do motor, no lado de cima (saída do ar)
+        m += caixa(FAN_R_CUBO - 1, f - 1, -1.5, 1.5, FAN_ALT - 3, FAN_ALT).rotate((0, 0, 45 + 90 * i))
+    pas = []
+    for i in range(7):
+        pa = caixa(FAN_R_CUBO - 1, FAN_R_PAS - 1.5, -7, 7, -0.6, 0.6).rotate((30, 0, 0))
+        pas.append(pa.translate((0, 0, FAN_ALT / 2 - 2)).rotate((0, 0, i * 360 / 7)))
+    return m + uniao(pas)
 
 
 def capa_sensor():
@@ -312,19 +414,25 @@ def pecas_impressao():
         "4_tampa_silo": virar(tampa_silo()),
         "5_capa_sensor": virar(capa_sensor()),
         "6_escotilha": escotilha(),
+        "7_pe_ventoinha": no_chao(pe_ventoinha().translate((-(FAN_LADO / 2 - PE_LADO / 2),) * 2 + (0,))),
         "0_peca_teste": peca_teste(),
     }
 
 
+Z_BASE = PE_ALT + FAN_ALT   # a base fica em cima dos pés e da ventoinha
+
+
 def montagem():
     """Peças na posição de uso, para conferência visual."""
-    z_tb = BASE_ALT
+    z_tb = Z_BASE + BASE_ALT
     z_silo = z_tb + TB_ESP
     z_tampa = z_silo + ALT_SILO
     porta = arco(PORTA_R_INT, PORTA_R_EXT, FRENTE - PORTA_ANG, FRENTE + PORTA_ANG, 0, PORTA_ALT)
     porta += arco(PORTA_R_EXT - 0.01, PORTA_R_EXT + 2.5, FRENTE - 4, FRENTE + 4, 0, PORTA_ALT)
     return {
-        "base": base(),
+        "pes": uniao([pe_ventoinha().rotate((0, 0, 90 * i)) for i in range(4)]),
+        "ventoinha": ventoinha_ref().translate((0, 0, PE_ALT)),
+        "base": base().translate((0, 0, Z_BASE)),
         "tampa_base": tampa_base().translate((0, 0, z_tb)),
         "corpo": corpo().translate((0, 0, z_silo)),
         "porta_saida": porta.translate((0, 0, z_silo)),
