@@ -221,6 +221,19 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 - **Em review:** código compilado (`pio run` sem warnings, `docs/entregas/M2/t2.4-pio-run.log`); falta testar na placa com o LED. Dá para testar só com a ESP32: o `cmd_seq` volta em `grupo3/ventilacao` mesmo sem o LED ligado.
 - **Evidência:** `docs/entregas/M2/t2.4-comando.log` + vídeo do LED
 
+### T2.5 — Ajustar a pinagem do firmware ao protótipo montado
+- **Marco:** M2
+- **Status:** doing
+- **Responsável:** Davi
+- **Depende de:** T2.4
+- **Descrição:** o protótipo foi montado com outros pinos e com um DHT22 no lugar do DHT11. O firmware e a pinagem documentada passam a seguir a placa: DHT22 no GPIO 4, TRIG no 32, ECHO no 33, LEDs no 25/26/27.
+- **Critérios de aceite:**
+  - [x] Sensores no firmware: DHT22 no GPIO 4, TRIG no 32, ECHO no 33; `pio run` sem warnings novos
+  - [ ] LEDs de alerta e ventilação nos pinos do protótipo (25/26/27, cor de cada pino a confirmar)
+  - [ ] `docs/arquitetura.md` §2, `docs/decisoes-pendentes.md` e `docs/topicos-mqtt.md` trocam DHT11 por DHT22 e mostram a pinagem nova
+  - [ ] Na placa, linhas `[SENSOR]` com temperatura, umidade e distância coerentes (vale também para a T2.1)
+- **Evidência:** `docs/entregas/M2/t2.5-sensores.log` (monitor serial)
+
 ## M3 — Ingestão e persistência · tag `v0.3.0`
 
 _Tasks T3.1–T3.4._
