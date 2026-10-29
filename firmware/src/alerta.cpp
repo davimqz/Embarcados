@@ -4,7 +4,7 @@
 QueueHandle_t xFilaAlerta = NULL;
 
 // Só a TaskSensores chama alertaAvaliar(), então o estado não precisa de mutex.
-static bool estadoConhecido = false;  // false até a primeira leitura válida do DHT11
+static bool estadoConhecido = false;  // false até a primeira leitura válida do DHT22
 static bool ativo = false;
 static uint32_t seq = 0;
 

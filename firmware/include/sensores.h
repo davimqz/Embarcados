@@ -6,9 +6,9 @@
 #include "freertos/queue.h"
 
 // Pinagem em docs/arquitetura.md §2.
-#define DHT_PIN       4    // DATA do módulo DHT11 (o módulo já tem o pull-up)
-#define SONAR_TRIG_PIN 26  // TRIG do HC-SR04
-#define SONAR_ECHO_PIN 27  // ECHO do HC-SR04, pelo divisor de tensão (5 V → 3,3 V)
+#define DHT_PIN        4   // DATA do módulo DHT22 (o módulo já tem o pull-up)
+#define SONAR_TRIG_PIN 32  // TRIG do HC-SR04
+#define SONAR_ECHO_PIN 33  // ECHO do HC-SR04, pelo divisor de tensão (5 V → 3,3 V)
 
 #define LEITURA_INTERVALO_MS 5000  // decisão 4 de docs/decisoes-pendentes.md
 #define FILA_TELEMETRIA_TAMANHO 12  // 1 min de leituras guardadas enquanto o broker está fora
@@ -27,7 +27,7 @@ struct LeituraSilo {
     uint32_t seq;        // numerado na leitura: uma leitura descartada vira buraco no seq publicado
     time_t ts;
     bool dhtOk;          // false: temperatura e umidade inválidas
-    int temperatura;     // °C (o DHT11 tem passo de 1 °C)
+    int temperatura;     // °C, arredondada para inteiro (contrato em docs/topicos-mqtt.md)
     int umidade;         // % de umidade relativa
     bool sonarOk;        // false: distância e nível inválidos (sem eco ou fora da faixa)
     float distanciaCm;
@@ -37,8 +37,8 @@ struct LeituraSilo {
 // Fila de leituras da TaskSensores para a TaskComunicacao; criada no setup().
 extern QueueHandle_t xFilaTelemetria;
 
-// Configura os pinos e o DHT11; chamado no setup(), antes de criar a TaskSensores.
+// Configura os pinos e o DHT22; chamado no setup(), antes de criar a TaskSensores.
 void sensoresIniciar();
 
-// Lê o DHT11 e o HC-SR04 a cada LEITURA_INTERVALO_MS e põe a leitura na xFilaTelemetria.
+// Lê o DHT22 e o HC-SR04 a cada LEITURA_INTERVALO_MS e põe a leitura na xFilaTelemetria.
 void TaskSensores(void *pvParameters);
