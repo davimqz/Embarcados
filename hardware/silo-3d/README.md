@@ -7,7 +7,12 @@ estão em [`docs/arquitetura.md`](../../docs/arquitetura.md) §3; as do silo, no
 
 ## Peças
 
-Os STLs em `stl/` já estão na orientação de impressão: é só abrir no fatiador, sem girar.
+Os STLs em `stl/` já estão na orientação de impressão: é só abrir no fatiador, sem girar. Unidade: milímetro. Cada
+peça está centralizada na origem e apoiada no solo (Z mínimo = 0). As malhas foram reparadas (vértices soldados,
+triângulos degenerados removidos) e são fechadas, sem arestas abertas. Esta é a versão enviada ao professor em 2026-10-29.
+
+`step/` tem o mesmo sólido de cada peça em STEP (convertido no FreeCAD 1.1.4), para abrir e editar no Fusion 360 ou
+em outro CAD.
 
 | Arquivo | Qtd | Medida (mm) | Observação de impressão |
 |---|---|---|---|
@@ -17,7 +22,9 @@ Os STLs em `stl/` já estão na orientação de impressão: é só abrir no fati
 | `3_corpo.stl` | 1 | 107 × 107 × 112 | Piso na mesa, **na diagonal** (já sai girado 45°: o conduíte só cabe assim). Sem suporte: as aberturas das escotilhas são pontes de 36 mm. Piso de aeração com furos Ø2 |
 | `4_tampa_silo.stl` | 1 | 104 × 104 × 8 | Topo na mesa, encaixe e bolso do DHT11 para cima. Respiros Ø3 na borda |
 | `5_capa_sensor.stl` | 1 | 57 × 52 × 17 | Topo na mesa, pinos para cima. Rasgo dos fios atrás, virado para o conduíte |
-| `6_escotilha.stl` | **2** | 47 × 9 × 24 | Em pé, como sai do arquivo. Usar brim: a peça é fina |
+| `6_escotilha_x2.stl` | 1 (são **2 escotilhas** no arquivo, 10 mm entre elas) | 47 × 29 × 24 | Em pé, como sai do arquivo. Usar brim: a peça é fina |
+
+Cada arquivo é impresso 1 vez (7 impressões no total).
 
 **Fatiador:** PLA, camada 0,2 mm, 3 perímetros, 15–20% de preenchimento, **sem suporte**. A base e a tampa da base
 ocupam 112 mm da mesa de 120: **desligar saia (skirt) e brim** nessas duas, senão não cabem.
@@ -93,3 +100,7 @@ python gerar_stl.py
 ```
 
 O script mostra a medida de cada peça, se ela é um sólido fechado e se cabe na mesa.
+
+**Atenção:** o script gera a malha bruta, com a escotilha avulsa (`6_escotilha.stl`) e sem centralizar as peças nem
+fazer o reparo descrito acima. Ele sobrescreve os arquivos de `stl/`. Depois de mudar uma medida, é preciso reparar e
+centralizar de novo e regerar os STEP de `step/`.
