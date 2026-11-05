@@ -29,6 +29,21 @@ Cada arquivo é impresso 1 vez (7 impressões no total).
 **Fatiador:** PLA, camada 0,2 mm, 3 perímetros, 15–20% de preenchimento, **sem suporte**. A base e a tampa da base
 ocupam 112 mm da mesa de 120: **desligar saia (skirt) e brim** nessas duas, senão não cabem.
 
+### Tampas em 2D (DXF)
+
+`dxf/` tem as duas tampas em 2D: `2_tampa_base.dxf` e `4_tampa_silo.dxf`. São vistas de cima, com a peça na
+posição de uso (frente = −Y, conduíte = +Y), centralizada na origem. Unidade: mm. Formato DXF R12, que abre no
+LaserCAD/RDWorks, no LightBurn, no Inkscape e em qualquer CAD. Os furos são círculos de verdade, não polígonos.
+
+| Camada | Cor | Conteúdo |
+|---|---|---|
+| `CORTE` | vermelho | Contorno externo e furos passantes. É o que a laser corta |
+| `REBAIXO` | azul | Rebaixo de 2 mm da câmara de ar, na face de cima da tampa da base (dá para gravar) |
+| `REFERENCIA` | verde | Partes que saem da chapa: abas da tampa da base, anel de encaixe e bolso do DHT11 da tampa do silo. Só para conferência: a laser não faz |
+
+Chapa: 4 mm na tampa da base e 2,4 mm na tampa do silo. Cortadas em chapa plana, as tampas ficam sem as partes da
+camada `REFERENCIA`. Para gerar de novo (usa os mesmos parâmetros de `gerar_stl.py`): `python gerar_dxf.py`.
+
 ## Ventoinha (aeração do silo)
 
 Ventoinha de PC **120 × 120 × 25 mm** **entre a base e a tampa da base**, soprando **para cima**: a seta do fluxo, na

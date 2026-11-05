@@ -99,6 +99,7 @@
   - [x] README com orientação de impressão, quantidade de cada peça e montagem
   - [x] Ventoinha 120 × 120 × 25 entre a base e a tampa da base (parafusos M3) e caminho do ar: rasgos na base, tampa da base, piso do silo e respiros furados
   - [ ] Peça de teste impressa e conferida com o HC-SR04, um LED e um botão
+  - [x] Tampa da base e tampa do silo em 2D (DXF, `hardware/silo-3d/dxf/`), com o mesmo número de furos e a mesma área da chapa que os STLs
 - **Em review:** falta imprimir a peça de teste e conferir os encaixes com as peças reais.
 - **Evidência:** `hardware/silo-3d/stl/` e `step/` (versão reparada, enviada ao professor em 2026-10-29), `docs/entregas/M0/t0.7-silo-3d.png` (prévia) e foto da peça de teste
 
