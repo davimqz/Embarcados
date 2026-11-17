@@ -170,7 +170,31 @@ _Tasks T3.1–T3.4._
 
 ## M4 — Dashboard · tag `v0.4.0`
 
-_Tasks T4.1–T4.4 (depende de T0.4)._
+> **Exceção à regra "não pular marco" (pedida em 2026-11-17, a referendar pelo grupo):** o enunciado da disciplina
+> cobra um **protótipo do front-end** no Check Point (17/11) e dá 15 pts ao dashboard. A T4.0 adianta a tela com
+> **dados simulados no navegador**, sem depender do M2 nem do M3. Condições (as mesmas da exceção do M3):
+> - o M4 só **fecha** (tag `v0.4.0`) depois de M2 e M3 fecharem, com o critério do marco repetido com a placa real;
+> - evidências feitas com dados simulados ficam marcadas como `-simulador` no nome do arquivo;
+> - a fonte simulada segue o contrato (`docs/topicos-mqtt.md`); se divergirem, vale o contrato.
+
+### T4.0 — Criar o protótipo do dashboard com dados simulados
+- **Marco:** M4
+- **Status:** review
+- **Responsável:** Luiz Felipe
+- **Depende de:** T0.4, T0.6
+- **Descrição:** projeto `dashboard/` (Vite + React + TS + Tailwind + Recharts, ADR 0002) com a tela de visão geral alimentada por uma fonte simulada que segue o contrato MQTT, atrás de uma interface (`FonteDados`) que o WebSocket do backend vai implementar depois. Pedida pela exceção acima.
+- **Critérios de aceite:**
+  - [x] `npm run build` (tipos + bundle) sem erros nem avisos
+  - [x] Gráfico de temperatura/umidade com os limiares do alerta; nível de grão e saldo de lotes
+  - [x] Selo online/offline (LWT) e último `seq` por tópico
+  - [x] Botão da ventilação só muda de estado quando chega `grupo3/ventilacao` com o `cmd_seq` do comando; sem confirmação em 5 s, avisa
+  - [x] Aviso de alerta com a histerese do contrato (ATIVO > 30 °C / 70 %; NORMAL < 28 °C e < 65 %)
+  - [x] Tela marcada como **Simulado** e painel para simular a placa (clima, botões, queda)
+  - [x] Sem estouro horizontal em 375 px nem em 1440 px
+- **Observações:** a troca pela fonte real está descrita em `dashboard/README.md`. O histórico (T4.4) e a tela de integridade (M5) aparecem desabilitados no menu.
+- **Evidência:** `docs/entregas/M4/T4.0-dashboard-desktop-simulador.png`, `docs/entregas/M4/T4.0-dashboard-celular-simulador.png`, `docs/entregas/M4/T4.0-npm-run-build.log`
+
+_Tasks T4.1–T4.4 a detalhar; dependem do WebSocket do `backend/ingest` (M3)._
 
 ## M5 — Camada Blockchain · tag `v0.5.0`
 
