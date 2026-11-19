@@ -3,6 +3,7 @@
 export const MQTT_URL = process.env.MQTT_URL ?? 'mqtt://localhost:1883';
 export const GRUPO = process.env.GRUPO ?? '3';
 export const BROKER_PORTA = Number(process.env.BROKER_PORTA ?? 1883);
+export const SERVIDOR_PORTA = Number(process.env.SERVIDOR_PORTA ?? 3000);
 
 // Contrato em docs/topicos-mqtt.md.
 export const TOPICOS = {
