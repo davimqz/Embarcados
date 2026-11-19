@@ -1,6 +1,8 @@
 // SÓ EM DESENVOLVIMENTO: alterna a fonte de dados (break-ui). Não aparece no build de produção.
+// "real" é a placa pelo servidor do backend (T4.6); "demo" é a FonteSimulada.
 
 export const MODOS_DADOS = [
+  { id: "real", rotulo: "Placa" },
   { id: "demo", rotulo: "Demo" },
   { id: "pior", rotulo: "Pior caso" },
   { id: "vazio", rotulo: "Vazio" },
@@ -11,13 +13,13 @@ export type ModoDados = (typeof MODOS_DADOS)[number]["id"];
 
 export function lerModoDados(): ModoDados {
   const m = new URLSearchParams(window.location.search).get("dados");
-  return MODOS_DADOS.some((x) => x.id === m) ? (m as ModoDados) : "demo";
+  return MODOS_DADOS.some((x) => x.id === m) ? (m as ModoDados) : "real";
 }
 
 export function SeletorDadosDev({ atual }: { atual: ModoDados }) {
   const ir = (id: ModoDados) => {
     const url = new URL(window.location.href);
-    if (id === "demo") url.searchParams.delete("dados");
+    if (id === "real") url.searchParams.delete("dados");
     else url.searchParams.set("dados", id);
     window.location.assign(url.toString()); // recarrega: a fonte é criada uma vez por carga
   };
