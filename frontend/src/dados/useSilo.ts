@@ -4,7 +4,17 @@ import type { Alerta, EventoSilo, FonteDados, Mensagem, StatusPlaca, Telemetria,
 const MAX_LEITURAS = 120; // 10 min a cada 5 s
 const MAX_EVENTOS = 30;
 
+export type RegistroComando = {
+  seq: number;
+  valor: "LIGAR" | "DESLIGAR";
+  enviadoEm: number; // ms
+  respostaEm: number | null; // ms
+  situacao: "pendente" | "confirmado" | "sem resposta";
+};
+
 export type EstadoSilo = {
+  /** Comandos enviados nesta sessão, mais recentes primeiro. */
+  comandos: RegistroComando[];
   status: StatusPlaca | null;
   leituras: Telemetria[];
   eventos: EventoSilo[];
@@ -21,6 +31,7 @@ export type EstadoSilo = {
 };
 
 const inicial: EstadoSilo = {
+  comandos: [],
   status: null,
   leituras: [],
   eventos: [],
@@ -36,8 +47,22 @@ const inicial: EstadoSilo = {
 type Acao = { tipo: "msg"; m: Mensagem } | { tipo: "cmd"; seq: number; valor: "LIGAR" | "DESLIGAR" } | { tipo: "cmd-expirou"; seq: number };
 
 function reduzir(s: EstadoSilo, a: Acao): EstadoSilo {
-  if (a.tipo === "cmd") return { ...s, comandoPendente: { seq: a.seq, valor: a.valor, desde: Date.now() }, comandoSemResposta: null };
-  if (a.tipo === "cmd-expirou") return s.comandoPendente?.seq === a.seq ? { ...s, comandoPendente: null, comandoSemResposta: a.seq } : s;
+  if (a.tipo === "cmd")
+    return {
+      ...s,
+      comandoPendente: { seq: a.seq, valor: a.valor, desde: Date.now() },
+      comandoSemResposta: null,
+      comandos: [{ seq: a.seq, valor: a.valor, enviadoEm: Date.now(), respostaEm: null, situacao: "pendente" as const }, ...s.comandos].slice(0, 50),
+    };
+  if (a.tipo === "cmd-expirou")
+    return s.comandoPendente?.seq === a.seq
+      ? {
+          ...s,
+          comandoPendente: null,
+          comandoSemResposta: a.seq,
+          comandos: s.comandos.map((c) => (c.seq === a.seq ? { ...c, situacao: "sem resposta" as const } : c)),
+        }
+      : s;
 
   const { m } = a;
   const base = { ...s, ultimaMensagem: Date.now() };
@@ -57,7 +82,10 @@ function reduzir(s: EstadoSilo, a: Acao): EstadoSilo {
       return { ...comSeq, alerta: m.payload };
     case "grupo3/ventilacao": {
       const confirmou = s.comandoPendente && m.payload.cmd_seq === s.comandoPendente.seq;
-      return { ...comSeq, ventilacao: m.payload, comandoPendente: confirmou ? null : s.comandoPendente };
+      const comandos = s.comandos.map((c) =>
+        c.seq === m.payload.cmd_seq && c.situacao === "pendente" ? { ...c, respostaEm: Date.now(), situacao: "confirmado" as const } : c,
+      );
+      return { ...comSeq, ventilacao: m.payload, comandos, comandoPendente: confirmou ? null : s.comandoPendente };
     }
   }
 }
