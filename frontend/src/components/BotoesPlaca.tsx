@@ -85,7 +85,9 @@ export function BotoesPlaca({ eventos, online, aoApertar }: Props) {
                 </p>
                 <p className="mt-2 flex items-baseline gap-1.5">
                   <span className="font-mono text-xl font-semibold tabular-nums">{total ?? 0}</span>
-                  <span className="text-xs text-texto-2">{b.evento === "ENTRADA" ? "entradas" : "saídas"} desde o boot</span>
+                  <span className="text-xs text-texto-2">
+                    {(total ?? 0) === 1 ? (b.evento === "ENTRADA" ? "entrada" : "saída") : b.evento === "ENTRADA" ? "entradas" : "saídas"} desde o boot
+                  </span>
                 </p>
                 <p className="text-xs text-texto-2" aria-live="polite">
                   {ev ? `Último aperto às ${formatarHora(ev.ts)}` : "Nenhum aperto ainda"}

@@ -1,7 +1,7 @@
 import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { EventoSilo, Telemetria } from "@/dados/tipos";
-import { valorOuTraco } from "@/lib/formato";
+import { plural, valorOuTraco } from "@/lib/formato";
 
 /** Nível do grão (HC-SR04) e saldo de lotes (botões): medidas independentes, lado a lado. */
 export function Silo({ leitura, ultimoEvento }: { leitura?: Telemetria; ultimoEvento?: EventoSilo }) {
@@ -40,7 +40,7 @@ export function Silo({ leitura, ultimoEvento }: { leitura?: Telemetria; ultimoEv
             <dt className="rotulo">Nível de grão</dt>
             <dd className="font-mono text-4xl font-semibold tabular-nums text-texto">
               {valorOuTraco(nivel)}
-              <span className="text-lg text-texto-2">%</span>
+              {nivel !== null && <span className="text-lg text-texto-2">%</span>}
             </dd>
             <dd className="text-xs text-texto-2">
               {leitura?.distancia_cm == null ? "eco não voltou" : `${valorOuTraco(leitura.distancia_cm, 1)} cm da tampa ao grão`}
@@ -51,10 +51,10 @@ export function Silo({ leitura, ultimoEvento }: { leitura?: Telemetria; ultimoEv
             <dd className="font-mono text-4xl font-semibold tabular-nums text-texto">{valorOuTraco(ultimoEvento?.saldo)}</dd>
             <dd className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-texto-2">
               <span className="inline-flex items-center gap-1">
-                <ArrowDownToLine aria-hidden className="size-3.5" /> {ultimoEvento?.entradas ?? 0} entradas
+                <ArrowDownToLine aria-hidden className="size-3.5" /> {plural(ultimoEvento?.entradas ?? 0, "entrada", "entradas")}
               </span>
               <span className="inline-flex items-center gap-1">
-                <ArrowUpFromLine aria-hidden className="size-3.5" /> {ultimoEvento?.saidas ?? 0} saídas
+                <ArrowUpFromLine aria-hidden className="size-3.5" /> {plural(ultimoEvento?.saidas ?? 0, "saída", "saídas")}
               </span>
             </dd>
           </div>

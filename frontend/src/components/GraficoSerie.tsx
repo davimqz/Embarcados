@@ -32,6 +32,12 @@ function ajustarEscala(dados: Ponto[], [min, max]: [number, number], ticks?: num
 
 /** Uma série, um eixo (sem eixo duplo). Falha de leitura (null) aparece como intervalo na linha. */
 export function GraficoSerie({ dados, cor, unidade, nome, dominio: dominioBase, ticks: ticksBase, limiar, area, altura = 160 }: Props) {
+  if (!dados.some((d) => d.v !== null))
+    return (
+      <p style={{ height: altura }} className="grid place-items-center rounded-controle border border-dashed border-borda text-sm text-texto-2">
+        Nenhuma leitura de {nome.toLowerCase()} no período
+      </p>
+    );
   const { dominio, ticks } = ajustarEscala(dados, dominioBase, ticksBase);
   const eixoX = <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--color-texto-2)" }} tickLine={false} axisLine={false} minTickGap={56} />;
   const eixoY = (

@@ -5,6 +5,8 @@ const MAX_LEITURAS = 120; // 10 min a cada 5 s
 const MAX_EVENTOS = 30;
 
 export type EstadoSilo = {
+  /** device_id visto em qualquer mensagem (o status retido pode não ter chegado). */
+  deviceId: string | null;
   status: StatusPlaca | null;
   leituras: Telemetria[];
   eventos: EventoSilo[];
@@ -16,6 +18,7 @@ export type EstadoSilo = {
 };
 
 const inicial: EstadoSilo = {
+  deviceId: null,
   status: null,
   leituras: [],
   eventos: [],
@@ -29,7 +32,7 @@ type Acao = { tipo: "msg"; m: Mensagem };
 
 function reduzir(s: EstadoSilo, a: Acao): EstadoSilo {
   const { m } = a;
-  const base = { ...s, ultimaMensagem: Date.now() };
+  const base = { ...s, ultimaMensagem: Date.now(), deviceId: m.payload.device_id };
   if (m.topico === "grupo3/status") return { ...base, status: m.payload };
 
   // Mensagem repetida (histórico recarregado numa reconexão, QoS 0 reenviado): mesma placa, seq e ts → ignora.

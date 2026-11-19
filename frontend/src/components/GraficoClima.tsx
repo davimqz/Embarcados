@@ -6,8 +6,8 @@ import { formatarHora, valorOuTraco } from "@/lib/formato";
 /** Temperatura e umidade em tempo real (DHT11): dois gráficos alinhados, cada um com o seu limiar de alerta. */
 export function GraficoClima({ leituras }: { leituras: Telemetria[] }) {
   const ultima = leituras.at(-1);
-  const temp = leituras.map((l) => ({ rotulo: formatarHora(l.ts), v: l.temperatura }));
-  const umid = leituras.map((l) => ({ rotulo: formatarHora(l.ts), v: l.umidade }));
+  const temp = leituras.map((l) => ({ rotulo: l.ts === null ? "—" : formatarHora(l.ts), v: l.temperatura }));
+  const umid = leituras.map((l) => ({ rotulo: l.ts === null ? "—" : formatarHora(l.ts), v: l.umidade }));
 
   return (
     <Card className="min-w-0">
@@ -45,7 +45,7 @@ function Serie({ titulo, valor, unidade, cor, children }: { titulo: string; valo
         </h3>
         <p className="font-mono text-xl font-semibold tabular-nums">
           {valor}
-          <span className="text-sm text-texto-2"> {unidade}</span>
+          {valor !== "—" && <span className="text-sm text-texto-2"> {unidade}</span>}
         </p>
       </div>
       {children}

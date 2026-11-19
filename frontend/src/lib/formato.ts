@@ -12,5 +12,8 @@ export function haQuanto(msDesde: number | null, agora: number) {
   return `há ${Math.floor(s / 60)} min`;
 }
 
+/** "1 entrada" / "0 entradas" / "3 entradas". Não usa Intl.PluralRules: em pt-BR ele trata 0 como singular ("0 entrada"). */
+export const plural = (n: number, um: string, varios: string) => `${n.toLocaleString("pt-BR")} ${n === 1 ? um : varios}`;
+
 export const valorOuTraco = (v: number | null | undefined, casas = 0) =>
   v === null || v === undefined ? "—" : v.toLocaleString("pt-BR", { maximumFractionDigits: casas, minimumFractionDigits: casas });

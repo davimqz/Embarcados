@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Diagnostico } from "@/components/Diagnostico";
@@ -8,7 +8,7 @@ import { SeletorPeriodo } from "@/components/SeletorPeriodo";
 import { Silo } from "@/components/Silo";
 import type { Alerta, EventoSilo, FonteDados, Mensagem, Telemetria } from "@/dados/tipos";
 import type { EstadoSilo } from "@/dados/useSilo";
-import { valorOuTraco } from "@/lib/formato";
+import { plural, valorOuTraco } from "@/lib/formato";
 import { useAgora, useConsulta } from "@/lib/hooks";
 
 const fmtHora = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -19,7 +19,21 @@ export function Dashboard({ estado, fonte }: { estado: EstadoSilo; fonte: FonteD
   const agora = useAgora();
   const [horas, setHoras] = useState(24);
   const { dados } = useConsulta(fonte, horas);
-  const p = useMemo(() => (dados ? resumir(dados, horas) : null), [dados, horas]);
+  // Estado do alerta no início do período: último alerta gravado antes dele (o backend responde com desde = 0).
+  const [anterior, setAnterior] = useState<"ATIVO" | "NORMAL" | null>(null);
+  useEffect(() => {
+    const ate = Math.floor(Date.now() / 1000) - horas * 3600 - 1;
+    let vivo = true;
+    fonte.consultar({ desde: 0, ate, topicos: ["grupo3/alerta"] }).then((ms) => {
+      const u = ms.at(-1);
+      if (vivo) setAnterior(u?.topico === "grupo3/alerta" ? u.payload.alerta : null);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [fonte, horas, dados]);
+  const alertaAoVivo = estado.alerta?.alerta === "ATIVO";
+  const p = useMemo(() => (dados ? resumir(dados, horas, anterior, alertaAoVivo) : null), [dados, horas, anterior, alertaAoVivo]);
   const ultima = estado.leituras.at(-1);
 
   return (
@@ -38,7 +52,7 @@ export function Dashboard({ estado, fonte }: { estado: EstadoSilo; fonte: FonteD
         <div>
           <h2 className="text-lg font-semibold">Indicadores do período</h2>
           <p className="text-sm text-texto-2">
-            {p ? `${p.nLeituras.toLocaleString("pt-BR")} leituras, de ${fmtDiaHora.format(p.inicio * 1000)} a ${fmtDiaHora.format(p.fim * 1000)}` : "Carregando o histórico…"}
+            {p ? `${plural(p.nLeituras, "leitura", "leituras")}, de ${fmtDiaHora.format(p.inicio * 1000)} a ${fmtDiaHora.format(p.fim * 1000)}` : "Carregando o histórico…"}
           </p>
         </div>
         <SeletorPeriodo horas={horas} aoMudar={setHoras} />
@@ -57,8 +71,8 @@ export function Dashboard({ estado, fonte }: { estado: EstadoSilo; fonte: FonteD
         <Indicador
           rotulo="Lotes movimentados"
           valor={p ? String(p.entradas + p.saidas) : "—"}
-          unidade="lotes"
-          detalhe={p ? `${p.entradas} entradas · ${p.saidas} saídas` : "—"}
+          unidade={p && p.entradas + p.saidas === 1 ? "lote" : "lotes"}
+          detalhe={p ? `${plural(p.entradas, "entrada", "entradas")} · ${plural(p.saidas, "saída", "saídas")}` : "—"}
         />
         <Indicador rotulo="Nível de grão" valor={valorOuTraco(p?.nivelUltimo)} unidade="% agora" detalhe={faixa(p?.nivel, "variou de", "%")} />
         <Indicador
@@ -113,7 +127,11 @@ export function Dashboard({ estado, fonte }: { estado: EstadoSilo; fonte: FonteD
             <span className="rotulo">entradas e saídas</span>
           </CardHeader>
           <CardContent>
-            {p ? (
+            {p && p.entradas + p.saidas === 0 ? (
+              <p className="grid h-[200px] place-items-center rounded-controle border border-dashed border-borda text-sm text-texto-2">
+                Nenhum lote movimentado no período
+              </p>
+            ) : p ? (
               <div className="h-[200px]" role="img" aria-label="Gráfico de barras de entradas e saídas de lotes por intervalo">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={p.lotes} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barGap={2}>
@@ -143,7 +161,7 @@ function Indicador({ rotulo, valor, unidade, detalhe, destaque }: { rotulo: stri
       <dt className="rotulo">{rotulo}</dt>
       <dd className="mt-1 flex items-baseline gap-1.5">
         <span className={`font-mono text-2xl font-semibold tabular-nums ${destaque ? "text-erro" : ""}`}>{valor}</span>
-        <span className="text-xs text-texto-2">{unidade}</span>
+        {valor !== "—" && <span className="text-xs text-texto-2">{unidade}</span>}
       </dd>
       <dd className="mt-0.5 text-xs text-texto-2">{detalhe}</dd>
     </div>
@@ -162,7 +180,7 @@ function Carregando() {
 }
 
 /** Agrega as mensagens do período em indicadores e séries (reduzidas a ~200 pontos para o gráfico). */
-function resumir(ms: Mensagem[], horas: number) {
+function resumir(ms: Mensagem[], horas: number, anterior: "ATIVO" | "NORMAL" | null, alertaAoVivo: boolean) {
   const tel = ms.filter((m): m is { topico: "grupo3/telemetria"; payload: Telemetria } => m.topico === "grupo3/telemetria").map((m) => m.payload);
   const evs = ms.filter((m): m is { topico: "grupo3/silo/evento"; payload: EventoSilo } => m.topico === "grupo3/silo/evento").map((m) => m.payload);
   const als = ms.filter((m): m is { topico: "grupo3/alerta"; payload: Alerta } => m.topico === "grupo3/alerta").map((m) => m.payload);
@@ -179,7 +197,8 @@ function resumir(ms: Mensagem[], horas: number) {
 
   // Tempo em alerta: integra a duração entre leituras enquanto o estado está ATIVO.
   const transicoes = [...als].sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0));
-  let ativo = false;
+  // Sem registro anterior e sem mudança no período, o alerta ativo agora já estava ativo no início.
+  let ativo = anterior !== null ? anterior === "ATIVO" : transicoes.length === 0 && alertaAoVivo;
   let segAlerta = 0;
   let cursor = inicio;
   for (const a of transicoes) {

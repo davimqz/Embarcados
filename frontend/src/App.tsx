@@ -65,7 +65,7 @@ export default function App() {
         </nav>
         <div className="border-t border-white/10 p-5 text-xs text-white/60">
           <p className="rotulo !text-white/40">Placa</p>
-          <p className="mt-1 truncate font-mono text-white/80">{estado.status?.device_id ?? "—"}</p>
+          <p className="mt-1 truncate font-mono text-white/80">{estado.deviceId ?? "—"}</p>
         </div>
       </aside>
 
@@ -83,8 +83,8 @@ export default function App() {
             </Badge>
           )}
           <Badge tom="shell" aria-live="polite">
-            <span aria-hidden className={`size-2 rounded-full ${online ? "bg-ok" : "bg-erro"}`} />
-            {estado.status === null ? "Sem status" : online ? "Online" : "Offline"}
+            <span aria-hidden className={`size-2 rounded-full ${estado.status === null ? "bg-white/40" : online ? "bg-ok" : "bg-erro"}`} />
+            {estado.status === null ? "Aguardando status" : online ? "Online" : "Offline"}
           </Badge>
         </div>
       </header>
