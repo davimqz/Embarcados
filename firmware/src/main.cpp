@@ -257,7 +257,7 @@ void travar(const char* msg) {
 }
 
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(115200);
     delay(1000);
 
     // Criado antes de qualquer task, para todas já encontrarem o mutex pronto.
