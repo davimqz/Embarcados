@@ -8,7 +8,7 @@ checa os tipos.
 | `comum/` | Configuração (`.env`) e nomes dos tópicos | T3.0 |
 | `broker/` | Broker MQTT de desenvolvimento (aedes), para não precisar instalar o Mosquitto | T3.0 |
 | `simulador/` | Simulador da placa: publica o mesmo que o firmware do M2 | T3.0 |
-| `ingest/` | Serviço de ingestão: assina, valida e grava no SQLite | T3.1–T3.3 |
+| `ingest/` | Servidor do painel (MQTT → WebSocket/REST, T4.6); depois, validação e SQLite | T4.6, T3.1–T3.3 |
 | `anchor/` | Serviço de ancoragem na Cardano Preprod | M5 |
 
 ## Como rodar
@@ -20,6 +20,32 @@ cp .env.example .env      # opcional: sem .env valem os padrões (broker em loca
 
 npm run broker            # terminal 1: broker local, mostra cada mensagem publicada
 npm run simulador         # terminal 2: a "placa"
+```
+
+## Servidor do painel (frontend com dados reais)
+
+```sh
+npm run servidor          # assina o broker do .env e serve o painel em http://localhost:3000
+npm test                  # testes do interpretador e do arquivo em memória
+```
+
+O `servidor` (`ingest/servidor.ts`) assina `grupo3/status`, `grupo3/telemetria`, `grupo3/silo/evento` e
+`grupo3/alerta` e repassa cada mensagem como `{ topico, payload }`, com o payload sem alteração:
+
+| Rota | O que faz |
+|---|---|
+| `ws://localhost:3000/ws` | Ao conectar, manda as mensagens dos últimos 10 min (mais o último status e alerta); depois, cada mensagem nova |
+| `GET /api/mensagens?desde=&ate=&topicos=a,b` | Histórico por período (`ts` em segundos UTC; mensagem com `ts: null` usa a hora de chegada) |
+| `GET /api/saude` | Broker, conexão, total de mensagens guardadas e painéis abertos |
+
+As mensagens ficam **só em memória** (até 20 000, ~24 h): ao reiniciar o servidor, o histórico some. O SQLite e a
+validação completa do contrato entram na T3.1–T3.2, neste mesmo serviço. Mensagens fora do formato são descartadas
+e aparecem no log.
+
+Com a placa real, o `.env` aponta para o mesmo broker do `config.h` do firmware:
+
+```sh
+MQTT_URL=mqtt://broker.hivemq.com:1883
 ```
 
 No terminal do simulador, as teclas mudam o silo: `a`/`e` aquecer/esfriar, `u`/`s` umedecer/secar, `1`/`2` botão de

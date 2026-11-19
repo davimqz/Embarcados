@@ -3,17 +3,21 @@
 Aplicação web do monitoramento do silo (ADR 0002): Vite + React + TypeScript, Tailwind CSS com os tokens do design
 system, componentes no estilo shadcn/ui e gráficos com Recharts. A pasta se chamava `dashboard/` até a T4.5.
 
-> **Estado atual: protótipo com dados simulados.** Não há placa nem backend envolvidos: a classe `FonteSimulada`
-> (`src/dados/fonteSimulada.ts`) gera no navegador as mesmas mensagens do contrato
-> [`docs/topicos-mqtt.md`](../docs/topicos-mqtt.md), com 24 h de histórico anterior. O topo da tela mostra o selo
-> **Simulado** enquanto for assim.
+> **Fonte padrão: a placa real** (T4.6), pelo servidor do backend (`backend/ingest/servidor.ts`), via WebSocket em
+> `/ws` e REST em `/api`. O Vite repassa os dois para `localhost:3000` (`vite.config.ts`). Com `?dados=demo`, a
+> classe `FonteSimulada` (`src/dados/fonteSimulada.ts`) gera no navegador as mesmas mensagens do contrato
+> [`docs/topicos-mqtt.md`](../docs/topicos-mqtt.md), e o topo da tela mostra o selo **Simulado**.
 
 ## Como rodar
 
 ```bash
+# terminal 1: servidor do painel (ver backend/README.md; .env com o broker da placa)
+cd backend && npm install && npm run servidor
+
+# terminal 2: frontend
 cd frontend
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173 (dados da placa) · http://localhost:5173/?dados=demo (simulado)
 npm run build    # checagem de tipos + build de produção em dist/
 ```
 
@@ -28,7 +32,7 @@ npm run build    # checagem de tipos + build de produção em dist/
 Cada gráfico tem uma série e um eixo só. Temperatura e umidade ficam em gráficos separados, cada um com a linha do
 seu limiar de alerta.
 
-## Como trocar o simulado pelo backend real
+## Fontes de dados
 
 Toda a tela consome a interface `FonteDados` (`src/dados/tipos.ts`):
 
@@ -36,8 +40,9 @@ Toda a tela consome a interface `FonteDados` (`src/dados/tipos.ts`):
 - `consultar({ desde, ate, topicos })` → REST do backend sobre o SQLite (T4.4);
 - `assinar()` → WebSocket do backend, com `{ topico, payload }` exatamente como no contrato.
 
-Quando o `backend/ingest` (M3) expuser isso, basta criar uma `FonteWebSocket` com a mesma interface e trocar a linha
-`const fonte = new FonteSimulada()` em `src/App.tsx`. O painel de simulação e o selo **Simulado** somem sozinhos.
+A `FonteWebSocket` (`src/dados/fonteWebSocket.ts`) implementa a interface com o servidor do backend e reconecta
+sozinha a cada 2 s se ele cair. A escolha fica em `src/App.tsx`: padrão = real; `?dados=demo` = simulado (com o painel
+de simulação); em desenvolvimento, `?dados=pior|vazio|um` = dados de teste fixos.
 
 ## Estrutura
 
@@ -47,7 +52,8 @@ src/
 ├── paginas/                # Controle, Dashboard, Historico
 ├── dados/
 │   ├── tipos.ts            # tipos do contrato MQTT + interface FonteDados
-│   ├── fonteSimulada.ts    # placa + backend simulados (temporário)
+│   ├── fonteSimulada.ts    # placa + backend simulados (?dados=demo)
+│   ├── fonteWebSocket.ts   # placa real pelo servidor do backend (padrão)
 │   └── useSilo.ts          # estado ao vivo: leituras, eventos, alerta e seq por tópico
 ├── components/             # Silo, GraficoClima, GraficoSerie, Eventos, Diagnostico, ...
 │   └── ui/                 # card, badge, button (estilo shadcn/ui)
