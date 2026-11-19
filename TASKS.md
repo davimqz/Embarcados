@@ -284,6 +284,22 @@ _Tasks T2.1–T2.4. Detalhar ao fechar o M1 (depende do sensor de T0.5)._
 - **Observações:** a fonte simulada ganhou 24 h de histórico (1 leitura/min, semente fixa) e a interface `FonteDados` ganhou `consultar()`, que o backend vai implementar como REST (T4.4).
 - **Evidência:** `docs/entregas/M4/T4.5-{controle,dashboard,historico}-desktop-simulador.png`, `docs/entregas/M4/T4.5-{dashboard,historico}-celular-simulador.png`, `docs/entregas/M4/T4.5-npm-run-build.log`
 
+### T4.6 — Ligar o frontend à placa real por WebSocket
+- **Marco:** M4
+- **Status:** review
+- **Responsável:** Davi
+- **Depende de:** T3.0, T4.5
+- **Descrição:** servidor mínimo em `backend/ingest/` (Fastify) que assina os tópicos da placa no broker e repassa cada mensagem `{ topico, payload }` por WebSocket, com um buffer em memória para o histórico; no frontend, uma `FonteWebSocket` no lugar da `FonteSimulada`. Ainda sem SQLite nem validação completa (T3.1–T3.2 entram depois neste mesmo servidor). Mesma exceção de ordem dos marcos da T4.0.
+- **Critérios de aceite:**
+  - [x] `npm run servidor` no `backend/` conecta no broker do `.env` e loga cada mensagem recebida
+  - [x] Navegador recebe por `ws://localhost:3000/ws` o buffer ao conectar e as mensagens novas em tempo real
+  - [x] `GET /api/mensagens?desde=&ate=&topicos=` responde a consulta do histórico a partir do buffer
+  - [x] Frontend abre com a fonte real por padrão (sem selo **Simulado**); `?dados=demo` volta ao simulado
+  - [ ] Com a placa ligada, apertar um botão ou mexer no HC-SR04 aparece no dashboard em < 2 s
+  - [x] `npm test` e `npm run build` passam no `backend/` e `npm run build` no `frontend/`
+- **Observações:** testado em 2026-11-19 com broker local + simulador (WebSocket e REST) e contra o broker.hivemq.com, recebendo o alerta e o status retidos da placa real. Falta o teste com a placa ligada.
+- **Evidência:** `docs/entregas/M4/T4.6-dashboard-placa.png` e `docs/entregas/M4/T4.6-servidor.log`
+
 _Tasks T4.1–T4.4 a detalhar; dependem do WebSocket do `backend/ingest` (M3)._
 
 ## M5 — Camada Blockchain · tag `v0.5.0`
