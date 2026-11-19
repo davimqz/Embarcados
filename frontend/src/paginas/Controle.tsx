@@ -10,10 +10,10 @@ import { formatarHora, haQuanto } from "@/lib/formato";
 import { useAgora } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
-type Props = { estado: EstadoSilo; fonte: FonteSimulada; simulado: boolean };
+type Props = { estado: EstadoSilo; simulador: FonteSimulada | null };
 
 /** Aba Controle: estado da placa, do alerta (LED vermelho) e dos botões de entrada/saída de lotes. */
-export function Controle({ estado, fonte, simulado }: Props) {
+export function Controle({ estado, simulador }: Props) {
   const agora = useAgora();
   const online = estado.status?.status === "online";
   const alerta = estado.alerta;
@@ -83,12 +83,12 @@ export function Controle({ estado, fonte, simulado }: Props) {
       <BotoesPlaca
         eventos={estado.eventos}
         online={online}
-        aoApertar={simulado ? (e) => fonte.controlar(e === "ENTRADA" ? "entrada" : "saida") : undefined}
+        aoApertar={simulador ? (e) => simulador.controlar(e === "ENTRADA" ? "entrada" : "saida") : undefined}
       />
 
       <Eventos eventos={estado.eventos} />
 
-      {simulado && <PainelSimulacao fonte={fonte} />}
+      {simulador && <PainelSimulacao fonte={simulador} />}
     </>
   );
 }

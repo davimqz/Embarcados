@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { ChartLine, History, SlidersHorizontal, Wheat, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { FonteSimulada } from "@/dados/fonteSimulada";
+import { fontePiorCaso, fonteUm, fonteVazia } from "@/dados/fontesTeste";
+import type { FonteDados } from "@/dados/tipos";
+import { SeletorDadosDev, lerModoDados } from "@/components/SeletorDadosDev";
 import { useSilo } from "@/dados/useSilo";
 import { cn } from "@/lib/utils";
 import { Controle } from "@/paginas/Controle";
@@ -9,8 +12,12 @@ import { Dashboard } from "@/paginas/Dashboard";
 import { Historico } from "@/paginas/Historico";
 
 // Única troca necessária quando o backend (M3) existir: uma FonteWebSocket com a mesma interface.
-const fonte = new FonteSimulada();
-const SIMULADO = fonte instanceof FonteSimulada;
+// Em desenvolvimento, ?dados=pior|vazio|um troca a fonte por dados de teste fixos (break-ui).
+const MODO = import.meta.env.DEV ? lerModoDados() : "demo";
+const fonte: FonteDados =
+  MODO === "pior" ? fontePiorCaso() : MODO === "vazio" ? fonteVazia() : MODO === "um" ? fonteUm() : new FonteSimulada();
+const simulador = fonte instanceof FonteSimulada ? fonte : null;
+const SIMULADO = simulador !== null;
 
 type Rota = "controle" | "dashboard" | "historico";
 
@@ -83,10 +90,12 @@ export default function App() {
       </header>
 
       <main className="mx-auto grid max-w-[1400px] grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:p-6">
-        {rota === "controle" && <Controle estado={estado} fonte={fonte} simulado={SIMULADO} />}
+        {rota === "controle" && <Controle estado={estado} simulador={simulador} />}
         {rota === "dashboard" && <Dashboard estado={estado} fonte={fonte} />}
         {rota === "historico" && <Historico fonte={fonte} />}
       </main>
+
+      {import.meta.env.DEV && <SeletorDadosDev atual={MODO} />}
 
       {/* Navegação no celular: barra inferior */}
       <nav aria-label="Seções" className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/80 text-white backdrop-blur-md lg:hidden">
