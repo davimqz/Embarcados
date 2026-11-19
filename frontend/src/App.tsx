@@ -21,7 +21,7 @@ const NAV: { rota: Rota; rotulo: string; icone: LucideIcon }[] = [
 ];
 
 export default function App() {
-  const { estado, comandar } = useSilo(fonte);
+  const { estado } = useSilo(fonte);
   const rota = useRota();
   const online = estado.status?.status === "online";
   const alertaAtivo = estado.alerta?.alerta === "ATIVO";
@@ -83,9 +83,9 @@ export default function App() {
       </header>
 
       <main className="mx-auto grid max-w-[1400px] grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:p-6">
-        {rota === "controle" && <Controle estado={estado} comandar={comandar} fonte={fonte} simulado={SIMULADO} />}
+        {rota === "controle" && <Controle estado={estado} fonte={fonte} simulado={SIMULADO} />}
         {rota === "dashboard" && <Dashboard estado={estado} fonte={fonte} />}
-        {rota === "historico" && <Historico fonte={fonte} comandos={estado.comandos} />}
+        {rota === "historico" && <Historico fonte={fonte} />}
       </main>
 
       {/* Navegação no celular: barra inferior */}

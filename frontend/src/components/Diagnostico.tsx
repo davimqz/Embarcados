@@ -3,7 +3,7 @@ import type { EstadoSilo } from "@/dados/useSilo";
 import type { Topico } from "@/dados/tipos";
 import { haQuanto } from "@/lib/formato";
 
-const TOPICOS: Exclude<Topico, "grupo3/status">[] = ["grupo3/telemetria", "grupo3/silo/evento", "grupo3/alerta", "grupo3/ventilacao"];
+const TOPICOS: Exclude<Topico, "grupo3/status">[] = ["grupo3/telemetria", "grupo3/silo/evento", "grupo3/alerta"];
 
 /** T4.2: último seq por tópico e buracos vistos (a detecção oficial é do backend, T3.3). */
 export function Diagnostico({ estado, agora }: { estado: EstadoSilo; agora: number }) {

@@ -30,14 +30,6 @@ export type Alerta = {
   umidade: number | null;
 };
 
-export type Ventilacao = {
-  device_id: string;
-  ts: number | null;
-  seq: number;
-  ventilacao: "LIGADA" | "DESLIGADA";
-  cmd_seq: number | null;
-};
-
 export type StatusPlaca = {
   device_id: string;
   status: "online" | "offline";
@@ -48,7 +40,6 @@ export type Mensagem =
   | { topico: "grupo3/telemetria"; payload: Telemetria }
   | { topico: "grupo3/silo/evento"; payload: EventoSilo }
   | { topico: "grupo3/alerta"; payload: Alerta }
-  | { topico: "grupo3/ventilacao"; payload: Ventilacao }
   | { topico: "grupo3/status"; payload: StatusPlaca };
 
 export type Topico = Mensagem["topico"];
@@ -64,6 +55,4 @@ export interface FonteDados {
   assinar(aoReceber: (m: Mensagem) => void): () => void;
   /** Consulta o histórico gravado (T4.4: REST do backend sobre o SQLite). ts em segundos UTC. */
   consultar(filtro: { desde: number; ate: number; topicos?: Topico[] }): Promise<Mensagem[]>;
-  /** Pede ao backend para publicar em grupo3/cmd; devolve o seq do comando. */
-  enviarComando(valor: "LIGAR" | "DESLIGAR"): number;
 }

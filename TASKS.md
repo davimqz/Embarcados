@@ -202,7 +202,8 @@ _Tasks T3.1–T3.4._
 - **Descrição:** pedido do grupo em 2026-11-19 para cobrir o "visualização, interação e gestão" do enunciado: renomear `dashboard/` para `frontend/` e dividir a tela em três abas (**Controle**, **Dashboard** com mais gráficos e indicadores, **Histórico** em forma de log). Ainda com dados simulados, na mesma exceção da T4.0.
 - **Critérios de aceite:**
   - [x] Pasta `frontend/`, com `CLAUDE.md`, README e ADR 0002 apontando para ela
-  - [x] Controle: estado da placa, ventilação e registro dos comandos (`seq`, tempo de resposta, confirmado/sem resposta)
+  - [x] Controle: estado da placa, estado do alerta (LED vermelho) e movimentação de lotes
+  - [x] Sem ventilação na interface: o grupo não tem como ligar/desligar um ventilador (pedido de 2026-11-19)
   - [x] Dashboard: ao vivo + indicadores e gráficos de 1 h / 6 h / 24 h (médias, mín./máx., tempo em alerta, lotes por hora, nível, falhas do DHT11)
   - [x] Histórico: log com filtro por tipo e período, busca e exportação CSV
   - [x] Nenhum gráfico com eixo duplo (temperatura e umidade separados)

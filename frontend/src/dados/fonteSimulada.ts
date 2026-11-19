@@ -1,5 +1,6 @@
 // Fonte SIMULADA: imita, no navegador, o que a placa publica (firmware do M2) e o que o backend repassaria.
-// Segue docs/topicos-mqtt.md: seq por tópico, ts em segundos UTC, alerta com histerese, ventilação manual.
+// Segue docs/topicos-mqtt.md: seq por tópico, ts em segundos UTC, alerta com histerese.
+// Sem ventilação: o grupo não tem como ligar/desligar o ventilador (decisão de 2026-11-19).
 // Some quando o backend (M3) expuser o WebSocket — basta trocar a fonte em App.tsx.
 
 import type { FonteDados, Mensagem, Telemetria } from "./tipos";
@@ -15,7 +16,7 @@ type Controle = "aquecer" | "esfriar" | "umedecer" | "secar" | "entrada" | "said
 export class FonteSimulada implements FonteDados {
   private ouvintes = new Set<(m: Mensagem) => void>();
   private timer: ReturnType<typeof setInterval> | null = null;
-  private seq = { telemetria: 0, evento: 0, alerta: 0, ventilacao: 0, cmd: 0 };
+  private seq = { telemetria: 0, evento: 0, alerta: 0 };
 
   private temperatura = 26;
   private umidade = 58;
@@ -23,7 +24,6 @@ export class FonteSimulada implements FonteDados {
   private entradas = 6;
   private saidas = 2;
   private alertaAtivo = false;
-  private ventilacao: "LIGADA" | "DESLIGADA" = "DESLIGADA";
   private online = true;
   private hist: Mensagem[] = [];
   /** Tudo o que "o banco" guardou: 24 h anteriores (1 leitura/min) + o que foi publicado nesta sessão. */
@@ -47,10 +47,6 @@ export class FonteSimulada implements FonteDados {
       this.hist.push({ topico: "grupo3/telemetria", payload: this.leitura(agora - i * 5) });
     }
     this.hist.push({ topico: "grupo3/status", payload: { device_id: DEVICE_ID, status: "online" } });
-    this.hist.push({
-      topico: "grupo3/ventilacao",
-      payload: { device_id: DEVICE_ID, ts: agora - 300, seq: ++this.seq.ventilacao, ventilacao: "DESLIGADA", cmd_seq: null },
-    });
     this.avaliarAlerta(agora, true);
     this.arquivo.push(...this.hist);
   }
@@ -80,20 +76,6 @@ export class FonteSimulada implements FonteDados {
         this.timer = null;
       }
     };
-  }
-
-  enviarComando(valor: "LIGAR" | "DESLIGAR") {
-    const cmdSeq = ++this.seq.cmd;
-    if (!this.online) return cmdSeq; // placa fora: o comando se perde (sem retain), como no real
-    // Latência de ida e volta broker → placa → broker.
-    setTimeout(() => {
-      this.ventilacao = valor === "LIGAR" ? "LIGADA" : "DESLIGADA";
-      this.emitir({
-        topico: "grupo3/ventilacao",
-        payload: { device_id: DEVICE_ID, ts: agoraS(), seq: ++this.seq.ventilacao, ventilacao: this.ventilacao, cmd_seq: cmdSeq },
-      });
-    }, 600 + Math.random() * 500);
-    return cmdSeq;
   }
 
   /** Controles do painel de simulação (equivalem às teclas do simulador da T3.0). */
@@ -132,10 +114,9 @@ export class FonteSimulada implements FonteDados {
   }
 
   private passoClima() {
-    // Passeio aleatório lento; a ventilação ligada puxa temperatura e umidade para baixo.
-    const vent = this.ventilacao === "LIGADA" ? 1 : 0;
-    this.temperatura = limitar(this.temperatura + (Math.random() - 0.5) * 0.8 - vent * 0.35, 15, 40);
-    this.umidade = limitar(this.umidade + (Math.random() - 0.5) * 1.6 - vent * 0.6, 30, 90);
+    // Passeio aleatório lento.
+    this.temperatura = limitar(this.temperatura + (Math.random() - 0.5) * 0.8, 15, 40);
+    this.umidade = limitar(this.umidade + (Math.random() - 0.5) * 1.6, 30, 90);
   }
 
   private leitura(ts: number): Telemetria {

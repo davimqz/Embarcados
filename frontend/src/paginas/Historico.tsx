@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SeletorPeriodo } from "@/components/SeletorPeriodo";
 import type { FonteDados, Mensagem } from "@/dados/tipos";
-import type { RegistroComando } from "@/dados/useSilo";
 import { useConsulta } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
-type Tipo = "telemetria" | "lote" | "alerta" | "ventilacao" | "comando";
+type Tipo = "telemetria" | "lote" | "alerta";
 
 type Linha = { ts: number; tipo: Tipo; seq: number | null; descricao: string; critico?: boolean; payload: string };
 
@@ -17,40 +16,25 @@ const TIPOS: { tipo: Tipo; rotulo: string; tom: "neutro" | "laranja" | "erro" | 
   { tipo: "telemetria", rotulo: "Telemetria", tom: "neutro" },
   { tipo: "lote", rotulo: "Lote", tom: "ok" },
   { tipo: "alerta", rotulo: "Alerta", tom: "erro" },
-  { tipo: "ventilacao", rotulo: "Ventilação", tom: "laranja" },
-  { tipo: "comando", rotulo: "Comando", tom: "aviso" },
 ];
 
 const POR_PAGINA = 100;
 const fmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
-/** Aba Histórico: log de tudo o que a placa publicou e dos comandos enviados, com filtro e exportação CSV. */
-export function Historico({ fonte, comandos }: { fonte: FonteDados; comandos: RegistroComando[] }) {
+/** Aba Histórico: log de tudo o que a placa publicou, com filtro e exportação CSV. */
+export function Historico({ fonte }: { fonte: FonteDados }) {
   const [horas, setHoras] = useState(1);
-  const [ativos, setAtivos] = useState<Set<Tipo>>(() => new Set(["lote", "alerta", "ventilacao", "comando"]));
+  const [ativos, setAtivos] = useState<Set<Tipo>>(() => new Set(["lote", "alerta"]));
   const [busca, setBusca] = useState("");
   const [limite, setLimite] = useState(POR_PAGINA);
   const { dados, erro, recarregar } = useConsulta(fonte, horas);
 
   const linhas = useMemo(() => {
     if (!dados) return null;
-    const desde = Math.floor(Date.now() / 1000) - horas * 3600;
-    const todas = [
-      ...dados.map(paraLinha),
-      ...comandos
-        .filter((c) => c.enviadoEm / 1000 >= desde)
-        .map<Linha>((c) => ({
-          ts: Math.floor(c.enviadoEm / 1000),
-          tipo: "comando",
-          seq: c.seq,
-          descricao: `VENTILACAO · ${c.valor} → ${c.situacao}${c.respostaEm ? ` em ${c.respostaEm - c.enviadoEm} ms` : ""}`,
-          critico: c.situacao === "sem resposta",
-          payload: JSON.stringify({ seq: c.seq, comando: "VENTILACAO", valor: c.valor }),
-        })),
-    ];
+    const todas = dados.map(paraLinha);
     const q = busca.trim().toLowerCase();
     return todas.filter((l) => ativos.has(l.tipo) && (!q || l.descricao.toLowerCase().includes(q))).sort((a, b) => b.ts - a.ts);
-  }, [dados, comandos, horas, ativos, busca]);
+  }, [dados, ativos, busca]);
 
   const alternar = (t: Tipo) => {
     setLimite(POR_PAGINA);
@@ -67,7 +51,7 @@ export function Historico({ fonte, comandos }: { fonte: FonteDados; comandos: Re
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Registro de mensagens</h2>
-          <p className="text-sm text-texto-2">Tudo o que a placa publicou e os comandos enviados. Cada linha guarda o payload original.</p>
+          <p className="text-sm text-texto-2">Tudo o que a placa publicou. Passe o mouse numa linha para ver o payload original.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SeletorPeriodo horas={horas} aoMudar={(h) => (setHoras(h), setLimite(POR_PAGINA))} />
@@ -194,14 +178,6 @@ function paraLinha(m: Mensagem): Linha {
           m.payload.alerta === "ATIVO"
             ? `ATIVO: ${m.payload.motivos.join(" e ").toLowerCase()} (${m.payload.temperatura} °C, ${m.payload.umidade} %)`
             : `NORMAL: voltou ao normal (${m.payload.temperatura} °C, ${m.payload.umidade} %)`,
-      };
-    case "grupo3/ventilacao":
-      return {
-        ts: m.payload.ts ?? 0,
-        tipo: "ventilacao",
-        seq: m.payload.seq,
-        payload,
-        descricao: `${m.payload.ventilacao}${m.payload.cmd_seq !== null ? ` · confirma o comando #${m.payload.cmd_seq}` : " · estado do boot"}`,
       };
     case "grupo3/status":
       return { ts: 0, tipo: "telemetria", seq: null, payload, descricao: m.payload.status };
