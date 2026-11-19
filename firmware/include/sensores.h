@@ -6,9 +6,9 @@
 #include "freertos/queue.h"
 
 // Pinagem em docs/arquitetura.md §2.
-#define DHT_PIN        4   // DATA do módulo DHT22 (o módulo já tem o pull-up)
-#define SONAR_TRIG_PIN 32  // TRIG do HC-SR04
-#define SONAR_ECHO_PIN 33  // ECHO do HC-SR04, pelo divisor de tensão (5 V → 3,3 V)
+#define DHT_PIN        25  // DATA do módulo DHT11 (o módulo já tem o pull-up)
+#define SONAR_TRIG_PIN 5   // TRIG do HC-SR04 (pino de boot, mas só saída: o TRIG não força nível)
+#define SONAR_ECHO_PIN 14  // ECHO do HC-SR04, pelo divisor de tensão (5 V → 3,3 V)
 
 #define LEITURA_INTERVALO_MS 5000  // decisão 4 de docs/decisoes-pendentes.md
 #define FILA_TELEMETRIA_TAMANHO 12  // 1 min de leituras guardadas enquanto o broker está fora
@@ -37,8 +37,8 @@ struct LeituraSilo {
 // Fila de leituras da TaskSensores para a TaskComunicacao; criada no setup().
 extern QueueHandle_t xFilaTelemetria;
 
-// Configura os pinos e o DHT22; chamado no setup(), antes de criar a TaskSensores.
+// Configura os pinos e o DHT11; chamado no setup(), antes de criar a TaskSensores.
 void sensoresIniciar();
 
-// Lê o DHT22 e o HC-SR04 a cada LEITURA_INTERVALO_MS e põe a leitura na xFilaTelemetria.
+// Lê o DHT11 e o HC-SR04 a cada LEITURA_INTERVALO_MS e põe a leitura na xFilaTelemetria.
 void TaskSensores(void *pvParameters);

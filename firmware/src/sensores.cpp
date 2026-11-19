@@ -23,7 +23,7 @@ void sensoresIniciar() {
     pinMode(SONAR_TRIG_PIN, OUTPUT);
     digitalWrite(SONAR_TRIG_PIN, LOW);
     pinMode(SONAR_ECHO_PIN, INPUT);
-    dht.setup(DHT_PIN, DHTesp::DHT22);
+    dht.setup(DHT_PIN, DHTesp::DHT11);
 }
 
 // Uma medida em cm, ou NAN se não houve eco.
@@ -88,7 +88,7 @@ static void lerSensores(LeituraSilo *l) {
     l->temperatura = l->dhtOk ? (int)lroundf(th.temperature) : 0;
     l->umidade = l->dhtOk ? (int)lroundf(th.humidity) : 0;
     if (!l->dhtOk) {
-        logSerial("[SENSOR] Falha no DHT22: %s\n", dht.getStatusString());
+        logSerial("[SENSOR] Falha no DHT11: %s\n", dht.getStatusString());
     }
 
     float cm = medianaDistanciaCm();
