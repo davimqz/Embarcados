@@ -56,5 +56,5 @@ tokens, mas não o nome nem a marca do produto original:
 ## Consequências
 
 - Mais trabalho no M4 que com o Node-RED; compensa no M5 (tela de verificação) e na apresentação.
-- `dashboard/` vira um projeto Node próprio (`npm run dev`), separado do `backend/`.
+- `frontend/` (antes `dashboard/`, renomeada em 2026-11-19) vira um projeto Node próprio (`npm run dev`), separado do `backend/`.
 - Tudo roda **localmente no notebook** na apresentação (ver `docs/decisoes-pendentes.md`, item 2).
