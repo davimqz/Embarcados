@@ -32,6 +32,13 @@ function reduzir(s: EstadoSilo, a: Acao): EstadoSilo {
   const base = { ...s, ultimaMensagem: Date.now() };
   if (m.topico === "grupo3/status") return { ...base, status: m.payload };
 
+  // Mensagem repetida (histórico recarregado numa reconexão, QoS 0 reenviado): mesma placa, seq e ts → ignora.
+  const igual = (x: { device_id: string; seq: number; ts: number | null }) =>
+    x.device_id === m.payload.device_id && x.seq === m.payload.seq && x.ts === m.payload.ts;
+  const repetida =
+    m.topico === "grupo3/telemetria" ? s.leituras.some(igual) : m.topico === "grupo3/silo/evento" ? s.eventos.some(igual) : !!s.alerta && igual(s.alerta);
+  if (repetida) return s;
+
   // seq por tópico: buraco = pulou; menor = reboot (não conta como erro).
   const anterior = s.ultimoSeq[m.topico];
   const buraco = anterior !== undefined && m.payload.seq > anterior + 1 ? m.payload.seq - anterior - 1 : 0;

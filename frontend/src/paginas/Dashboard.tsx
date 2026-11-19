@@ -45,14 +45,14 @@ export function Dashboard({ estado, fonte }: { estado: EstadoSilo; fonte: FonteD
       </div>
 
       <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Indicador rotulo="Temperatura" valor={valorOuTraco(p?.temp.media, 1)} unidade="°C média" detalhe={p ? `mín. ${p.temp.min} · máx. ${p.temp.max} °C` : "—"} />
-        <Indicador rotulo="Umidade" valor={valorOuTraco(p?.umid.media, 1)} unidade="% média" detalhe={p ? `mín. ${p.umid.min} · máx. ${p.umid.max} %` : "—"} />
+        <Indicador rotulo="Temperatura" valor={valorOuTraco(p?.temp?.media, 1)} unidade="°C média" detalhe={faixa(p?.temp, "mín.", "°C")} />
+        <Indicador rotulo="Umidade" valor={valorOuTraco(p?.umid?.media, 1)} unidade="% média" detalhe={faixa(p?.umid, "mín.", "%")} />
         <Indicador
           rotulo="Tempo em alerta"
           valor={valorOuTraco(p?.pctAlerta, 1)}
           unidade="%"
           detalhe={p ? `${p.nAlertas} ${p.nAlertas === 1 ? "alerta disparado" : "alertas disparados"}` : "—"}
-          destaque={!!p && p.pctAlerta > 0}
+          destaque={!!p && (p.pctAlerta ?? 0) > 0}
         />
         <Indicador
           rotulo="Lotes movimentados"
@@ -60,7 +60,7 @@ export function Dashboard({ estado, fonte }: { estado: EstadoSilo; fonte: FonteD
           unidade="lotes"
           detalhe={p ? `${p.entradas} entradas · ${p.saidas} saídas` : "—"}
         />
-        <Indicador rotulo="Nível de grão" valor={valorOuTraco(p?.nivel.ultimo)} unidade="% agora" detalhe={p ? `variou de ${p.nivel.min} a ${p.nivel.max} %` : "—"} />
+        <Indicador rotulo="Nível de grão" valor={valorOuTraco(p?.nivelUltimo)} unidade="% agora" detalhe={faixa(p?.nivel, "variou de", "%")} />
         <Indicador
           rotulo="Falhas do DHT11"
           valor={valorOuTraco(p?.pctFalha, 1)}
@@ -150,6 +150,13 @@ function Indicador({ rotulo, valor, unidade, detalhe, destaque }: { rotulo: stri
   );
 }
 
+/** "mín. 19 · máx. 31 °C", "variou de 28 a 100 %" ou "sem leituras no período". */
+function faixa(e: { min: number; max: number } | null | undefined, prefixo: string, unidade: string) {
+  if (e === undefined) return "—";
+  if (e === null) return "sem leituras no período";
+  return prefixo === "mín." ? `mín. ${e.min} · máx. ${e.max} ${unidade}` : `${prefixo} ${e.min} a ${e.max} ${unidade}`;
+}
+
 function Carregando() {
   return <div className="h-[200px] animate-pulse rounded-controle bg-borda/40" aria-label="Carregando" />;
 }
@@ -164,7 +171,8 @@ function resumir(ms: Mensagem[], horas: number) {
   const fim = Math.floor(Date.now() / 1000);
   const inicio = fim - horas * 3600;
   const vals = (k: "temperatura" | "umidade" | "nivel_pct") => tel.map((t) => t[k]).filter((v): v is number => v !== null);
-  const est = (v: number[]) => ({ min: v.length ? Math.min(...v) : 0, max: v.length ? Math.max(...v) : 0, media: v.length ? v.reduce((a, b) => a + b, 0) / v.length : null });
+  // Sem leitura no período, min/máx./média ficam null (nunca 0, que seria um dado falso).
+  const est = (v: number[]) => (v.length ? { min: Math.min(...v), max: Math.max(...v), media: v.reduce((a, b) => a + b, 0) / v.length } : null);
   const temps = vals("temperatura");
   const umids = vals("umidade");
   const niveis = vals("nivel_pct");
@@ -201,15 +209,16 @@ function resumir(ms: Mensagem[], horas: number) {
     nLeituras: tel.length,
     temp: est(temps),
     umid: est(umids),
-    nivel: { ...est(niveis), ultimo: niveis.at(-1) ?? null },
+    nivel: est(niveis),
+    nivelUltimo: niveis.at(-1) ?? null,
     entradas: evs.filter((e) => e.evento === "ENTRADA").length,
     saidas: evs.filter((e) => e.evento === "SAIDA").length,
     nAlertas: als.filter((a) => a.alerta === "ATIVO").length,
-    pctAlerta: (segAlerta / (fim - inicio)) * 100,
+    pctAlerta: tel.length ? (segAlerta / (fim - inicio)) * 100 : null,
     nFalhas,
-    pctFalha: tel.length ? (nFalhas / tel.length) * 100 : 0,
-    pctTempAlta: temps.length ? (temps.filter((t) => t > 30).length / temps.length) * 100 : 0,
-    pctUmidAlta: umids.length ? (umids.filter((u) => u > 70).length / umids.length) * 100 : 0,
+    pctFalha: tel.length ? (nFalhas / tel.length) * 100 : null,
+    pctTempAlta: temps.length ? (temps.filter((t) => t > 30).length / temps.length) * 100 : null,
+    pctUmidAlta: umids.length ? (umids.filter((u) => u > 70).length / umids.length) * 100 : null,
     serieTemp: serie("temperatura"),
     serieUmid: serie("umidade"),
     serieNivel: serie("nivel_pct"),

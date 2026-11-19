@@ -14,8 +14,25 @@ type Props = {
   altura?: number;
 };
 
+/**
+ * A escala padrão cobre a faixa normal do silo; se uma leitura sai dela (DHT11 vai até 50 °C e 95 %), o eixo cresce
+ * no mesmo passo das marcas, em vez de a linha ser desenhada fora do gráfico.
+ */
+function ajustarEscala(dados: Ponto[], [min, max]: [number, number], ticks?: number[]) {
+  const vals = dados.map((d) => d.v).filter((v): v is number => v !== null);
+  if (vals.length === 0) return { dominio: [min, max] as [number, number], ticks };
+  const passo = ticks && ticks.length > 1 ? ticks[1] - ticks[0] : 5;
+  const novoMin = Math.min(min, Math.floor(Math.min(...vals) / passo) * passo);
+  const novoMax = Math.max(max, Math.ceil(Math.max(...vals) / passo) * passo);
+  if (novoMin === min && novoMax === max) return { dominio: [min, max] as [number, number], ticks };
+  const novas: number[] = [];
+  for (let t = novoMin; t <= novoMax; t += passo) novas.push(t);
+  return { dominio: [novoMin, novoMax] as [number, number], ticks: ticks ? novas : undefined };
+}
+
 /** Uma série, um eixo (sem eixo duplo). Falha de leitura (null) aparece como intervalo na linha. */
-export function GraficoSerie({ dados, cor, unidade, nome, dominio, ticks, limiar, area, altura = 160 }: Props) {
+export function GraficoSerie({ dados, cor, unidade, nome, dominio: dominioBase, ticks: ticksBase, limiar, area, altura = 160 }: Props) {
+  const { dominio, ticks } = ajustarEscala(dados, dominioBase, ticksBase);
   const eixoX = <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--color-texto-2)" }} tickLine={false} axisLine={false} minTickGap={56} />;
   const eixoY = (
     <YAxis domain={dominio} ticks={ticks} width={40} tick={{ fontSize: 11, fill: "var(--color-texto-2)" }} tickLine={false} axisLine={false} unit={unidade} />
