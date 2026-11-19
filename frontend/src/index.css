@@ -13,6 +13,7 @@
   --color-erro: #fb2c36;
   --color-aviso: #edb200;
   --color-umidade: #2f7bbf;
+  --color-shell: #1f1b18; /* quase-preto quente: barra lateral, topo e navegação inferior */
 
   --radius-input: 6px;
   --radius-controle: 8px;

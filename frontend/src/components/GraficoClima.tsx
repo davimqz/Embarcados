@@ -1,4 +1,6 @@
+import { Radio } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EstadoVazio } from "@/components/EstadoVazio";
 import { GraficoSerie } from "@/components/GraficoSerie";
 import type { Telemetria } from "@/dados/tipos";
 import { formatarHora, valorOuTraco } from "@/lib/formato";
@@ -19,14 +21,14 @@ export function GraficoClima({ leituras }: { leituras: Telemetria[] }) {
       </CardHeader>
       <CardContent className="grid gap-4">
         {leituras.length === 0 ? (
-          <p className="grid h-64 place-items-center text-sm text-texto-2">Aguardando a primeira leitura…</p>
+          <EstadoVazio icone={Radio} titulo="Aguardando a primeira leitura" detalhe="A placa publica temperatura e umidade a cada 5 s." altura={392} />
         ) : (
           <>
             <Serie titulo="Temperatura" valor={valorOuTraco(ultima?.temperatura)} unidade="°C" cor="var(--color-laranja)">
-              <GraficoSerie dados={temp} cor="var(--color-laranja)" unidade="°" nome="Temperatura" dominio={[15, 40]} ticks={[15, 20, 25, 30, 35, 40]} limiar={{ valor: 30, rotulo: "alerta > 30 °C" }} />
+              <GraficoSerie dados={temp} cor="var(--color-laranja)" unidade="°" nome="Temperatura" dominio={[15, 40]} ticks={[15, 20, 25, 30, 35, 40]} limiar={{ valor: 30, rotulo: "alerta > 30 °C" }} altura={176} />
             </Serie>
             <Serie titulo="Umidade relativa" valor={valorOuTraco(ultima?.umidade)} unidade="%" cor="var(--color-umidade)">
-              <GraficoSerie dados={umid} cor="var(--color-umidade)" unidade="%" nome="Umidade" dominio={[30, 90]} ticks={[30, 50, 70, 90]} limiar={{ valor: 70, rotulo: "alerta > 70 %" }} />
+              <GraficoSerie dados={umid} cor="var(--color-umidade)" unidade="%" nome="Umidade" dominio={[30, 90]} ticks={[30, 50, 70, 90]} limiar={{ valor: 70, rotulo: "alerta > 70 %" }} altura={176} />
             </Serie>
           </>
         )}

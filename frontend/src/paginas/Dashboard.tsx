@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Package } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EstadoVazio } from "@/components/EstadoVazio";
 import { Diagnostico } from "@/components/Diagnostico";
 import { GraficoClima } from "@/components/GraficoClima";
 import { GraficoSerie } from "@/components/GraficoSerie";
@@ -128,9 +130,7 @@ export function Dashboard({ estado, fonte }: { estado: EstadoSilo; fonte: FonteD
           </CardHeader>
           <CardContent>
             {p && p.entradas + p.saidas === 0 ? (
-              <p className="grid h-[200px] place-items-center rounded-controle border border-dashed border-borda text-sm text-texto-2">
-                Nenhum lote movimentado no período
-              </p>
+              <EstadoVazio icone={Package} titulo="Nenhum lote movimentado" detalhe="Os apertos dos botões amarelo e vermelho aparecem aqui." altura={200} />
             ) : p ? (
               <div className="h-[200px]" role="img" aria-label="Gráfico de barras de entradas e saídas de lotes por intervalo">
                 <ResponsiveContainer width="100%" height="100%">

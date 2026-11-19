@@ -1,3 +1,5 @@
+import { ChartNoAxesColumn } from "lucide-react";
+import { EstadoVazio } from "@/components/EstadoVazio";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type Ponto = { rotulo: string; v: number | null };
@@ -34,9 +36,7 @@ function ajustarEscala(dados: Ponto[], [min, max]: [number, number], ticks?: num
 export function GraficoSerie({ dados, cor, unidade, nome, dominio: dominioBase, ticks: ticksBase, limiar, area, altura = 160 }: Props) {
   if (!dados.some((d) => d.v !== null))
     return (
-      <p style={{ height: altura }} className="grid place-items-center rounded-controle border border-dashed border-borda text-sm text-texto-2">
-        Nenhuma leitura de {nome.toLowerCase()} no período
-      </p>
+      <EstadoVazio icone={ChartNoAxesColumn} titulo={`Nenhuma leitura de ${nome.toLowerCase()}`} detalhe="Sem dados neste intervalo. Tente um período maior." altura={altura} />
     );
   const { dominio, ticks } = ajustarEscala(dados, dominioBase, ticksBase);
   const eixoX = <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--color-texto-2)" }} tickLine={false} axisLine={false} minTickGap={56} />;

@@ -48,7 +48,7 @@ tokens, mas não o nome nem a marca do produto original:
 
 - **Fundo:** `#FCFAF7`. **Texto:** `#423D38`. **Texto secundário:** `#797067`. **Bordas:** `#E3E0DD`.
 - **Laranja principal** `#FE6E00` para ações, item ativo, foco e telemetria. Barras de gráfico a 60% de opacidade.
-- **Shell** (barra lateral 256 px e topo 64 px): preto a 70%, com blur de 12 px e borda branca a 10%; texto branco.
+- **Shell** (barra lateral 256 px e topo 64 px): quase-preto quente sólido `#1F1B18` e borda branca a 10%; texto branco. (Até 2026-11-19 era preto a 70% com blur, que sobre o fundo claro ficava cinza `#4D4D4D`.)
 - **Status:** verde `#00C758` = online, vermelho `#FB2C36` = offline/alerta, amarelo `#EDB200` = aviso.
 - **Tipografia:** fonte do sistema (`ui-sans-serif, system-ui`); rótulos pequenos em caixa alta com espaçamento largo.
 - **Raios:** 6 px nos inputs, 8 px nos controles, 12 px nos cards, pílula nos badges.

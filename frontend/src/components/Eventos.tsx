@@ -1,4 +1,6 @@
+import { Package } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EstadoVazio } from "@/components/EstadoVazio";
 import { Badge } from "@/components/ui/badge";
 import type { EventoSilo } from "@/dados/tipos";
 import { formatarHora, plural } from "@/lib/formato";
@@ -14,7 +16,7 @@ export function Eventos({ eventos }: { eventos: EventoSilo[] }) {
       </CardHeader>
       <CardContent className="px-0 pb-2">
         {eventos.length === 0 ? (
-          <p className="px-5 pb-3 text-sm text-texto-2">Nenhum lote movimentado ainda.</p>
+          <div className="px-5 pb-3"><EstadoVazio icone={Package} titulo="Nenhum lote movimentado ainda" detalhe="Aperte o botão amarelo (entrada) ou o vermelho (saída) na placa." /></div>
         ) : (
           <div className="max-h-72 overflow-y-auto">
             <table className="w-full text-sm">

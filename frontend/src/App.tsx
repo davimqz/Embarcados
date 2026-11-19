@@ -37,7 +37,7 @@ export default function App() {
   return (
     <div className="min-h-dvh pb-16 lg:pb-0 lg:pl-64">
       {/* Barra lateral (shell escuro translúcido, ADR 0002) */}
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-white/10 bg-black/70 text-white backdrop-blur-md lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-white/10 bg-shell text-white lg:flex">
         <div className="flex h-16 items-center gap-2.5 border-b border-white/10 px-5">
           <Wheat aria-hidden className="size-5 text-laranja" />
           <span className="font-semibold">Silo · Grupo 3</span>
@@ -70,7 +70,7 @@ export default function App() {
       </aside>
 
       {/* Topo */}
-      <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-white/10 bg-black/70 px-4 text-white backdrop-blur-md sm:px-6">
+      <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-white/10 bg-shell px-4 text-white sm:px-6">
         <Wheat aria-hidden className="size-5 text-laranja lg:hidden" />
         <h1 className="min-w-0 truncate font-semibold">
           <span className="lg:hidden">Silo · </span>
@@ -98,7 +98,7 @@ export default function App() {
       {import.meta.env.DEV && <SeletorDadosDev atual={MODO} />}
 
       {/* Navegação no celular: barra inferior */}
-      <nav aria-label="Seções" className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/80 text-white backdrop-blur-md lg:hidden">
+      <nav aria-label="Seções" className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-shell text-white lg:hidden">
         <ul className="grid grid-cols-3">
           {NAV.map(({ rota: r, rotulo, icone: Icone }) => (
             <li key={rotulo}>
