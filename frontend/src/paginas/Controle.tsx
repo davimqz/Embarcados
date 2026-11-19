@@ -1,6 +1,7 @@
 import { Cpu, Siren, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BotoesPlaca } from "@/components/BotoesPlaca";
 import { Eventos } from "@/components/Eventos";
 import { PainelSimulacao } from "@/components/PainelSimulacao";
 import type { FonteSimulada } from "@/dados/fonteSimulada";
@@ -78,6 +79,12 @@ export function Controle({ estado, fonte, simulado }: Props) {
           <p className="border-t border-borda px-5 py-3 text-xs text-texto-2">A placa acende o LED sozinha, mesmo sem rede.</p>
         </Card>
       </div>
+
+      <BotoesPlaca
+        eventos={estado.eventos}
+        online={online}
+        aoApertar={simulado ? (e) => fonte.controlar(e === "ENTRADA" ? "entrada" : "saida") : undefined}
+      />
 
       <Eventos eventos={estado.eventos} />
 

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { EventoSilo } from "@/dados/tipos";
 import { formatarHora } from "@/lib/formato";
+import { COR_BOTAO } from "@/components/BotoesPlaca";
 
 /** Entradas e saídas de lotes (grupo3/silo/evento), mais recentes primeiro. */
 export function Eventos({ eventos }: { eventos: EventoSilo[] }) {
@@ -30,7 +31,10 @@ export function Eventos({ eventos }: { eventos: EventoSilo[] }) {
                   <tr key={`${e.device_id}-${e.seq}-${e.ts}`} className="border-b border-borda/60 last:border-0">
                     <td className="px-5 py-2 font-mono text-xs tabular-nums text-texto-2">{formatarHora(e.ts)}</td>
                     <td className="py-2">
-                      <Badge tom={e.evento === "ENTRADA" ? "ok" : "neutro"}>{e.evento === "ENTRADA" ? "Entrada" : "Saída"}</Badge>
+                      <Badge tom="neutro">
+                        <span aria-hidden className="size-2 rounded-full" style={{ background: COR_BOTAO[e.evento] }} />
+                        {e.evento === "ENTRADA" ? "Entrada · amarelo" : "Saída · vermelho"}
+                      </Badge>
                     </td>
                     <td className="py-2 text-right font-mono tabular-nums">{e.saldo}</td>
                     <td className="px-5 py-2 text-right font-mono text-xs tabular-nums text-texto-2">{e.seq}</td>

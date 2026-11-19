@@ -6,7 +6,6 @@ type Controle = Parameters<FonteSimulada["controlar"]>[0];
 
 const GRUPOS: { titulo: string; botoes: [Controle, string][] }[] = [
   { titulo: "Clima", botoes: [["aquecer", "+3 °C"], ["esfriar", "−3 °C"], ["umedecer", "+6 % UR"], ["secar", "−6 % UR"]] },
-  { titulo: "Botões da placa", botoes: [["entrada", "Entrada de lote"], ["saida", "Saída de lote"]] },
   { titulo: "Conexão", botoes: [["desconectar", "Derrubar placa"], ["reconectar", "Reconectar"]] },
 ];
 

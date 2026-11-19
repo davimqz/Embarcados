@@ -21,7 +21,7 @@ npm run build    # checagem de tipos + build de produção em dist/
 
 | Aba | Endereço | O que tem |
 |---|---|---|
-| **Controle** | `#/controle` | Estado da placa (online/offline pelo LWT), estado do alerta (LED vermelho) com os limiares, entradas e saídas de lotes (botões da placa) e o painel de simulação da placa. Sem ventilação: o grupo não tem como ligar/desligar um ventilador |
+| **Controle** | `#/controle` | Estado da placa (online/offline pelo LWT), estado do alerta (LED vermelho) com os limiares, os dois botões da placa (amarelo = entrada, vermelho = saída) com contagem e último aperto, a movimentação de lotes e o painel de simulação da placa. Sem ventilação: o grupo não tem como ligar/desligar um ventilador |
 | **Dashboard** | `#/dashboard` (inicial) | Ao vivo: temperatura e umidade dos últimos 10 min, nível de grão, saldo de lotes e último `seq` por tópico. Período (1 h / 6 h / 24 h): médias, mín./máx., tempo em alerta, lotes movimentados, falhas do DHT11, % do tempo acima dos limiares, gráficos de temperatura, umidade e nível e lotes por hora |
 | **Histórico** | `#/historico` | Log de tudo o que a placa publicou, com filtro por tipo e por período, busca e **exportação CSV** (separador `;` e acentos, abre direto no Excel) |
 
