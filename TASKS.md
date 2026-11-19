@@ -191,8 +191,25 @@ _Tasks T3.1–T3.4._
   - [x] Aviso de alerta com a histerese do contrato (ATIVO > 30 °C / 70 %; NORMAL < 28 °C e < 65 %)
   - [x] Tela marcada como **Simulado** e painel para simular a placa (clima, botões, queda)
   - [x] Sem estouro horizontal em 375 px nem em 1440 px
-- **Observações:** a troca pela fonte real está descrita em `dashboard/README.md`. O histórico (T4.4) e a tela de integridade (M5) aparecem desabilitados no menu.
+- **Observações:** a troca pela fonte real está descrita em `frontend/README.md` (pasta renomeada na T4.5). O histórico (T4.4) e a tela de integridade (M5) aparecem desabilitados no menu.
 - **Evidência:** `docs/entregas/M4/T4.0-dashboard-desktop-simulador.png`, `docs/entregas/M4/T4.0-dashboard-celular-simulador.png`, `docs/entregas/M4/T4.0-npm-run-build.log`
+
+### T4.5 — Organizar o frontend em abas de controle, dashboard e histórico
+- **Marco:** M4
+- **Status:** review
+- **Responsável:** Luiz Felipe
+- **Depende de:** T4.0
+- **Descrição:** pedido do grupo em 2026-11-19 para cobrir o "visualização, interação e gestão" do enunciado: renomear `dashboard/` para `frontend/` e dividir a tela em três abas (**Controle**, **Dashboard** com mais gráficos e indicadores, **Histórico** em forma de log). Ainda com dados simulados, na mesma exceção da T4.0.
+- **Critérios de aceite:**
+  - [x] Pasta `frontend/`, com `CLAUDE.md`, README e ADR 0002 apontando para ela
+  - [x] Controle: estado da placa, ventilação e registro dos comandos (`seq`, tempo de resposta, confirmado/sem resposta)
+  - [x] Dashboard: ao vivo + indicadores e gráficos de 1 h / 6 h / 24 h (médias, mín./máx., tempo em alerta, lotes por hora, nível, falhas do DHT11)
+  - [x] Histórico: log com filtro por tipo e período, busca e exportação CSV
+  - [x] Nenhum gráfico com eixo duplo (temperatura e umidade separados)
+  - [x] Navegação no celular (barra inferior) sem estouro horizontal em 375 px
+  - [x] `npm run build` sem erros nem avisos
+- **Observações:** a fonte simulada ganhou 24 h de histórico (1 leitura/min, semente fixa) e a interface `FonteDados` ganhou `consultar()`, que o backend vai implementar como REST (T4.4).
+- **Evidência:** `docs/entregas/M4/T4.5-{controle,dashboard,historico}-desktop-simulador.png`, `docs/entregas/M4/T4.5-{dashboard,historico}-celular-simulador.png`, `docs/entregas/M4/T4.5-npm-run-build.log`
 
 _Tasks T4.1–T4.4 a detalhar; dependem do WebSocket do `backend/ingest` (M3)._
 
