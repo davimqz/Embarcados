@@ -62,6 +62,8 @@ export interface FonteDados {
   historico(): Mensagem[];
   /** Assina as mensagens em tempo real; devolve a função para cancelar. */
   assinar(aoReceber: (m: Mensagem) => void): () => void;
+  /** Consulta o histórico gravado (T4.4: REST do backend sobre o SQLite). ts em segundos UTC. */
+  consultar(filtro: { desde: number; ate: number; topicos?: Topico[] }): Promise<Mensagem[]>;
   /** Pede ao backend para publicar em grupo3/cmd; devolve o seq do comando. */
   enviarComando(valor: "LIGAR" | "DESLIGAR"): number;
 }

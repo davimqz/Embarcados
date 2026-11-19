@@ -26,8 +26,17 @@ export class FonteSimulada implements FonteDados {
   private ventilacao: "LIGADA" | "DESLIGADA" = "DESLIGADA";
   private online = true;
   private hist: Mensagem[] = [];
+  /** Tudo o que "o banco" guardou: 24 h anteriores (1 leitura/min) + o que foi publicado nesta sessão. */
+  private arquivo: Mensagem[];
 
   constructor() {
+    // A sessão ao vivo continua de onde o histórico parou (mesmo boot: contadores e seq seguem).
+    const a = gerarArquivo24h();
+    this.arquivo = a.mensagens;
+    Object.assign(this.seq, a.seq);
+    this.entradas = a.entradas;
+    this.saidas = a.saidas;
+    this.nivel = a.nivel;
     // 5 min de histórico (60 leituras) + alguns eventos, para o gráfico não nascer vazio.
     const agora = Math.floor(Date.now() / 1000);
     const eventos = new Map<number, "ENTRADA" | "SAIDA">([[56, "ENTRADA"], [38, "ENTRADA"], [19, "SAIDA"]]);
@@ -43,12 +52,22 @@ export class FonteSimulada implements FonteDados {
       payload: { device_id: DEVICE_ID, ts: agora - 300, seq: ++this.seq.ventilacao, ventilacao: "DESLIGADA", cmd_seq: null },
     });
     this.avaliarAlerta(agora, true);
+    this.arquivo.push(...this.hist);
   }
 
   historico() {
     const h = this.hist;
     this.hist = [];
     return h;
+  }
+
+  async consultar({ desde, ate, topicos }: { desde: number; ate: number; topicos?: Mensagem["topico"][] }) {
+    await new Promise((r) => setTimeout(r, 250)); // latência simulada, para o estado "carregando" aparecer
+    return this.arquivo.filter((m) => {
+      if (topicos && !topicos.includes(m.topico)) return false;
+      const ts = "ts" in m.payload ? m.payload.ts : null;
+      return ts !== null && ts >= desde && ts <= ate;
+    });
   }
 
   assinar(aoReceber: (m: Mensagem) => void) {
@@ -173,8 +192,71 @@ export class FonteSimulada implements FonteDados {
   }
 
   private emitir(m: Mensagem) {
+    this.arquivo.push(m);
     this.ouvintes.forEach((f) => f(m));
   }
+}
+
+/**
+ * 24 h anteriores à sessão, 1 leitura por minuto, com ciclo diário de temperatura (pico à tarde),
+ * lotes no horário comercial e alertas pela mesma histerese do contrato.
+ * Semente fixa: o histórico é o mesmo a cada recarga.
+ */
+function gerarArquivo24h() {
+  let semente = 20261119;
+  const rand = () => (semente = (semente * 1103515245 + 12345) % 2 ** 31) / 2 ** 31;
+  const out: Mensagem[] = [];
+  const fim = agoraS() - 6 * 60; // termina antes do histórico ao vivo
+  const inicio = fim - 24 * 3600;
+  const seq = { tel: 0, ev: 0, al: 0 };
+  let entradas = 0;
+  let saidas = 0;
+  let nivel = 20;
+  let ativo = false;
+  let ruidoT = 0;
+  let ruidoU = 0;
+  for (let ts = inicio; ts <= fim; ts += 60) {
+    const d = new Date(ts * 1000);
+    const h = d.getHours() + d.getMinutes() / 60;
+    const ciclo = Math.sin(((h - 9) / 24) * 2 * Math.PI); // máximo por volta das 15h
+    ruidoT = ruidoT * 0.9 + (rand() - 0.5) * 0.6;
+    ruidoU = ruidoU * 0.9 + (rand() - 0.5) * 1.2;
+    const t = Math.round(25 + ciclo * 5.5 + ruidoT);
+    const u = Math.round(56 - ciclo * 11 + ruidoU);
+    if (h >= 7 && h <= 18 && rand() < 0.035) {
+      const ev: "ENTRADA" | "SAIDA" = nivel > 85 || (nivel > 30 && rand() < 0.4) ? "SAIDA" : "ENTRADA";
+      if (ev === "ENTRADA") {
+        entradas++;
+        nivel = Math.min(100, nivel + PASSO_NIVEL_LOTE);
+      } else {
+        saidas++;
+        nivel = Math.max(0, nivel - PASSO_NIVEL_LOTE);
+      }
+      out.push({ topico: "grupo3/silo/evento", payload: { device_id: DEVICE_ID, ts: ts - 20, seq: ++seq.ev, evento: ev, entradas, saidas, saldo: entradas - saidas } });
+    }
+    const falha = rand() < 0.01;
+    const dist = DIST_VAZIO_CM - (nivel / 100) * (DIST_VAZIO_CM - DIST_CHEIO_CM);
+    out.push({
+      topico: "grupo3/telemetria",
+      payload: { device_id: DEVICE_ID, ts, seq: ++seq.tel, temperatura: falha ? null : t, umidade: falha ? null : u, distancia_cm: Math.round(dist * 10) / 10, nivel_pct: Math.round(nivel) },
+    });
+    if (falha) continue;
+    const motivos: ("TEMPERATURA" | "UMIDADE")[] = [];
+    if (t > 30) motivos.push("TEMPERATURA");
+    if (u > 70) motivos.push("UMIDADE");
+    const novo: boolean = !ativo && motivos.length > 0 ? true : ativo && t < 28 && u < 65 ? false : ativo;
+    if (novo !== ativo) {
+      ativo = novo;
+      out.push({ topico: "grupo3/alerta", payload: { device_id: DEVICE_ID, ts, seq: ++seq.al, alerta: novo ? "ATIVO" : "NORMAL", motivos: novo ? motivos : [], temperatura: t, umidade: u } });
+    }
+  }
+  return {
+    mensagens: out,
+    seq: { telemetria: seq.tel, evento: seq.ev, alerta: seq.al },
+    entradas,
+    saidas,
+    nivel,
+  };
 }
 
 const agoraS = () => Math.floor(Date.now() / 1000);
