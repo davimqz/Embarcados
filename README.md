@@ -28,7 +28,7 @@ Broker ──► Ingestão (valida + SQLite) ──► Ancoragem (Merkle root �
 | `firmware/` | Projeto PlatformIO do ESP32 |
 | `backend/ingest/` | Serviço que assina o broker, valida e persiste em SQLite |
 | `backend/anchor/` | Serviço que agrupa leituras em lotes e ancora a Merkle root on-chain |
-| `dashboard/` | Flows Node-RED exportados ou app web |
+| `frontend/` | App web: controle, dashboard e histórico (Vite + React + TS) |
 | `docs/arquitetura.md` | Arquitetura e decisões de FreeRTOS |
 | `docs/topicos-mqtt.md` | Contrato de tópicos e payloads |
 | `docs/decisoes/` | ADRs |

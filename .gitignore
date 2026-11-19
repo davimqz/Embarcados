@@ -22,6 +22,7 @@ keystore/
 node_modules/
 dist/
 coverage/
+*.tsbuildinfo
 npm-debug.log*
 
 # --- Banco local ---

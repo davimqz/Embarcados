@@ -62,7 +62,7 @@ Já existe uma base funcional da Atividade Prática 02 (`firmware/src/main.cpp`)
 ├── backend/
 │   ├── ingest/
 │   └── anchor/
-├── dashboard/               # flows Node-RED exportados (.json) ou app web
+├── frontend/                # app web (dashboard): Vite + React + TS
 └── TASKS.md                 # backlog vivo (ver seção 4)
 ```
 
