@@ -223,16 +223,17 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T2.5 — Ajustar a pinagem do firmware ao protótipo montado
 - **Marco:** M2
-- **Status:** doing
+- **Status:** review
 - **Responsável:** Davi
 - **Depende de:** T2.4
-- **Descrição:** o protótipo foi montado com outros pinos e com um DHT22 no lugar do DHT11. O firmware e a pinagem documentada passam a seguir a placa: DHT22 no GPIO 4, TRIG no 32, ECHO no 33, LEDs no 25/26/27.
+- **Descrição:** o protótipo foi montado e testado com `firmware/teste-montagem/` (2026-11-19). O firmware, o esquemático e a pinagem documentada passam a seguir a placa: DHT11 no GPIO 25, TRIG no 5, ECHO no 14, botões no 19/21, LEDs no 22/23.
 - **Critérios de aceite:**
-  - [x] Sensores no firmware: DHT22 no GPIO 4, TRIG no 32, ECHO no 33; `pio run` sem warnings novos
-  - [ ] LEDs de alerta e ventilação nos pinos do protótipo (25/26/27, cor de cada pino a confirmar)
-  - [ ] `docs/arquitetura.md` §2, `docs/decisoes-pendentes.md` e `docs/topicos-mqtt.md` trocam DHT11 por DHT22 e mostram a pinagem nova
-  - [ ] Na placa, linhas `[SENSOR]` com temperatura, umidade e distância coerentes (vale também para a T2.1)
-- **Evidência:** `docs/entregas/M2/t2.5-sensores.log` (monitor serial)
+  - [x] Sensores no firmware: DHT11 no GPIO 25, TRIG no 5, ECHO no 14; `pio run` sem warnings novos
+  - [x] LEDs de alerta e ventilação mantidos no 22 (vermelho) e 23 (azul), sem conflito com o DHT11
+  - [x] `docs/arquitetura.md` §2, `docs/decisoes-pendentes.md` e `hardware/esquematico/diagram.json` mostram a pinagem nova
+  - [x] Teste de montagem na placa: botões, DHT11 e HC-SR04 respondendo (`firmware/teste-montagem/`)
+  - [ ] Firmware principal na placa: linhas `[SENSOR]` com temperatura, umidade e distância coerentes (vale também para a T2.1)
+- **Evidência:** `docs/entregas/M2/t2.5-sensores.log` (monitor serial do firmware principal)
 
 ## M3 — Ingestão e persistência · tag `v0.3.0`
 

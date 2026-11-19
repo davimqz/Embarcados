@@ -55,15 +55,15 @@ Ficam de fora: TCRT5000 (reserva) e potenciômetro. A escotilha **abre com a mã
 |---|---|---|
 | Botão entrada (amarelo) | um lado / outro lado | GPIO 19 / GND (`INPUT_PULLUP`) |
 | Botão saída (vermelho) | um lado / outro lado | GPIO 21 / GND (`INPUT_PULLUP`) |
-| DHT11 | VCC · DATA · GND | 3V3 · **GPIO 4** · GND |
-| HC-SR04 | VCC · TRIG · ECHO · GND | **VIN (5 V)** · **GPIO 26** · divisor → **GPIO 27** · GND |
+| DHT11 (módulo de 3 pinos) | `+` · `out` · `-` | 3V3 · **GPIO 25** · GND (o pull-up de 10 kΩ já vem no módulo) |
+| HC-SR04 | VCC · TRIG · ECHO · GND | **VIN (5 V)** · **GPIO 5** · divisor → **GPIO 14** · GND |
 | LED alerta (RGB) | perna R · perna mais longa (cátodo) | **GPIO 22** → 220 Ω → R · cátodo → GND · G e B sem ligação |
 | LED ventilação (RGB) | perna B (ou G) · perna mais longa (cátodo) | **GPIO 23** → 100 Ω → B · cátodo → GND · R e G sem ligação |
 
 **Divisor do ECHO** (o HC-SR04 responde com 5 V e o ESP32 aceita até 3,3 V):
 
 ```
-ECHO ──[ 1 kΩ ]──┬── GPIO 27
+ECHO ──[ 1 kΩ ]──┬── GPIO 14
                  │
               [ 2 kΩ ]
                  │
@@ -72,6 +72,10 @@ ECHO ──[ 1 kΩ ]──┬── GPIO 27
 
 O VIN só tem 5 V com a placa ligada pelo USB. Todos os GND são comuns.
 Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39 (só entrada).
+O GPIO 5 é exceção aceita: o TRIG do HC-SR04 é entrada de alta impedância e não muda o nível do pino no boot.
+
+Pinagem conferida na placa em 2026-11-19 com `firmware/teste-montagem/` (botões, DHT11 e HC-SR04 respondendo).
+O esquemático do Wokwi fica em `hardware/esquematico/diagram.json` (o Wokwi não tem DHT11; o desenho usa o DHT22, que tem a mesma pinagem).
 
 ## 3. Medidas para a impressão 3D
 

@@ -106,6 +106,9 @@ servem apenas para leitura).
 HC-SR04 TRIG → GPIO 26, ECHO → GPIO 27 (com divisor de tensão). Os LEDs do grupo são RGB de cátodo comum: usar só
 um canal de cada (vermelho com 220 Ω no alerta; azul ou verde com 100 Ω na ventilação).
 
+**Atualização (2026-11-19, protótipo montado e testado):** DHT11 → **GPIO 25** · HC-SR04 TRIG → **GPIO 5**, ECHO →
+**GPIO 14** · botões 19/21 e LEDs 22/23 sem mudança. Vale a tabela de `docs/arquitetura.md` §2.
+
 ## 4. Intervalo de leitura do sensor 🟡
 
 **O que decidir:** de quanto em quanto tempo a placa lê e publica a telemetria.
