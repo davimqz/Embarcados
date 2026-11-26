@@ -235,6 +235,18 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
   - [ ] Firmware principal na placa: linhas `[SENSOR]` com temperatura, umidade e distância coerentes (vale também para a T2.1)
 - **Evidência:** `docs/entregas/M2/t2.5-sensores.log` (monitor serial do firmware principal)
 
+### T2.6 — Testar na bancada os dois LEDs RGB
+- **Marco:** M2
+- **Status:** review
+- **Responsável:** Davi
+- **Depende de:** —
+- **Descrição:** programa de teste separado do firmware (env `teste-rgb` no PlatformIO) que passa cada LED RGB por vermelho, verde, azul, amarelo, ciano, magenta, branco e apagado, para conferir a montagem antes de usar os LEDs no firmware. Task registrada depois de implementada.
+- **Critérios de aceite:**
+  - [x] `pio run -e teste-rgb` e `pio run -e esp32dev` compilam; o firmware principal não inclui `src/testes/`
+  - [x] Pinos: LED 1 R=GPIO15, G=GPIO2, B=GPIO4 · LED 2 R=GPIO26, G=GPIO32, B=GPIO33 (o R do LED 2 saiu do GPIO35, que só funciona como entrada)
+  - [x] As 8 cores aparecem nos dois LEDs na placa (confirmado pelo grupo)
+- **Evidência:** pendente: foto/vídeo dos LEDs em `docs/entregas/M2/`
+
 ## M3 — Ingestão e persistência · tag `v0.3.0`
 
 _Tasks T3.1–T3.4._
