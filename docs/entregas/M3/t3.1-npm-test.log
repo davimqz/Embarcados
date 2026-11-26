@@ -1,0 +1,27 @@
+
+> silo-backend@0.0.0 test
+> node --test ingest/*.test.ts
+
+✔ aceita telemetria do contrato sem alterar o payload (2.0754ms)
+✔ aceita ts null (relógio ainda sem NTP) e status sem seq (0.1902ms)
+✔ descarta JSON inválido, sem device_id, sem seq e tópico fora do painel (0.2475ms)
+✔ consulta por período usa o ts da placa, ou a chegada quando ts é null (0.3834ms)
+✔ recentes traz a janela e o último status e alerta, mesmo antigos (0.3742ms)
+✔ descarta as mais antigas quando passa do máximo (0.2041ms)
+✔ aceita o exemplo do contrato de cada tópico, sem alterar o payload (1.531ms)
+✔ aceita ts null, leituras null e campos a mais (0.1473ms)
+✔ rejeita JSON inválido, payload que não é objeto e tópico fora do contrato (0.1707ms)
+✔ rejeita device_id, ts e seq fora do contrato em qualquer tópico com seq (0.5217ms)
+✔ rejeita evento fora do contrato (0.1966ms)
+✔ rejeita status fora do contrato (0.1712ms)
+✔ rejeita telemetria fora do contrato (0.2182ms)
+✔ rejeita alerta fora do contrato (0.1763ms)
+✔ rejeita ventilacao fora do contrato (0.2681ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 130.4508

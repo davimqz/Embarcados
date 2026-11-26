@@ -1,0 +1,50 @@
+# T3.1 — ingest validando o contrato (simulador, broker aedes na porta 1884)
+# Roteiro: simulador publica a cada 2 s com 30% de falha de sensor; às 21:38:50 um cliente publica 6 payloads
+# fora do contrato e 1 de grupo3/ventilacao; às 21:39:01 o broker é derrubado e volta às 21:39:07.
+# O buraco no seq da telemetria (8 → 12) é a perda durante a queda; a detecção é da T3.3.
+
+2026-11-25 21:38:45 [HTTP] Servidor do painel em http://localhost:3010 (WebSocket em /ws)
+2026-11-25 21:38:45 [MQTT] Conectado a mqtt://localhost:1884
+2026-11-25 21:38:45 [MQTT] Assinado: grupo3/silo/evento, grupo3/status, grupo3/telemetria, grupo3/alerta, grupo3/ventilacao
+2026-11-25 21:38:45 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653525,"seq":1,"temperatura":null,"umidade":null,"distancia_cm":7.4,"nivel_pct":51} → 0 painel(is)
+2026-11-25 21:38:47 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653527,"seq":2,"temperatura":26,"umidade":60,"distancia_cm":7.4,"nivel_pct":51} → 0 painel(is)
+2026-11-25 21:38:48 [MQTT] grupo3/alerta {"device_id":"esp32-grupo3-sim0001","ts":1795653527,"seq":1,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":60} → 0 painel(is)
+2026-11-25 21:38:50 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653530,"seq":3,"temperatura":26,"umidade":60,"distancia_cm":7.4,"nivel_pct":51} → 0 painel(is)
+2026-11-25 21:38:50 [MQTT] grupo3/silo/evento {"device_id":"esp32-grupo3-sim0001","ts":1795653530,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1} → 0 painel(is)
+2026-11-25 21:38:50 [MQTT] Rejeitada em grupo3/telemetria (JSON inválido): {temperatura: 27
+2026-11-25 21:38:50 [MQTT] Rejeitada em grupo3/telemetria (device_id ausente ou vazio): {"ts":1792500005,"seq":9,"temperatura":27,"umidade":61,"distancia_cm":5.8,"nivel_pct":62}
+2026-11-25 21:38:50 [MQTT] Rejeitada em grupo3/telemetria (temperatura deve ser inteiro ou null): {"device_id":"esp32-teste","ts":1792500005,"seq":9,"temperatura":"27","umidade":61,"distancia_cm":5.8,"nivel_pct":62}
+2026-11-25 21:38:50 [MQTT] Rejeitada em grupo3/silo/evento (saldo diferente de entradas - saidas): {"device_id":"esp32-teste","ts":null,"seq":3,"evento":"ENTRADA","entradas":2,"saidas":1,"saldo":5}
+2026-11-25 21:38:50 [MQTT] Rejeitada em grupo3/alerta (motivos deve ser vazio quando alerta é NORMAL): {"device_id":"esp32-teste","ts":null,"seq":1,"alerta":"NORMAL","motivos":["UMIDADE"],"temperatura":25,"umidade":60}
+2026-11-25 21:38:50 [MQTT] Rejeitada em grupo3/status (status deve ser online ou offline): {"device_id":"esp32-teste","status":"talvez"}
+2026-11-25 21:38:50 [MQTT] grupo3/ventilacao {"device_id":"esp32-teste","ts":null,"seq":1,"ventilacao":"DESLIGADA","cmd_seq":null} (válida; fora do painel)
+2026-11-25 21:38:52 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653532,"seq":4,"temperatura":null,"umidade":null,"distancia_cm":null,"nivel_pct":null} → 0 painel(is)
+2026-11-25 21:38:53 [MQTT] grupo3/silo/evento {"device_id":"esp32-grupo3-sim0001","ts":1795653533,"seq":2,"evento":"SAIDA","entradas":1,"saidas":1,"saldo":0} → 0 painel(is)
+2026-11-25 21:38:54 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653534,"seq":5,"temperatura":null,"umidade":null,"distancia_cm":7.4,"nivel_pct":51} → 0 painel(is)
+2026-11-25 21:38:56 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653536,"seq":6,"temperatura":26,"umidade":60,"distancia_cm":7.4,"nivel_pct":51} → 0 painel(is)
+2026-11-25 21:38:58 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653538,"seq":7,"temperatura":null,"umidade":null,"distancia_cm":null,"nivel_pct":null} → 0 painel(is)
+2026-11-25 21:39:00 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653540,"seq":8,"temperatura":26,"umidade":60,"distancia_cm":7.6,"nivel_pct":49} → 0 painel(is)
+2026-11-25 21:39:01 [MQTT] Erro: read ECONNRESET
+2026-11-25 21:39:01 [MQTT] Sem conexão com o broker
+2026-11-25 21:39:04 [MQTT] Reconectando a mqtt://localhost:1884...
+2026-11-25 21:39:04 [MQTT] Erro: ECONNREFUSED
+2026-11-25 21:39:07 [MQTT] Reconectando a mqtt://localhost:1884...
+2026-11-25 21:39:07 [MQTT] Conectado a mqtt://localhost:1884
+2026-11-25 21:39:07 [MQTT] Assinado: grupo3/silo/evento, grupo3/status, grupo3/telemetria, grupo3/alerta, grupo3/ventilacao
+2026-11-25 21:39:07 [MQTT] grupo3/status {"device_id":"esp32-grupo3-sim0001","status":"online"} → 0 painel(is)
+2026-11-25 21:39:08 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653548,"seq":12,"temperatura":26,"umidade":61,"distancia_cm":7.4,"nivel_pct":51} → 0 painel(is)
+2026-11-25 21:39:10 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653550,"seq":13,"temperatura":26,"umidade":60,"distancia_cm":null,"nivel_pct":null} → 0 painel(is)
+2026-11-25 21:39:12 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653552,"seq":14,"temperatura":null,"umidade":null,"distancia_cm":7.6,"nivel_pct":49} → 0 painel(is)
+2026-11-25 21:39:14 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653554,"seq":15,"temperatura":26,"umidade":61,"distancia_cm":7.6,"nivel_pct":49} → 0 painel(is)
+2026-11-25 21:39:16 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653556,"seq":16,"temperatura":26,"umidade":60,"distancia_cm":7.4,"nivel_pct":51} → 0 painel(is)
+2026-11-25 21:39:18 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653558,"seq":17,"temperatura":null,"umidade":null,"distancia_cm":7.5,"nivel_pct":50} → 0 painel(is)
+2026-11-25 21:39:20 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653560,"seq":18,"temperatura":null,"umidade":null,"distancia_cm":7.6,"nivel_pct":49} → 0 painel(is)
+2026-11-25 21:39:22 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653562,"seq":19,"temperatura":null,"umidade":null,"distancia_cm":null,"nivel_pct":null} → 0 painel(is)
+2026-11-25 21:39:22 [MQTT] grupo3/silo/evento {"device_id":"esp32-grupo3-sim0001","ts":1795653562,"seq":3,"evento":"ENTRADA","entradas":2,"saidas":1,"saldo":1} → 0 painel(is)
+2026-11-25 21:39:24 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653564,"seq":20,"temperatura":null,"umidade":null,"distancia_cm":null,"nivel_pct":null} → 0 painel(is)
+2026-11-25 21:39:26 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653566,"seq":21,"temperatura":26,"umidade":60,"distancia_cm":7,"nivel_pct":56} → 0 painel(is)
+2026-11-25 21:39:28 [MQTT] grupo3/telemetria {"device_id":"esp32-grupo3-sim0001","ts":1795653568,"seq":22,"temperatura":26,"umidade":60,"distancia_cm":7,"nivel_pct":56} → 0 painel(is)
+2026-11-25 21:39:29 [MQTT] Erro: read ECONNRESET
+2026-11-25 21:39:29 [MQTT] Sem conexão com o broker
+2026-11-25 21:39:32 [MQTT] Reconectando a mqtt://localhost:1884...
+2026-11-25 21:39:32 [MQTT] Erro: ECONNREFUSED

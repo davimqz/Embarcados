@@ -292,15 +292,16 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T3.1 — Assinar os tópicos da placa e validar o schema no serviço ingest
 - **Marco:** M3
-- **Status:** todo
-- **Responsável:** —
+- **Status:** done
+- **Responsável:** Davi
 - **Depende de:** T3.0
 - **Descrição:** o serviço `ingest` assina os tópicos publicados pela placa e valida cada payload contra o contrato; mensagem inválida é rejeitada com o motivo no log.
 - **Critérios de aceite:**
-  - [ ] Assina `grupo3/silo/evento`, `grupo3/telemetria`, `grupo3/alerta`, `grupo3/ventilacao` e `grupo3/status`
-  - [ ] Payload fora do contrato (JSON inválido, campo faltando, tipo errado) é rejeitado com o motivo no log
-  - [ ] Reconecta sozinho se o broker cair
-- **Evidência:** `docs/entregas/M3/t3.1-ingest-simulador.log`
+  - [x] Assina `grupo3/silo/evento`, `grupo3/telemetria`, `grupo3/alerta`, `grupo3/ventilacao` e `grupo3/status`
+  - [x] Payload fora do contrato (JSON inválido, campo faltando, tipo errado) é rejeitado com o motivo no log
+  - [x] Reconecta sozinho se o broker cair
+- **Observações:** validador escrito à mão em `backend/ingest/contrato.ts`, sem dependência nova (o contrato é pequeno e o motivo da rejeição sai em português). Campos a mais são aceitos. `grupo3/ventilacao` é validado, mas não vai ao painel (decisão 14). Testes em `contrato.test.ts` (15 testes no total, todos passando).
+- **Evidência:** `docs/entregas/M3/t3.1-ingest-simulador.log` (6 payloads rejeitados com motivo; broker derrubado e reconexão em 6 s)
 
 ### T3.2 — Persistir as mensagens no SQLite com hash SHA-256
 - **Marco:** M3
