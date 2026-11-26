@@ -88,6 +88,22 @@
 - **Observações:** cada tópico tem o seu próprio `seq`; o `ts` da telemetria é o da leitura. O PubSubClient só publica em QoS 0.
 - **Evidência:** `docs/topicos-mqtt.md`
 
+### T0.7 — Modelar o silo em 3D e gerar os STLs
+- **Marco:** M0
+- **Status:** review
+- **Responsável:** Davi
+- **Depende de:** T0.5
+- **Descrição:** gerar as peças do silo para a impressora do grupo (12 × 12 × 12 cm) a partir das medidas do §3 de `docs/arquitetura.md`, com o modelo paramétrico versionado em `hardware/silo-3d/`. Pedido do grupo, fora do roadmap original.
+- **Critérios de aceite:**
+  - [x] Script gera base, tampa da base, corpo, tampa do silo, capa do sensor, escotilha e peça de teste em STL
+  - [x] Toda peça cabe em 120 × 120 × 120 mm e é sólida fechada (manifold)
+  - [x] README com orientação de impressão, quantidade de cada peça e montagem
+  - [x] Ventoinha 120 × 120 × 25 entre a base e a tampa da base (parafusos M3) e caminho do ar: rasgos na base, tampa da base, piso do silo e respiros furados
+  - [ ] Peça de teste impressa e conferida com o HC-SR04, um LED e um botão
+  - [x] Tampa da base e tampa do silo em 2D (DXF, `hardware/silo-3d/dxf/`), com o mesmo número de furos e a mesma área da chapa que os STLs
+- **Em review:** falta imprimir a peça de teste e conferir os encaixes com as peças reais.
+- **Evidência:** `hardware/silo-3d/stl/` e `step/` (versão reparada, enviada ao professor em 2026-10-29), `docs/entregas/M0/t0.7-silo-3d.png` (prévia) e foto da peça de teste
+
 ---
 
 ## M1 — Firmware base robusto · tag `v0.1.0` · **fechado em 2026-10-20**
