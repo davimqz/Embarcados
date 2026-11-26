@@ -49,6 +49,19 @@ tópico, `device_id`, `seq`, `ts` (`null` em `grupo3/status` ou sem NTP), `receb
 (`backend/dados/silo.db`, ou `BANCO_CAMINHO` no `.env`) é criado sozinho na primeira execução e fica fora do git.
 Mensagens rejeitadas pelo contrato não são gravadas.
 
+O **`seq`** de cada placa e tópico é conferido com o anterior (`ingest/sequencia.ts`). Cada ocorrência sai no log com
+a tag `[SEQ]` e vai para a tabela `ocorrencias_seq`:
+
+| Tipo | Quando | Grava em `leituras`? |
+|---|---|---|
+| `buraco` | `seq` pulou (ex.: 7 → 9); guarda o intervalo perdido (`faltando_de`..`faltando_ate`) | sim |
+| `duplicata` | mesmo `seq` e mesmo payload (SHA-256) de uma mensagem já recebida neste boot | **não**, nem vai ao painel |
+| `reboot` | `seq` menor ou igual ao anterior com payload novo: a placa reiniciou (não é erro) | sim |
+
+Ao subir, o servidor retoma o último `seq` de cada fluxo a partir do banco, então reiniciar o backend não gera reboot
+falso e a mensagem retida que o broker reentrega vira duplicata. A primeira mensagem de um fluxo que o banco ainda não
+conhece não é comparada com nada (perder justamente ela não aparece como buraco).
+
 O WebSocket e o `/api/mensagens` ainda leem do arquivo **em memória** (até 20 000, ~24 h), que some ao reiniciar; o
 histórico do painel a partir do SQLite é a T4.4.
 
