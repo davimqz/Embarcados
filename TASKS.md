@@ -305,15 +305,16 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T3.2 — Persistir as mensagens no SQLite com hash SHA-256
 - **Marco:** M3
-- **Status:** todo
-- **Responsável:** —
+- **Status:** done
+- **Responsável:** Davi
 - **Depende de:** T3.1
 - **Descrição:** gravar cada mensagem válida na tabela `leituras`, com o payload bruto exatamente como chegou e o SHA-256 dele, base da Merkle root do M5.
 - **Critérios de aceite:**
-  - [ ] Tabela `leituras` com tópico, `device_id`, `seq`, `ts`, horário de recebimento, payload bruto e hash
-  - [ ] O hash gravado bate com o SHA-256 do payload recalculado a partir do banco
-  - [ ] O banco é criado sozinho na primeira execução e fica fora do git
-- **Evidência:** `docs/entregas/M3/t3.2-dump-simulador.txt`
+  - [x] Tabela `leituras` com tópico, `device_id`, `seq`, `ts`, horário de recebimento, payload bruto e hash
+  - [x] O hash gravado bate com o SHA-256 do payload recalculado a partir do banco
+  - [x] O banco é criado sozinho na primeira execução e fica fora do git
+- **Observações:** `backend/ingest/banco.ts` com better-sqlite3 (já previsto na stack e no ADR 0002). Grava as mensagens válidas dos cinco tópicos; o hash é o SHA-256 dos bytes recebidos do broker, e o payload é guardado como texto sem reformatar (bytes que não são UTF-8 são recusados para o hash continuar recalculável). `.gitignore` passou a cobrir também `*.db-wal`/`*.db-shm` (modo WAL). Testes em `banco.test.ts` (hash conhecido, colunas, payload byte a byte, adulteração detectada); 21 testes no total, todos passando.
+- **Evidência:** `docs/entregas/M3/t3.2-dump-simulador.txt` (20 linhas gravadas do simulador em 60 s, 0 com hash divergente)
 
 ### T3.3 — Detectar seq faltante ou duplicado e registrar
 - **Marco:** M3

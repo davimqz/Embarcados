@@ -8,7 +8,7 @@ checa os tipos.
 | `comum/` | Configuração (`.env`) e nomes dos tópicos | T3.0 |
 | `broker/` | Broker MQTT de desenvolvimento (aedes), para não precisar instalar o Mosquitto | T3.0 |
 | `simulador/` | Simulador da placa: publica o mesmo que o firmware do M2 | T3.0 |
-| `ingest/` | Servidor do painel (MQTT → WebSocket/REST, T4.6), validação do contrato (`contrato.ts`, T3.1); depois, SQLite | T4.6, T3.1–T3.3 |
+| `ingest/` | Servidor do painel (MQTT → WebSocket/REST, T4.6), validação do contrato (`contrato.ts`, T3.1), SQLite (`banco.ts`, T3.2) | T4.6, T3.1–T3.3 |
 | `anchor/` | Serviço de ancoragem na Cardano Preprod | M5 |
 
 ## Como rodar
@@ -26,7 +26,7 @@ npm run simulador         # terminal 2: a "placa"
 
 ```sh
 npm run servidor          # assina o broker do .env e serve o painel em http://localhost:3000
-npm test                  # testes do validador do contrato e do arquivo em memória
+npm test                  # testes do validador do contrato, do arquivo em memória e do banco
 ```
 
 O `servidor` (`ingest/servidor.ts`) assina os cinco tópicos da placa (`grupo3/status`, `grupo3/telemetria`,
@@ -41,10 +41,16 @@ reconectar a cada 3 s:
 |---|---|
 | `ws://localhost:3000/ws` | Ao conectar, manda as mensagens dos últimos 10 min (mais o último status e alerta); depois, cada mensagem nova |
 | `GET /api/mensagens?desde=&ate=&topicos=a,b` | Histórico por período (`ts` em segundos UTC; mensagem com `ts: null` usa a hora de chegada) |
-| `GET /api/saude` | Broker, conexão, total de mensagens guardadas e painéis abertos |
+| `GET /api/saude` | Broker, conexão, mensagens em memória, linhas gravadas no SQLite e painéis abertos |
 
-As mensagens ficam **só em memória** (até 20 000, ~24 h): ao reiniciar o servidor, o histórico some. O SQLite entra
-na T3.2, neste mesmo serviço.
+**Toda mensagem válida** (os cinco tópicos, inclusive `grupo3/ventilacao`) é gravada no SQLite, na tabela `leituras`:
+tópico, `device_id`, `seq`, `ts` (`null` em `grupo3/status` ou sem NTP), `recebido_em` (ms UTC da chegada), o
+**payload bruto** exatamente como veio do broker e o **SHA-256** desses bytes (base da Merkle root do M5). O banco
+(`backend/dados/silo.db`, ou `BANCO_CAMINHO` no `.env`) é criado sozinho na primeira execução e fica fora do git.
+Mensagens rejeitadas pelo contrato não são gravadas.
+
+O WebSocket e o `/api/mensagens` ainda leem do arquivo **em memória** (até 20 000, ~24 h), que some ao reiniciar; o
+histórico do painel a partir do SQLite é a T4.4.
 
 Com a placa real, o `.env` aponta para o mesmo broker do `config.h` do firmware:
 

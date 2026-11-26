@@ -1,0 +1,49 @@
+# T3.2 — dump da tabela leituras (2026-11-26T00:49:14.683Z)
+# Banco: backend/dados/silo.db, criado sozinho pelo `npm run servidor` (pasta dados/ não existia antes)
+# Fonte: simulador (npm run simulador) por 60 s, via broker do .env; hash recalculado = sha256(payload lido do banco)
+
+id | topico | device_id | seq | ts | recebido_em | hash gravado | hash recalculado | confere
+1 | grupo3/alerta | esp32-grupo3-sim0001 | 1 | 1795653986 | 2026-11-26T00:47:49.829Z | 7d674e8f17a13a71f27f08c2ead6f800b08f3f5dbc0fc841c3ab586ba3f4e1d8 | 7d674e8f17a13a71f27f08c2ead6f800b08f3f5dbc0fc841c3ab586ba3f4e1d8 | OK
+2 | grupo3/ventilacao | esp32-grupo3-sim0001 | 1 | 1795653986 | 2026-11-26T00:47:49.830Z | b584b8a22280063bd5728a9c44b27b86c92f1a4b75c8b7164b4409d5239e2e68 | b584b8a22280063bd5728a9c44b27b86c92f1a4b75c8b7164b4409d5239e2e68 | OK
+3 | grupo3/status | esp32-grupo3-sim0001 | null | null | 2026-11-26T00:47:49.830Z | 82962aac91d362e477261ce62cb9328897ac37068fb3a9bfc58a7472f2b7fe70 | 82962aac91d362e477261ce62cb9328897ac37068fb3a9bfc58a7472f2b7fe70 | OK
+4 | grupo3/status | esp32-grupo3-sim0001 | null | null | 2026-11-26T00:47:53.568Z | c96351523781a98808f9ad6d471345189f4a44376ad5fada21ae867fa8802593 | c96351523781a98808f9ad6d471345189f4a44376ad5fada21ae867fa8802593 | OK
+5 | grupo3/ventilacao | esp32-grupo3-sim0001 | 1 | 1795654073 | 2026-11-26T00:47:53.568Z | 651341fcd9ca2541c3141951eef1c0f638e7b2fffca3de54272b632083743939 | 651341fcd9ca2541c3141951eef1c0f638e7b2fffca3de54272b632083743939 | OK
+6 | grupo3/telemetria | esp32-grupo3-sim0001 | 1 | 1795654073 | 2026-11-26T00:47:53.569Z | cd33659239d2bb6f82cd0672ee83476251ed86b5e06ec1e7e7f8389b4658c6b4 | cd33659239d2bb6f82cd0672ee83476251ed86b5e06ec1e7e7f8389b4658c6b4 | OK
+7 | grupo3/alerta | esp32-grupo3-sim0001 | 1 | 1795654073 | 2026-11-26T00:47:53.569Z | 2213390259107f4e553ceb3a0866bd5402c1411130d654a203b1de029c9ddc88 | 2213390259107f4e553ceb3a0866bd5402c1411130d654a203b1de029c9ddc88 | OK
+8 | grupo3/telemetria | esp32-grupo3-sim0001 | 2 | 1795654078 | 2026-11-26T00:47:58.572Z | 02280c0365f40579376ed828c31e4282e63f173946f37766e1e4e7d00fdb7a95 | 02280c0365f40579376ed828c31e4282e63f173946f37766e1e4e7d00fdb7a95 | OK
+9 | grupo3/telemetria | esp32-grupo3-sim0001 | 3 | 1795654083 | 2026-11-26T00:48:03.575Z | 53be081c15f32a09e541908eb50bbdd8e50b6feec4bfbec039dc41dc8fe54814 | 53be081c15f32a09e541908eb50bbdd8e50b6feec4bfbec039dc41dc8fe54814 | OK
+10 | grupo3/telemetria | esp32-grupo3-sim0001 | 4 | 1795654088 | 2026-11-26T00:48:08.578Z | 830d3674b700a51319313dfc21c9d9ad9043fdc0e396a38dc101deeaf956ead5 | 830d3674b700a51319313dfc21c9d9ad9043fdc0e396a38dc101deeaf956ead5 | OK
+11 | grupo3/telemetria | esp32-grupo3-sim0001 | 5 | 1795654093 | 2026-11-26T00:48:13.587Z | 6a93c0e0dbc398fd80f0a31cafa39f80dc7508f7aa5649f93beebf987a3bdc40 | 6a93c0e0dbc398fd80f0a31cafa39f80dc7508f7aa5649f93beebf987a3bdc40 | OK
+12 | grupo3/telemetria | esp32-grupo3-sim0001 | 6 | 1795654098 | 2026-11-26T00:48:18.595Z | 98da0ef6d2447684aedc90704326c57fdde2c421bb2c760a3d279b3d86a5d34d | 98da0ef6d2447684aedc90704326c57fdde2c421bb2c760a3d279b3d86a5d34d | OK
+13 | grupo3/telemetria | esp32-grupo3-sim0001 | 7 | 1795654103 | 2026-11-26T00:48:23.596Z | f347fe69d0ee446e9e1887ce99e6c998cc2ff4ac9261f9d67b1d17824f71235f | f347fe69d0ee446e9e1887ce99e6c998cc2ff4ac9261f9d67b1d17824f71235f | OK
+14 | grupo3/telemetria | esp32-grupo3-sim0001 | 8 | 1795654108 | 2026-11-26T00:48:28.603Z | f61e581a5be4f897b53ce0d13c55342b6065abac89e1b87c7f8092b54c880758 | f61e581a5be4f897b53ce0d13c55342b6065abac89e1b87c7f8092b54c880758 | OK
+15 | grupo3/silo/evento | esp32-grupo3-sim0001 | 1 | 1795654109 | 2026-11-26T00:48:29.511Z | f784026213220cf3d4f04b0a58ae300603785db4aa91d5d87d6d4cc47866314e | f784026213220cf3d4f04b0a58ae300603785db4aa91d5d87d6d4cc47866314e | OK
+16 | grupo3/telemetria | esp32-grupo3-sim0001 | 9 | 1795654113 | 2026-11-26T00:48:33.618Z | 853622d83c5b33b06c7d8279191eab1bc76cd1cd6f3e406bec6f8d999fb090b9 | 853622d83c5b33b06c7d8279191eab1bc76cd1cd6f3e406bec6f8d999fb090b9 | OK
+17 | grupo3/telemetria | esp32-grupo3-sim0001 | 10 | 1795654118 | 2026-11-26T00:48:38.622Z | a6f1cb5bcc42a0e6557edac77bef5591f0876af384a042d92e179a355f3e19f9 | a6f1cb5bcc42a0e6557edac77bef5591f0876af384a042d92e179a355f3e19f9 | OK
+18 | grupo3/telemetria | esp32-grupo3-sim0001 | 11 | 1795654123 | 2026-11-26T00:48:43.625Z | 1f77d208b4ad9b10fa98b856479629f505211cae728a533d06c82af3703ee1fe | 1f77d208b4ad9b10fa98b856479629f505211cae728a533d06c82af3703ee1fe | OK
+19 | grupo3/telemetria | esp32-grupo3-sim0001 | 12 | 1795654128 | 2026-11-26T00:48:48.633Z | 38775da6c93eb45baf4503e0ca2ae2d8dc1c6bd400b581385d6ade1eedbb92fd | 38775da6c93eb45baf4503e0ca2ae2d8dc1c6bd400b581385d6ade1eedbb92fd | OK
+20 | grupo3/status | esp32-grupo3-sim0001 | null | null | 2026-11-26T00:48:52.232Z | 82962aac91d362e477261ce62cb9328897ac37068fb3a9bfc58a7472f2b7fe70 | 82962aac91d362e477261ce62cb9328897ac37068fb3a9bfc58a7472f2b7fe70 | OK
+
+# Payloads brutos (exatamente como gravados)
+1 | {"device_id":"esp32-grupo3-sim0001","ts":1795653986,"seq":1,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":60}
+2 | {"device_id":"esp32-grupo3-sim0001","ts":1795653986,"seq":1,"ventilacao":"DESLIGADA","cmd_seq":null}
+3 | {"device_id":"esp32-grupo3-sim0001","status":"offline"}
+4 | {"device_id":"esp32-grupo3-sim0001","status":"online"}
+5 | {"device_id":"esp32-grupo3-sim0001","ts":1795654073,"seq":1,"ventilacao":"DESLIGADA","cmd_seq":null}
+6 | {"device_id":"esp32-grupo3-sim0001","ts":1795654073,"seq":1,"temperatura":26,"umidade":61,"distancia_cm":7.6,"nivel_pct":49}
+7 | {"device_id":"esp32-grupo3-sim0001","ts":1795654073,"seq":1,"alerta":"NORMAL","motivos":[],"temperatura":26,"umidade":61}
+8 | {"device_id":"esp32-grupo3-sim0001","ts":1795654078,"seq":2,"temperatura":26,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+9 | {"device_id":"esp32-grupo3-sim0001","ts":1795654083,"seq":3,"temperatura":26,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+10 | {"device_id":"esp32-grupo3-sim0001","ts":1795654088,"seq":4,"temperatura":26,"umidade":60,"distancia_cm":7.6,"nivel_pct":49}
+11 | {"device_id":"esp32-grupo3-sim0001","ts":1795654093,"seq":5,"temperatura":26,"umidade":59,"distancia_cm":7.4,"nivel_pct":51}
+12 | {"device_id":"esp32-grupo3-sim0001","ts":1795654098,"seq":6,"temperatura":26,"umidade":60,"distancia_cm":7.4,"nivel_pct":51}
+13 | {"device_id":"esp32-grupo3-sim0001","ts":1795654103,"seq":7,"temperatura":26,"umidade":60,"distancia_cm":7.5,"nivel_pct":50}
+14 | {"device_id":"esp32-grupo3-sim0001","ts":1795654108,"seq":8,"temperatura":26,"umidade":59,"distancia_cm":7.5,"nivel_pct":50}
+15 | {"device_id":"esp32-grupo3-sim0001","ts":1795654109,"seq":1,"evento":"ENTRADA","entradas":1,"saidas":0,"saldo":1}
+16 | {"device_id":"esp32-grupo3-sim0001","ts":1795654113,"seq":9,"temperatura":26,"umidade":59,"distancia_cm":7,"nivel_pct":56}
+17 | {"device_id":"esp32-grupo3-sim0001","ts":1795654118,"seq":10,"temperatura":26,"umidade":59,"distancia_cm":7,"nivel_pct":56}
+18 | {"device_id":"esp32-grupo3-sim0001","ts":1795654123,"seq":11,"temperatura":26,"umidade":59,"distancia_cm":6.9,"nivel_pct":57}
+19 | {"device_id":"esp32-grupo3-sim0001","ts":1795654128,"seq":12,"temperatura":26,"umidade":59,"distancia_cm":6.9,"nivel_pct":57}
+20 | {"device_id":"esp32-grupo3-sim0001","status":"offline"}
+
+# Resumo: 20 linha(s); 0 com hash divergente.
