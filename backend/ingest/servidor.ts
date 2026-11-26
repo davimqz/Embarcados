@@ -1,5 +1,6 @@
 // Servidor do painel (T4.6): assina os tópicos da placa no broker, valida cada mensagem contra o contrato (T3.1)
-// e repassa as válidas ao frontend. As inválidas são rejeitadas com o motivo no log.
+// grava todas as válidas no SQLite com o SHA-256 do payload bruto (T3.2) e repassa ao frontend as do painel.
+// As inválidas são rejeitadas com o motivo no log e não são gravadas.
 //   WebSocket  /ws              → ao conectar, as mensagens recentes; depois, cada mensagem nova
 //   REST       /api/mensagens   → ?desde=&ate=&topicos=a,b (ts em segundos UTC), a partir do arquivo em memória
 //   REST       /api/saude       → estado da conexão com o broker
@@ -12,13 +13,16 @@ import websocket from '@fastify/websocket';
 import type { WebSocket } from 'ws';
 import mqtt from 'mqtt';
 
-import { MQTT_URL, SERVIDOR_PORTA, agora } from '../comum/config.ts';
+import { BANCO_CAMINHO, MQTT_URL, SERVIDOR_PORTA, agora } from '../comum/config.ts';
 import { Arquivo, ehDoPainel } from './arquivo.ts';
+import { Banco } from './banco.ts';
 import { TOPICOS_INGEST, validar } from './contrato.ts';
 
 const JANELA_RECENTE_S = 10 * 60; // a tela ao vivo mostra 10 min de leituras
 
 const arquivo = new Arquivo();
+const banco = new Banco(BANCO_CAMINHO);
+console.log(`${agora()} [DB] Banco em ${BANCO_CAMINHO} (${banco.total} leitura(s) gravada(s))`);
 const clientes = new Set<WebSocket>();
 
 // --- MQTT ---
@@ -46,6 +50,12 @@ mqttCliente.on('message', (topico, bruto) => {
   if (!v.ok) {
     console.log(`${agora()} [MQTT] Rejeitada em ${topico} (${v.motivo}): ${bruto.toString().slice(0, 200)}`);
     return;
+  }
+  try {
+    const l = banco.gravar(v.topico, v.payload, bruto);
+    console.log(`${agora()} [DB] #${l.id} ${l.topico} seq=${l.seq ?? '-'} sha256=${l.hash.slice(0, 16)}…`);
+  } catch (erro) {
+    console.log(`${agora()} [DB] Falha ao gravar ${topico}: ${(erro as Error).message}`);
   }
   if (!ehDoPainel(v.topico)) {
     // Válida, mas o painel não mostra este tópico (grupo3/ventilacao, decisão 14 em aberto).
@@ -90,6 +100,7 @@ app.get('/api/saude', async () => ({
   broker: MQTT_URL,
   conectado: mqttCliente.connected,
   mensagens: arquivo.tamanho,
+  gravadas: banco.total,
   paineis: clientes.size,
 }));
 

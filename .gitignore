@@ -30,6 +30,8 @@ npm-debug.log*
 *.sqlite
 *.sqlite3
 *.db-journal
+*.db-wal
+*.db-shm
 
 # --- Node-RED (estado local, não os flows exportados) ---
 .node-red/
