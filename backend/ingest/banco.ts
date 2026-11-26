@@ -9,6 +9,7 @@ import { dirname } from 'node:path';
 import Database from 'better-sqlite3';
 
 import type { Payload } from './contrato.ts';
+import type { Ocorrencia } from './sequencia.ts';
 
 const ESQUEMA = `
 CREATE TABLE IF NOT EXISTS leituras (
@@ -23,6 +24,19 @@ CREATE TABLE IF NOT EXISTS leituras (
 );
 CREATE INDEX IF NOT EXISTS leituras_device_topico_seq ON leituras (device_id, topico, seq);
 CREATE INDEX IF NOT EXISTS leituras_ts ON leituras (ts);
+
+-- Buracos, duplicatas e reboots detectados no seq (T3.3). Duplicatas não entram em leituras.
+CREATE TABLE IF NOT EXISTS ocorrencias_seq (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  tipo         TEXT    NOT NULL CHECK (tipo IN ('buraco', 'duplicata', 'reboot')),
+  topico       TEXT    NOT NULL,
+  device_id    TEXT    NOT NULL,
+  seq_anterior INTEGER,          -- último seq do fluxo; null no buraco de um boot que não começou em 1
+  seq          INTEGER NOT NULL, -- seq da mensagem que revelou a ocorrência
+  faltando_de  INTEGER,          -- só em buraco: primeiro e último seq perdidos
+  faltando_ate INTEGER,
+  recebido_em  INTEGER NOT NULL  -- milissegundos UTC
+);
 `;
 
 export type Leitura = {
@@ -36,6 +50,21 @@ export type Leitura = {
   hash: string;
 };
 
+export type OcorrenciaGravada = {
+  id: number;
+  tipo: Ocorrencia['tipo'];
+  topico: string;
+  device_id: string;
+  seq_anterior: number | null;
+  seq: number;
+  faltando_de: number | null;
+  faltando_ate: number | null;
+  recebido_em: number;
+};
+
+// Última leitura com seq de cada placa e tópico, para o ControleSeq retomar depois de reiniciar o servidor.
+export type UltimaDoFluxo = { device_id: string; topico: string; seq: number; hash: string };
+
 export function sha256(bytes: Buffer | string): string {
   return createHash('sha256').update(bytes).digest('hex');
 }
@@ -46,6 +75,7 @@ const utf8 = new TextDecoder('utf-8', { fatal: true });
 export class Banco {
   private readonly db: Database.Database;
   private readonly inserir: Database.Statement;
+  private readonly inserirOcorrencia: Database.Statement;
 
   // caminho ':memory:' serve para os testes.
   constructor(caminho: string) {
@@ -56,6 +86,10 @@ export class Banco {
     this.inserir = this.db.prepare(
       `INSERT INTO leituras (topico, device_id, seq, ts, recebido_em, payload, hash)
        VALUES (@topico, @device_id, @seq, @ts, @recebido_em, @payload, @hash)`,
+    );
+    this.inserirOcorrencia = this.db.prepare(
+      `INSERT INTO ocorrencias_seq (tipo, topico, device_id, seq_anterior, seq, faltando_de, faltando_ate, recebido_em)
+       VALUES (@tipo, @topico, @device_id, @seq_anterior, @seq, @faltando_de, @faltando_ate, @recebido_em)`,
     );
   }
 
@@ -77,6 +111,36 @@ export class Banco {
 
   get total(): number {
     return (this.db.prepare('SELECT count(*) AS n FROM leituras').get() as { n: number }).n;
+  }
+
+  registrarOcorrencia(topico: string, deviceId: string, o: Ocorrencia, recebidoEm = Date.now()): OcorrenciaGravada {
+    const linha = {
+      tipo: o.tipo,
+      topico,
+      device_id: deviceId,
+      seq_anterior: o.seqAnterior,
+      seq: o.seq,
+      faltando_de: o.tipo === 'buraco' ? o.faltandoDe : null,
+      faltando_ate: o.tipo === 'buraco' ? o.faltandoAte : null,
+      recebido_em: recebidoEm,
+    };
+    const { lastInsertRowid } = this.inserirOcorrencia.run(linha);
+    return { id: Number(lastInsertRowid), ...linha };
+  }
+
+  get totalOcorrencias(): number {
+    return (this.db.prepare('SELECT count(*) AS n FROM ocorrencias_seq').get() as { n: number }).n;
+  }
+
+  ocorrencias(): OcorrenciaGravada[] {
+    return this.db.prepare('SELECT * FROM ocorrencias_seq ORDER BY id').all() as OcorrenciaGravada[];
+  }
+
+  ultimasPorFluxo(): UltimaDoFluxo[] {
+    return this.db.prepare(
+      `SELECT device_id, topico, seq, hash FROM leituras
+       WHERE id IN (SELECT max(id) FROM leituras WHERE seq IS NOT NULL GROUP BY device_id, topico)`,
+    ).all() as UltimaDoFluxo[];
   }
 
   todas(): Leitura[] {
