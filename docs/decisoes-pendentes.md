@@ -31,6 +31,8 @@
 | 10 | ~~Fonte das regras~~ ✅ `docs/regras/` | — | consistência |
 | 11 | Integrantes do grupo | 🟢 antes do M6 | README, apresentação |
 | 12 | ~~Design system~~ ✅ só os tokens | — | M4 |
+| 13 | Função e pinos dos dois LEDs RGB no firmware | 🟡 antes de ligar a placa | T2.3, T2.4, T2.6 |
+| 14 | Ventilação: fica, sai ou vira outro comando | 🟡 antes de ligar a placa | T2.4, T4.3, T0.7 |
 
 ---
 
@@ -231,6 +233,34 @@ descreve outro produto (com o nome e a marca dele). Se ele for de uso restrito, 
 **Recomendação:** guardar só os tokens adaptados, em `dashboard/` e no tema do Tailwind, sem o nome do produto original.
 
 **Decisão (2026-10-22):** **só os tokens adaptados** vão para o repositório, sem o nome nem a marca do produto original.
+
+---
+
+## 13. Função e pinos dos dois LEDs RGB 🟡
+
+O firmware acende o LED de alerta no GPIO 22 e o LED da ventilação no GPIO 23, que era a montagem antiga, com um LED.
+A montagem nova, testada na T2.6, tem **dois LEDs RGB**: LED 1 em R=15, G=2, B=4 e LED 2 em R=26, G=32, B=33.
+Se a placa for gravada como está, os sensores e os botões funcionam, mas os LEDs não acendem.
+
+**Falta decidir:** o que cada LED (e cada cor) indica, por exemplo LED 1 vermelho = alerta de clima.
+**Depois disso:** trocar `LED_ALERTA_PIN` (`firmware/include/alerta.h`) e `LED_VENTILACAO_PIN`
+(`firmware/include/atuador.h`) e atualizar `docs/arquitetura.md`. Isso dá para fazer sem a placa; testar, só com ela.
+
+## 14. Ventilação 🟡
+
+Hoje cada parte do projeto diz uma coisa diferente:
+
+- **Firmware (T2.4):** aceita o comando `grupo3/cmd` para ligar a ventilação e acende um LED representando o ventilador.
+- **Painel (T4.5):** o botão da ventilação foi tirado porque o grupo não tinha como ligar um ventilador.
+- **Silo 3D (T0.7):** o modelo tem o espaço de uma ventoinha de 120 mm.
+
+| Opção | O que muda |
+|---|---|
+| a) Tem ventilação | O botão volta ao painel; a placa acende o LED ou liga a ventoinha (12 V + MOSFET) |
+| b) Não tem ventilação | O comando sai do firmware e do contrato; a ventoinha sai do modelo ou fica só como enfeite |
+| c) O comando vira outra coisa | Mesmo tópico `grupo3/cmd`, outro atuador (ex.: LED de "silo em manutenção") |
+
+O contrato MQTT (`docs/topicos-mqtt.md`) só muda depois da decisão.
 
 ---
 
