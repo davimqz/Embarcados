@@ -1,6 +1,7 @@
 // Servidor do painel (T4.6): assina os tópicos da placa no broker, valida cada mensagem contra o contrato (T3.1)
 // grava todas as válidas no SQLite com o SHA-256 do payload bruto (T3.2) e repassa ao frontend as do painel.
-// As inválidas são rejeitadas com o motivo no log e não são gravadas.
+// As inválidas são rejeitadas com o motivo no log e não são gravadas. O seq de cada placa e tópico é conferido (T3.3):
+// buracos e reboots ficam no log e em ocorrencias_seq; duplicatas também, e não são gravadas nem repassadas.
 //   WebSocket  /ws              → ao conectar, as mensagens recentes; depois, cada mensagem nova
 //   REST       /api/mensagens   → ?desde=&ate=&topicos=a,b (ts em segundos UTC), a partir do arquivo em memória
 //   REST       /api/saude       → estado da conexão com o broker
@@ -15,14 +16,19 @@ import mqtt from 'mqtt';
 
 import { BANCO_CAMINHO, MQTT_URL, SERVIDOR_PORTA, agora } from '../comum/config.ts';
 import { Arquivo, ehDoPainel } from './arquivo.ts';
-import { Banco } from './banco.ts';
+import { Banco, sha256 } from './banco.ts';
 import { TOPICOS_INGEST, validar } from './contrato.ts';
+import { ControleSeq, descrever } from './sequencia.ts';
 
 const JANELA_RECENTE_S = 10 * 60; // a tela ao vivo mostra 10 min de leituras
 
 const arquivo = new Arquivo();
 const banco = new Banco(BANCO_CAMINHO);
 console.log(`${agora()} [DB] Banco em ${BANCO_CAMINHO} (${banco.total} leitura(s) gravada(s))`);
+const controleSeq = new ControleSeq();
+const fluxos = banco.ultimasPorFluxo();
+for (const f of fluxos) controleSeq.retomar(f.device_id, f.topico, f.seq, f.hash);
+console.log(`${agora()} [SEQ] Retomado o último seq de ${fluxos.length} fluxo(s) (placa × tópico) do banco`);
 const clientes = new Set<WebSocket>();
 
 // --- MQTT ---
@@ -45,14 +51,27 @@ mqttCliente.on('offline', () => console.log(`${agora()} [MQTT] Sem conexão com 
 mqttCliente.on('error', (erro) =>
   console.log(`${agora()} [MQTT] Erro: ${erro.message || (erro as NodeJS.ErrnoException).code || erro.name}`));
 
-mqttCliente.on('message', (topico, bruto) => {
+mqttCliente.on('message', (topico, bruto, pacote) => {
   const v = validar(topico, bruto);
   if (!v.ok) {
     console.log(`${agora()} [MQTT] Rejeitada em ${topico} (${v.motivo}): ${bruto.toString().slice(0, 200)}`);
     return;
   }
+  const recebidoEm = Date.now();
+  const seq = Number.isInteger(v.payload.seq) ? (v.payload.seq as number) : null;
+  const analise = controleSeq.analisar(v.payload.device_id, v.topico, seq, sha256(bruto));
+  for (const o of analise.ocorrencias) {
+    const retida = pacote.retain ? ' (mensagem retida)' : '';
+    console.log(`${agora()} [SEQ] ${v.topico} ${v.payload.device_id}: ${descrever(o)}${retida}`);
+    try {
+      banco.registrarOcorrencia(v.topico, v.payload.device_id, o, recebidoEm);
+    } catch (erro) {
+      console.log(`${agora()} [DB] Falha ao registrar ocorrência de seq: ${(erro as Error).message}`);
+    }
+  }
+  if (!analise.gravar) return; // duplicata: já está no banco e já foi ao painel
   try {
-    const l = banco.gravar(v.topico, v.payload, bruto);
+    const l = banco.gravar(v.topico, v.payload, bruto, recebidoEm);
     console.log(`${agora()} [DB] #${l.id} ${l.topico} seq=${l.seq ?? '-'} sha256=${l.hash.slice(0, 16)}…`);
   } catch (erro) {
     console.log(`${agora()} [DB] Falha ao gravar ${topico}: ${(erro as Error).message}`);
@@ -101,6 +120,7 @@ app.get('/api/saude', async () => ({
   conectado: mqttCliente.connected,
   mensagens: arquivo.tamanho,
   gravadas: banco.total,
+  ocorrencias_seq: banco.totalOcorrencias,
   paineis: clientes.size,
 }));
 

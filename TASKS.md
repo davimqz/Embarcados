@@ -318,15 +318,16 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T3.3 — Detectar seq faltante ou duplicado e registrar
 - **Marco:** M3
-- **Status:** todo
-- **Responsável:** —
+- **Status:** done
+- **Responsável:** Davi
 - **Depende de:** T3.2
 - **Descrição:** por placa e por tópico, comparar o `seq` com o anterior e registrar buracos, duplicatas e reboots (seq que volta a 1).
 - **Critérios de aceite:**
-  - [ ] Buraco (ex.: 7 → 9) registrado com o intervalo faltante
-  - [ ] Duplicata (mesmo `seq` e mesmo payload) registrada e não gravada de novo
-  - [ ] Reboot (`seq` menor que o anterior) registrado como reboot, não como erro
-- **Evidência:** `docs/entregas/M3/t3.3-seq-simulador.log` (simulador com perda e repetição ligadas)
+  - [x] Buraco (ex.: 7 → 9) registrado com o intervalo faltante
+  - [x] Duplicata (mesmo `seq` e mesmo payload) registrada e não gravada de novo
+  - [x] Reboot (`seq` menor que o anterior) registrado como reboot, não como erro
+- **Observações:** lógica em `backend/ingest/sequencia.ts` (sem dependência nova); ocorrências no log (`[SEQ]`) e na tabela `ocorrencias_seq`. Duplicata = mesmo SHA-256 já visto no boot atual, o que pega também reentrega fora de ordem; não é gravada nem repassada ao painel. `seq` menor ou igual com payload novo = reboot; se o novo boot não começou em 1, também registra o buraco 1..seq-1. O servidor retoma o último `seq` de cada fluxo do banco ao subir. Limitação: a primeira mensagem de um fluxo desconhecido não tem com o que comparar (no teste, a perda de `grupo3/ventilacao` seq 1 não virou buraco). `/api/saude` passou a mostrar `ocorrencias_seq`. Testes em `sequencia.test.ts`; 28 testes no total, todos passando.
+- **Evidência:** `docs/entregas/M3/t3.3-seq-simulador.log` (simulador com `--perda 0.15 --repeticao 0.15` por 60 s + reboot: 13/13 perdas de telemetria acusadas, 12/12 duplicatas descartadas, 0 linhas repetidas no banco, 2 reboots) e `docs/entregas/M3/t3.3-npm-test.log`
 
 ### T3.4 — Testar o validador, o hash e a detecção de seq
 - **Marco:** M3
