@@ -3,7 +3,7 @@
 > Formato e regras em `CLAUDE.md` §4. Status: `todo | doing | review | done | blocked`.
 > Responsável `—` = ainda não atribuído; o grupo distribui.
 
-**Marco atual:** M2 — Sensoriamento (T2.1–T2.4 em review, aguardando o protótipo) · M0 fechado (`v0.0.0`) · M1 fechado em 2026-10-20 (`v0.1.0`)
+**Marco atual:** M2 — Sensoriamento (T2.1–T2.6 em review, aguardando o teste na placa) · M3 e M4 adiantados com simulador (exceções, ver M3 e M4) · M0 (`v0.0.0`) e M1 (`v0.1.0`) fechados
 
 > **Decisões em aberto:** ver [`docs/decisoes-pendentes.md`](docs/decisoes-pendentes.md) — o que falta decidir para cada marco, com opções e recomendação.
 
@@ -249,7 +249,79 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ## M3 — Ingestão e persistência · tag `v0.3.0`
 
-_Tasks T3.1–T3.4._
+**Critério do marco:** 100% das mensagens do M2 persistidas; testes passando.
+
+> **Exceção à regra "não pular marco" (decidida pelo grupo em 2026-10-27):** o M3 começou antes de o M2 ser testado
+> na placa, porque o protótipo ainda não foi montado e o backend não depende do hardware, só do contrato MQTT
+> (`docs/topicos-mqtt.md`). Até a placa ficar pronta, um **simulador** (T3.0) publica as mesmas mensagens que o firmware
+> do M2. Condições:
+> - o M3 só **fecha** (tag `v0.3.0`) depois de o M2 fechar (`v0.2.0`) e de o critério acima ser repetido com a placa real;
+> - evidências feitas com o simulador ficam marcadas como `-simulador` no nome do arquivo;
+> - o simulador segue o contrato, não o contrário: se o firmware e o simulador divergirem, vale o contrato.
+
+### T3.0 — Criar o simulador da placa e o broker de desenvolvimento
+- **Marco:** M3
+- **Status:** done
+- **Responsável:** Davi
+- **Depende de:** T0.6
+- **Descrição:** projeto Node.js + TypeScript em `backend/` com um simulador que publica o que o firmware do M2 publica (status com LWT, telemetria a cada 5 s, eventos dos botões, alerta com histerese, resposta a `grupo3/cmd`) e um broker MQTT local para desenvolver sem instalar o Mosquitto. Pedida pela exceção acima, fora do roadmap original.
+- **Critérios de aceite:**
+  - [x] `npm run broker` sobe um broker em `localhost:1883`
+  - [x] `npm run simulador` publica nos 5 tópicos da placa, com payloads iguais aos exemplos do contrato
+  - [x] Comando `LIGAR` em `grupo3/cmd` volta em `grupo3/ventilacao` com o `cmd_seq`; comandos inválidos são descartados
+  - [x] Opções para simular perda e repetição de mensagens (para testar a T3.3)
+  - [x] `npm run build` (checagem de tipos) sem erros
+- **Observações:** teclas (ou linhas na entrada) aquecem, esfriam e apertam os botões, para a demo e para roteiros de teste. Como rodar: `backend/README.md`.
+- **Evidência:** `docs/entregas/M3/t3.0-simulador.log` (logs do simulador e do broker: telemetria, perda, repetição, falha de sensor, comandos, alerta com histerese, retidos e LWT)
+
+### T3.1 — Assinar os tópicos da placa e validar o schema no serviço ingest
+- **Marco:** M3
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T3.0
+- **Descrição:** o serviço `ingest` assina os tópicos publicados pela placa e valida cada payload contra o contrato; mensagem inválida é rejeitada com o motivo no log.
+- **Critérios de aceite:**
+  - [ ] Assina `grupo3/silo/evento`, `grupo3/telemetria`, `grupo3/alerta`, `grupo3/ventilacao` e `grupo3/status`
+  - [ ] Payload fora do contrato (JSON inválido, campo faltando, tipo errado) é rejeitado com o motivo no log
+  - [ ] Reconecta sozinho se o broker cair
+- **Evidência:** `docs/entregas/M3/t3.1-ingest-simulador.log`
+
+### T3.2 — Persistir as mensagens no SQLite com hash SHA-256
+- **Marco:** M3
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T3.1
+- **Descrição:** gravar cada mensagem válida na tabela `leituras`, com o payload bruto exatamente como chegou e o SHA-256 dele, base da Merkle root do M5.
+- **Critérios de aceite:**
+  - [ ] Tabela `leituras` com tópico, `device_id`, `seq`, `ts`, horário de recebimento, payload bruto e hash
+  - [ ] O hash gravado bate com o SHA-256 do payload recalculado a partir do banco
+  - [ ] O banco é criado sozinho na primeira execução e fica fora do git
+- **Evidência:** `docs/entregas/M3/t3.2-dump-simulador.txt`
+
+### T3.3 — Detectar seq faltante ou duplicado e registrar
+- **Marco:** M3
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T3.2
+- **Descrição:** por placa e por tópico, comparar o `seq` com o anterior e registrar buracos, duplicatas e reboots (seq que volta a 1).
+- **Critérios de aceite:**
+  - [ ] Buraco (ex.: 7 → 9) registrado com o intervalo faltante
+  - [ ] Duplicata (mesmo `seq` e mesmo payload) registrada e não gravada de novo
+  - [ ] Reboot (`seq` menor que o anterior) registrado como reboot, não como erro
+- **Evidência:** `docs/entregas/M3/t3.3-seq-simulador.log` (simulador com perda e repetição ligadas)
+
+### T3.4 — Testar o validador, o hash e a detecção de seq
+- **Marco:** M3
+- **Status:** todo
+- **Responsável:** —
+- **Depende de:** T3.3
+- **Descrição:** testes automáticos (`npm test`) do validador do contrato, do hash e da detecção de `seq`, sem precisar de broker externo.
+- **Critérios de aceite:**
+  - [ ] Um caso válido e casos inválidos para cada tópico
+  - [ ] Hash conhecido para um payload fixo
+  - [ ] Buraco, duplicata e reboot cobertos
+  - [ ] `npm test` passa
+- **Evidência:** `docs/entregas/M3/t3.4-npm-test.log`
 
 ## M4 — Dashboard · tag `v0.4.0`
 
@@ -294,6 +366,22 @@ _Tasks T3.1–T3.4._
   - [x] `npm run build` sem erros nem avisos
 - **Observações:** a fonte simulada ganhou 24 h de histórico (1 leitura/min, semente fixa) e a interface `FonteDados` ganhou `consultar()`, que o backend vai implementar como REST (T4.4).
 - **Evidência:** `docs/entregas/M4/T4.5-{controle,dashboard,historico}-desktop-simulador.png`, `docs/entregas/M4/T4.5-{dashboard,historico}-celular-simulador.png`, `docs/entregas/M4/T4.5-npm-run-build.log`
+
+### T4.6 — Ligar o frontend à placa real por WebSocket
+- **Marco:** M4
+- **Status:** review
+- **Responsável:** Davi
+- **Depende de:** T3.0, T4.5
+- **Descrição:** servidor mínimo em `backend/ingest/` (Fastify) que assina os tópicos da placa no broker e repassa cada mensagem `{ topico, payload }` por WebSocket, com um buffer em memória para o histórico; no frontend, uma `FonteWebSocket` no lugar da `FonteSimulada`. Ainda sem SQLite nem validação completa (T3.1–T3.2 entram depois neste mesmo servidor). Mesma exceção de ordem dos marcos da T4.0.
+- **Critérios de aceite:**
+  - [x] `npm run servidor` no `backend/` conecta no broker do `.env` e loga cada mensagem recebida
+  - [x] Navegador recebe por `ws://localhost:3000/ws` o buffer ao conectar e as mensagens novas em tempo real
+  - [x] `GET /api/mensagens?desde=&ate=&topicos=` responde a consulta do histórico a partir do buffer
+  - [x] Frontend abre com a fonte real por padrão (sem selo **Simulado**); `?dados=demo` volta ao simulado
+  - [ ] Com a placa ligada, apertar um botão ou mexer no HC-SR04 aparece no dashboard em < 2 s
+  - [x] `npm test` e `npm run build` passam no `backend/` e `npm run build` no `frontend/`
+- **Observações:** testado em 2026-11-19 com broker local + simulador (WebSocket e REST) e contra o broker.hivemq.com, recebendo o alerta e o status retidos da placa real. Falta o teste com a placa ligada.
+- **Evidência:** `docs/entregas/M4/T4.6-dashboard-placa.png` e `docs/entregas/M4/T4.6-servidor.log`
 
 _Tasks T4.1–T4.4 a detalhar; dependem do WebSocket do `backend/ingest` (M3)._
 

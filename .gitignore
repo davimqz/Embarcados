@@ -43,3 +43,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 *.swp
+
+# cache do python
+__pycache__/
+*.pyc

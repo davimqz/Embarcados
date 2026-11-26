@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ChartLine, History, SlidersHorizontal, Wheat, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { FonteSimulada } from "@/dados/fonteSimulada";
+import { FonteWebSocket } from "@/dados/fonteWebSocket";
 import { fontePiorCaso, fonteUm, fonteVazia } from "@/dados/fontesTeste";
 import type { FonteDados } from "@/dados/tipos";
 import { SeletorDadosDev, lerModoDados } from "@/components/SeletorDadosDev";
@@ -11,11 +12,16 @@ import { Controle } from "@/paginas/Controle";
 import { Dashboard } from "@/paginas/Dashboard";
 import { Historico } from "@/paginas/Historico";
 
-// Única troca necessária quando o backend (M3) existir: uma FonteWebSocket com a mesma interface.
+// Padrão: a placa real pelo servidor do backend (FonteWebSocket, T4.6). ?dados=demo volta à simulação no navegador.
 // Em desenvolvimento, ?dados=pior|vazio|um troca a fonte por dados de teste fixos (break-ui).
-const MODO = import.meta.env.DEV ? lerModoDados() : "demo";
+const PEDIDO = lerModoDados();
+const MODO = import.meta.env.DEV || PEDIDO === "demo" ? PEDIDO : "real";
 const fonte: FonteDados =
-  MODO === "pior" ? fontePiorCaso() : MODO === "vazio" ? fonteVazia() : MODO === "um" ? fonteUm() : new FonteSimulada();
+  MODO === "pior" ? fontePiorCaso()
+  : MODO === "vazio" ? fonteVazia()
+  : MODO === "um" ? fonteUm()
+  : MODO === "demo" ? new FonteSimulada()
+  : new FonteWebSocket();
 const simulador = fonte instanceof FonteSimulada ? fonte : null;
 const SIMULADO = simulador !== null;
 
