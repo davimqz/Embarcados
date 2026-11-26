@@ -6,7 +6,7 @@
 SemaphoreHandle_t xMutexSerial = NULL;
 
 void logSerial(const char* fmt, ...) {
-    char buf[160];
+    char buf[256];  // cabe a linha "[MQTT] Publicado em ..." com o payload da telemetria
     va_list args;
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);

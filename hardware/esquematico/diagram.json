@@ -1,0 +1,289 @@
+{
+  "version": 1,
+  "author": "Grupo 3 - Sistemas Embarcados (CESAR School)",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 150,
+      "left": 260,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-hc-sr04",
+      "id": "sonar",
+      "top": 0,
+      "left": 20,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_echo1k",
+      "top": 109.35,
+      "left": 150,
+      "attrs": {
+        "value": "1000"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_echo2k",
+      "top": 175,
+      "left": 160,
+      "attrs": {
+        "value": "2000"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_led_r",
+      "top": 269.35,
+      "left": 140,
+      "attrs": {
+        "value": "220"
+      },
+      "rotate": 90
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_led_b",
+      "top": 269.35,
+      "left": 170,
+      "attrs": {
+        "value": "100"
+      },
+      "rotate": 90
+    },
+    {
+      "type": "wokwi-rgb-led",
+      "id": "led",
+      "top": 362,
+      "left": 180,
+      "attrs": {
+        "common": "cathode"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_saida",
+      "top": 180,
+      "left": 470,
+      "attrs": {
+        "color": "red",
+        "label": "Saída"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_entrada",
+      "top": 240,
+      "left": 470,
+      "attrs": {
+        "color": "yellow",
+        "label": "Entrada"
+      }
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht",
+      "top": 320,
+      "left": 480,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [
+      "esp:TX0",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX0",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "sonar:VCC",
+      "esp:VIN",
+      "red",
+      [
+        "v350.5",
+        "h166.7",
+        "v-136.5"
+      ]
+    ],
+    [
+      "sonar:TRIG",
+      "esp:D5",
+      "orange",
+      [
+        "v45.5",
+        "h148.7",
+        "v82.2"
+      ]
+    ],
+    [
+      "sonar:ECHO",
+      "r_echo1k:1",
+      "purple",
+      [
+        "v20.5"
+      ]
+    ],
+    [
+      "r_echo1k:2",
+      "esp:D14",
+      "purple",
+      [
+        "h31.2",
+        "v116.7"
+      ]
+    ],
+    [
+      "r_echo2k:2",
+      "r_echo1k:2",
+      "purple",
+      [
+        "h21.2",
+        "*",
+        "h31.2"
+      ]
+    ],
+    [
+      "r_echo2k:1",
+      "sonar:GND",
+      "black",
+      [
+        "h-38.7"
+      ]
+    ],
+    [
+      "sonar:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "v335.5",
+        "h128.7",
+        "v-131"
+      ]
+    ],
+    [
+      "esp:D22",
+      "r_led_r:1",
+      "red",
+      [
+        "h-125"
+      ]
+    ],
+    [
+      "esp:D23",
+      "r_led_b:1",
+      "blue",
+      [
+        "h-95"
+      ]
+    ],
+    [
+      "r_led_r:2",
+      "led:R",
+      "red",
+      [
+        "v28.2",
+        "h48.5"
+      ]
+    ],
+    [
+      "r_led_b:2",
+      "led:B",
+      "blue",
+      [
+        "v16.2",
+        "h45.7"
+      ]
+    ],
+    [
+      "led:COM",
+      "esp:GND.2",
+      "black",
+      [
+        "v14",
+        "*",
+        "h-15",
+        "v131"
+      ]
+    ],
+    [
+      "esp:D21",
+      "btn_saida:1.l",
+      "red",
+      [
+        "h88.7",
+        "v-19.9"
+      ]
+    ],
+    [
+      "esp:D19",
+      "btn_entrada:1.l",
+      "gold",
+      [
+        "h78.7",
+        "v30.8"
+      ]
+    ],
+    [
+      "btn_saida:2.r",
+      "btn_entrada:2.r",
+      "black",
+      [
+        "h63",
+        "*",
+        "h63"
+      ]
+    ],
+    [
+      "esp:GND.1",
+      "btn_entrada:2.r",
+      "black",
+      [
+        "h238.7",
+        "*",
+        "h63"
+      ]
+    ],
+    [
+      "dht:GND",
+      "btn_entrada:2.r",
+      "black",
+      [
+        "v10.1",
+        "h76.2",
+        "*",
+        "h63"
+      ]
+    ],
+    [
+      "esp:D25",
+      "dht:SDA",
+      "teal",
+      [
+        "h48.7",
+        "v190",
+        "h94.5"
+      ]
+    ],
+    [
+      "esp:3V3",
+      "dht:VCC",
+      "red",
+      [
+        "h33.7",
+        "v141.5",
+        "h100"
+      ]
+    ]
+  ],
+  "dependencies": {}
+}

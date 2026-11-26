@@ -24,6 +24,7 @@ static WiFiClient wifiClient;
 static PubSubClient mqtt(wifiClient);
 
 static char idDispositivo[32];
+static const char* topicoAssinado = NULL;
 
 void wifiMqttIniciar() {
     mqtt.setServer(MQTT_BROKER, MQTT_PORT);
@@ -100,10 +101,22 @@ void verificarMQTT() {
     if (mqtt.connect(idDispositivo, MQTT_TOPIC_STATUS, 1, true, statusOffline)) {
         logSerial("[MQTT] Conectado ao broker.\n");
         mqtt.publish(MQTT_TOPIC_STATUS, statusOnline, true);
+        if (topicoAssinado != NULL) {
+            if (mqtt.subscribe(topicoAssinado, 1)) {
+                logSerial("[MQTT] Assinado: %s\n", topicoAssinado);
+            } else {
+                logSerial("[MQTT] Falha ao assinar %s\n", topicoAssinado);
+            }
+        }
     } else {
         logSerial("[MQTT] Falha na conexao. Estado: %d (nova tentativa em %d s)\n",
                   mqtt.state(), RECONEXAO_MS / 1000);
     }
+}
+
+void mqttAssinar(const char* topico, void (*callback)(char*, uint8_t*, unsigned int)) {
+    topicoAssinado = topico;
+    mqtt.setCallback(callback);
 }
 
 bool mqttConectado() {
@@ -114,8 +127,8 @@ void mqttLoop() {
     mqtt.loop();
 }
 
-bool mqttPublicar(const char* topico, const char* payload) {
-    return mqtt.publish(topico, payload);
+bool mqttPublicar(const char* topico, const char* payload, bool retido) {
+    return mqtt.publish(topico, payload, retido);
 }
 
 const char* deviceId() {

@@ -55,15 +55,15 @@ Ficam de fora: TCRT5000 (reserva) e potenciômetro. A escotilha **abre com a mã
 |---|---|---|
 | Botão entrada (amarelo) | um lado / outro lado | GPIO 19 / GND (`INPUT_PULLUP`) |
 | Botão saída (vermelho) | um lado / outro lado | GPIO 21 / GND (`INPUT_PULLUP`) |
-| DHT11 | VCC · DATA · GND | 3V3 · **GPIO 4** · GND |
-| HC-SR04 | VCC · TRIG · ECHO · GND | **VIN (5 V)** · **GPIO 26** · divisor → **GPIO 27** · GND |
+| DHT11 (módulo de 3 pinos) | `+` · `out` · `-` | 3V3 · **GPIO 25** · GND (o pull-up de 10 kΩ já vem no módulo) |
+| HC-SR04 | VCC · TRIG · ECHO · GND | **VIN (5 V)** · **GPIO 5** · divisor → **GPIO 14** · GND |
 | LED alerta (RGB) | perna R · perna mais longa (cátodo) | **GPIO 22** → 220 Ω → R · cátodo → GND · G e B sem ligação |
 | LED ventilação (RGB) | perna B (ou G) · perna mais longa (cátodo) | **GPIO 23** → 100 Ω → B · cátodo → GND · R e G sem ligação |
 
 **Divisor do ECHO** (o HC-SR04 responde com 5 V e o ESP32 aceita até 3,3 V):
 
 ```
-ECHO ──[ 1 kΩ ]──┬── GPIO 27
+ECHO ──[ 1 kΩ ]──┬── GPIO 14
                  │
               [ 2 kΩ ]
                  │
@@ -72,6 +72,10 @@ ECHO ──[ 1 kΩ ]──┬── GPIO 27
 
 O VIN só tem 5 V com a placa ligada pelo USB. Todos os GND são comuns.
 Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39 (só entrada).
+O GPIO 5 é exceção aceita: o TRIG do HC-SR04 é entrada de alta impedância e não muda o nível do pino no boot.
+
+Pinagem conferida na placa em 2026-11-19 com `firmware/teste-montagem/` (botões, DHT11 e HC-SR04 respondendo).
+O esquemático do Wokwi fica em `hardware/esquematico/diagram.json` (o Wokwi não tem DHT11; o desenho usa o DHT22, que tem a mesma pinagem).
 
 ## 3. Medidas para a impressão 3D
 
@@ -120,13 +124,36 @@ Pinos a evitar: 0, 2, 5, 12 e 15 (boot), 6–11 (flash), 1 e 3 (Serial), 34–39
 |---|---|---|---|---|---|
 | `TaskBotaoEntrada` | 1 | 2 | 3072 | ✅ M1 | Espera o semáforo da ISR do GPIO 19, confirma o aperto e põe o evento na fila |
 | `TaskBotaoSaida` | 1 | 2 | 3072 | ✅ M1 | Idem, GPIO 21 |
-| `TaskComunicacao` | 0 | 1 | 8192 | ✅ M1 | Wi-Fi, MQTT, LWT, NTP; tira da fila e publica; vai assinar `grupo3/cmd` |
-| `TaskSensores` | 1 | a definir na T2.1 | a definir | M2 (T2.1/T2.2) | A cada 5 s lê o DHT11 e o HC-SR04 e põe a leitura na fila de telemetria |
-| alerta por limiar | — | — | — | M2 (T2.3) | Ao cruzar 30 °C / 70% (volta em 28 °C / 65%), avisa por notify, acende o LED vermelho e gera o evento de alerta |
-| `TaskAtuador` | 1 | a definir na T2.4 | a definir | M2 (T2.4) | Recebe da `TaskComunicacao`, por fila, o comando de `grupo3/cmd`, aciona o LED de ventilação e confirma o estado |
+| `TaskComunicacao` | 0 | 1 | 8192 | ✅ M1 · M2 (T2.2–T2.4) | Wi-Fi, MQTT, LWT, NTP; esvazia as filas na ordem botões → alerta → ventilação → telemetria, publicando cada item antes de tirá-lo da fila; assina `grupo3/cmd` (QoS 1) a cada conexão, e o callback valida o comando e o põe na fila de comandos |
+| `TaskSensores` | 1 | 1 | 4096 | M2 (T2.1/T2.2) código pronto, falta testar na placa | A cada 5 s lê o DHT11 e o HC-SR04 (mediana de 3 medidas), calcula o nível, numera a leitura (`seq`) e a põe na fila de telemetria (12 leituras = 1 min de queda do broker) |
+| alerta por limiar (`alerta.*`) | — | — | — | M2 (T2.3) código pronto, falta testar na placa | Roda dentro da `TaskSensores`: ao cruzar 30 °C / 70% (volta em 28 °C / 65%) acende o LED vermelho e põe a mudança de estado na fila de alerta (4 itens) |
+| `TaskAtuador` | 1 | 1 | 3072 | M2 (T2.4) código pronto, falta testar na placa | Recebe da `TaskComunicacao`, por fila, o comando de `grupo3/cmd`, aciona o LED de ventilação e põe o estado (com o `cmd_seq`) na fila de ventilação |
 
 As prioridades, stacks e a divisão entre tasks do M2 são fixadas e justificadas em cada task, ao implementar. Os
 botões ficam acima da comunicação para não perder apertos enquanto a rede reconecta.
+
+**`TaskSensores` (T2.1):**
+
+- **Prioridade 1, abaixo dos botões (2):** um aperto nunca espera uma leitura. A leitura tolera atraso: o período é de
+  5 s, e o `vTaskDelayUntil` mantém a cadência mesmo que uma volta atrase.
+- **Núcleo 1:** o núcleo 0 fica com a pilha do Wi-Fi e a `TaskComunicacao`. O `pulseIn` do HC-SR04 fica em espera
+  ativa por até ~30 ms por medida e não pode competir com a rede.
+- **Stack de 4096 bytes:** a biblioteca do DHT11 e o `vsnprintf` do log usam pouco. A folga real é registrada no log
+  da primeira leitura e conferida na placa. Se sobrar mais de 2 KB, dá para reduzir.
+- **Efeito nos botões:** a biblioteca DHTesp lê o DHT11 numa seção crítica de ~5 ms, com as interrupções desligadas
+  no núcleo 1. A borda do botão não se perde, porque o GPIO a guarda e a ISR roda logo depois. Um botão apertado no
+  meio de uma medida do HC-SR04 pode atrasar o `pulseIn` e estragar aquela medida, mas a mediana de 3 a descarta.
+
+**Alerta por limiar (T2.3), sem task própria:** a `TaskSensores` aplica o limiar logo depois de cada leitura e acende
+ou apaga o LED na hora, sem passar pela rede. Uma task de alerta acordada por notify não compensa aqui: o notify só
+carrega 32 bits, e o evento precisa da leitura inteira (ts, temperatura, umidade). Seria preciso uma fila do mesmo
+jeito, mais uma stack, só para repassar dados. A mudança de estado vai por fila para a `TaskComunicacao`, que publica o
+alerta antes da telemetria.
+
+**`TaskAtuador` (T2.4):** prioridade 1 e núcleo 1, como a `TaskSensores`. O trabalho por comando é um `digitalWrite`,
+e a latência do comando vem da rede, não da task. Por isso ela fica abaixo dos botões. A stack de 3072 é a mesma
+dos botões: a task só copia structs pequenas e chama o log. O JSON do comando é lido no callback do MQTT, que roda
+na stack da `TaskComunicacao` (8192).
 
 ## 5. Tópicos MQTT
 
@@ -134,9 +161,9 @@ botões ficam acima da comunicação para não perder apertos enquanto a rede re
 |---|---|---|
 | `grupo3/silo/evento` | ESP32 → broker | ✅ M1 |
 | `grupo3/status` (LWT) | ESP32/broker → assinantes | ✅ M1 |
-| `grupo3/telemetria` | ESP32 → broker | M2 (T2.1/T2.2): leitura a cada 5 s |
-| `grupo3/alerta` (retido) | ESP32 → broker | M2 (T2.3): mudança de estado do alerta |
-| `grupo3/cmd` | backend → ESP32 | M2 (T2.4): ligar/desligar a ventilação |
-| `grupo3/ventilacao` (retido) | ESP32 → broker | M2 (T2.4): estado do LED, confirma o comando |
+| `grupo3/telemetria` | ESP32 → broker | M2 (T2.2) código pronto, falta testar na placa: leitura a cada 5 s |
+| `grupo3/alerta` (retido) | ESP32 → broker | M2 (T2.3) código pronto, falta testar na placa: mudança de estado do alerta |
+| `grupo3/cmd` | backend → ESP32 | M2 (T2.4) código pronto, falta testar na placa: ligar/desligar a ventilação |
+| `grupo3/ventilacao` (retido) | ESP32 → broker | M2 (T2.4) código pronto, falta testar na placa: estado do LED, confirma o comando |
 
 Detalhes e exemplos em [`topicos-mqtt.md`](topicos-mqtt.md).
