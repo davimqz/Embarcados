@@ -1,0 +1,43 @@
+# T3.4 — npm test (backend) — 2026-11-25T22:07:35-03:00
+# node v24.19.0
+
+> silo-backend@0.0.0 test
+> node --test ingest/*.test.ts
+
+✔ aceita telemetria do contrato sem alterar o payload (2.163ms)
+✔ aceita ts null (relógio ainda sem NTP) e status sem seq (0.2283ms)
+✔ descarta JSON inválido, sem device_id, sem seq e tópico fora do painel (0.2633ms)
+✔ consulta por período usa o ts da placa, ou a chegada quando ts é null (0.4283ms)
+✔ recentes traz a janela e o último status e alerta, mesmo antigos (1.211ms)
+✔ descarta as mais antigas quando passa do máximo (0.3255ms)
+✔ sha256 de um payload fixo bate com o valor conhecido (0.9998ms)
+✔ hash gravado de um payload de telemetria fixo bate com o valor calculado fora do Node (3.7935ms)
+✔ grava tópico, device_id, seq, ts, recebimento, payload bruto e hash (1.335ms)
+✔ preserva o payload byte a byte, sem reformatar o JSON (0.6032ms)
+✔ status sem seq nem ts vira null nas colunas (0.5007ms)
+✔ hash recalculado do banco bate; adulterar o payload é detectado (15.3399ms)
+✔ recusa bytes que não são UTF-8 válido em vez de gravar texto trocado (0.9842ms)
+✔ aceita o exemplo do contrato de cada tópico, sem alterar o payload (2.3037ms)
+✔ aceita ts null, leituras null e campos a mais (0.2787ms)
+✔ rejeita JSON inválido, payload que não é objeto e tópico fora do contrato (0.2586ms)
+✔ rejeita device_id, ts e seq fora do contrato em qualquer tópico com seq (0.7971ms)
+✔ rejeita evento fora do contrato (1.0512ms)
+✔ rejeita status fora do contrato (0.1637ms)
+✔ rejeita telemetria fora do contrato (0.2141ms)
+✔ rejeita alerta fora do contrato (0.1561ms)
+✔ rejeita ventilacao fora do contrato (0.2517ms)
+✔ sequência normal não gera ocorrência (1.2556ms)
+✔ buraco 7 → 9 é registrado com o intervalo faltante (0.283ms)
+✔ duplicata (mesmo seq e payload) é registrada e não é gravada, mesmo fora de ordem (0.1546ms)
+✔ seq menor com payload novo é reboot, não erro; se não recomeçou em 1, também acusa o buraco (0.1694ms)
+✔ cada placa e cada tópico têm seq próprio; status (sem seq) passa direto (0.1651ms)
+✔ retoma do banco: mensagem retida já gravada é duplicata; o seq seguinte não vira reboot (4.3589ms)
+✔ ocorrência é gravada em ocorrencias_seq (1.0598ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 183.7573
