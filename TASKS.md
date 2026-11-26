@@ -164,7 +164,7 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 _Tasks T2.1–T2.4. Detalhar ao fechar o M1 (depende do sensor de T0.5)._
 
-### T2.5 — Testar na bancada os dois LEDs RGB
+### T2.6 — Testar na bancada os dois LEDs RGB
 - **Marco:** M2
 - **Status:** review
 - **Responsável:** Davi
