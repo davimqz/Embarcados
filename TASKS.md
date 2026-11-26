@@ -331,15 +331,16 @@ Resumo e evidências: [`docs/entregas/M1/README.md`](docs/entregas/M1/README.md)
 
 ### T3.4 — Testar o validador, o hash e a detecção de seq
 - **Marco:** M3
-- **Status:** todo
-- **Responsável:** —
+- **Status:** done
+- **Responsável:** Davi
 - **Depende de:** T3.3
 - **Descrição:** testes automáticos (`npm test`) do validador do contrato, do hash e da detecção de `seq`, sem precisar de broker externo.
 - **Critérios de aceite:**
-  - [ ] Um caso válido e casos inválidos para cada tópico
-  - [ ] Hash conhecido para um payload fixo
-  - [ ] Buraco, duplicata e reboot cobertos
-  - [ ] `npm test` passa
+  - [x] Um caso válido e casos inválidos para cada tópico
+  - [x] Hash conhecido para um payload fixo
+  - [x] Buraco, duplicata e reboot cobertos
+  - [x] `npm test` passa
+- **Observações:** a maior parte dos testes já tinha entrado com T3.1–T3.3 (`contrato.test.ts`, `banco.test.ts`, `sequencia.test.ts`). Esta task conferiu cada critério e fechou a única lacuna: o hash conhecido agora é de um payload real de telemetria (calculado fora do Node com `sha256sum`) e é conferido também na coluna `hash` gravada. 29 testes, todos passando; `tsc --noEmit` limpo.
 - **Evidência:** `docs/entregas/M3/t3.4-npm-test.log`
 
 ## M4 — Dashboard · tag `v0.4.0`
