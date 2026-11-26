@@ -1,9 +1,13 @@
 // Configuração lida do ambiente (.env, carregado pelo `node --env-file-if-exists`).
 
+import { fileURLToPath } from 'node:url';
+
 export const MQTT_URL = process.env.MQTT_URL ?? 'mqtt://localhost:1883';
 export const GRUPO = process.env.GRUPO ?? '3';
 export const BROKER_PORTA = Number(process.env.BROKER_PORTA ?? 1883);
 export const SERVIDOR_PORTA = Number(process.env.SERVIDOR_PORTA ?? 3000);
+// Arquivo SQLite do ingest (T3.2). Padrão: backend/dados/silo.db, independente da pasta de onde se roda.
+export const BANCO_CAMINHO = process.env.BANCO_CAMINHO ?? fileURLToPath(new URL('../dados/silo.db', import.meta.url));
 
 // Contrato em docs/topicos-mqtt.md.
 export const TOPICOS = {
