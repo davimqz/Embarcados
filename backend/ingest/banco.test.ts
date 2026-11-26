@@ -20,6 +20,15 @@ test('sha256 de um payload fixo bate com o valor conhecido', () => {
   assert.equal(sha256('abc'), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
 });
 
+test('hash gravado de um payload de telemetria fixo bate com o valor calculado fora do Node', () => {
+  // printf '%s' "$TEL" | sha256sum
+  const esperado = '51698c1d8abfb64f939cbab1378b050fdc8cd2654bf9ce744f80ee367e708406';
+  assert.equal(sha256(TEL), esperado);
+  const banco = new Banco(':memory:');
+  assert.equal(gravarValida(banco, 'grupo3/telemetria', TEL).hash, esperado);
+  banco.fechar();
+});
+
 test('grava tópico, device_id, seq, ts, recebimento, payload bruto e hash', () => {
   const banco = new Banco(':memory:');
   gravarValida(banco, 'grupo3/telemetria', TEL, 1795096306123);
