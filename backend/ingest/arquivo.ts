@@ -1,48 +1,30 @@
 // Interpretação das mensagens da placa e arquivo em memória para o painel (T4.6).
-// Checagem mínima do formato do contrato (docs/topicos-mqtt.md); a validação completa e o SQLite são da T3.1–T3.2.
+// A validação do contrato fica em contrato.ts (T3.1); o SQLite é da T3.2.
 
 import { TOPICOS } from '../comum/config.ts';
+import { validar, type Payload } from './contrato.ts';
 
 // Tópicos que o frontend entende (frontend/src/dados/tipos.ts). grupo3/ventilacao saiu da interface na T4.5.
 export const TOPICOS_PAINEL = [TOPICOS.status, TOPICOS.telemetria, TOPICOS.evento, TOPICOS.alerta] as const;
 export type TopicoPainel = (typeof TOPICOS_PAINEL)[number];
 
-export type Payload = Record<string, unknown> & { device_id: string };
+export type { Payload };
 
 // O mesmo formato que o frontend recebe pelo WebSocket: tópico + payload do contrato, sem alteração.
 export type Mensagem = { topico: TopicoPainel; payload: Payload };
 
 export type Resultado = { ok: true; mensagem: Mensagem } | { ok: false; motivo: string };
 
+export function ehDoPainel(topico: string): topico is TopicoPainel {
+  return (TOPICOS_PAINEL as readonly string[]).includes(topico);
+}
+
+// Valida contra o contrato (contrato.ts) e aceita só os tópicos que o painel entende.
 export function interpretar(topico: string, bruto: Buffer | string): Resultado {
-  if (!(TOPICOS_PAINEL as readonly string[]).includes(topico)) {
-    return { ok: false, motivo: 'tópico fora do painel' };
-  }
-
-  let p: unknown;
-  try {
-    p = JSON.parse(bruto.toString());
-  } catch {
-    return { ok: false, motivo: 'JSON inválido' };
-  }
-  if (typeof p !== 'object' || p === null || Array.isArray(p)) {
-    return { ok: false, motivo: 'payload não é um objeto' };
-  }
-  const obj = p as Record<string, unknown>;
-  if (typeof obj.device_id !== 'string' || obj.device_id === '') {
-    return { ok: false, motivo: 'sem device_id' };
-  }
-
-  if (topico === TOPICOS.status) {
-    if (obj.status !== 'online' && obj.status !== 'offline') {
-      return { ok: false, motivo: 'status diferente de online/offline' };
-    }
-  } else {
-    if (!Number.isInteger(obj.seq)) return { ok: false, motivo: 'sem seq inteiro' };
-    if (obj.ts !== null && !Number.isInteger(obj.ts)) return { ok: false, motivo: 'ts não é inteiro nem null' };
-  }
-
-  return { ok: true, mensagem: { topico: topico as TopicoPainel, payload: obj as Payload } };
+  if (!ehDoPainel(topico)) return { ok: false, motivo: 'tópico fora do painel' };
+  const v = validar(topico, bruto);
+  if (!v.ok) return v;
+  return { ok: true, mensagem: { topico, payload: v.payload } };
 }
 
 type Registro = { mensagem: Mensagem; ts: number };
