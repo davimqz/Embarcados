@@ -1,4 +1,5 @@
-// Servidor do painel (T4.6): assina os tópicos da placa no broker e repassa cada mensagem ao frontend.
+// Servidor do painel (T4.6): assina os tópicos da placa no broker, valida cada mensagem contra o contrato (T3.1)
+// e repassa as válidas ao frontend. As inválidas são rejeitadas com o motivo no log.
 //   WebSocket  /ws              → ao conectar, as mensagens recentes; depois, cada mensagem nova
 //   REST       /api/mensagens   → ?desde=&ate=&topicos=a,b (ts em segundos UTC), a partir do arquivo em memória
 //   REST       /api/saude       → estado da conexão com o broker
@@ -12,7 +13,8 @@ import type { WebSocket } from 'ws';
 import mqtt from 'mqtt';
 
 import { MQTT_URL, SERVIDOR_PORTA, agora } from '../comum/config.ts';
-import { Arquivo, TOPICOS_PAINEL, interpretar } from './arquivo.ts';
+import { Arquivo, ehDoPainel } from './arquivo.ts';
+import { TOPICOS_INGEST, validar } from './contrato.ts';
 
 const JANELA_RECENTE_S = 10 * 60; // a tela ao vivo mostra 10 min de leituras
 
@@ -28,24 +30,32 @@ const mqttCliente = mqtt.connect(MQTT_URL, {
 
 mqttCliente.on('connect', () => {
   console.log(`${agora()} [MQTT] Conectado a ${MQTT_URL}`);
-  mqttCliente.subscribe([...TOPICOS_PAINEL], { qos: 1 }, (erro) => {
+  mqttCliente.subscribe([...TOPICOS_INGEST], { qos: 1 }, (erro) => {
     if (erro) console.log(`${agora()} [MQTT] Falha ao assinar: ${erro.message}`);
-    else console.log(`${agora()} [MQTT] Assinado: ${TOPICOS_PAINEL.join(', ')}`);
+    else console.log(`${agora()} [MQTT] Assinado: ${TOPICOS_INGEST.join(', ')}`);
   });
 });
 mqttCliente.on('reconnect', () => console.log(`${agora()} [MQTT] Reconectando a ${MQTT_URL}...`));
 mqttCliente.on('offline', () => console.log(`${agora()} [MQTT] Sem conexão com o broker`));
-mqttCliente.on('error', (erro) => console.log(`${agora()} [MQTT] Erro: ${erro.message}`));
+// Conexão recusada chega como AggregateError, com message vazia; o code (ex.: ECONNREFUSED) diz o motivo.
+mqttCliente.on('error', (erro) =>
+  console.log(`${agora()} [MQTT] Erro: ${erro.message || (erro as NodeJS.ErrnoException).code || erro.name}`));
 
 mqttCliente.on('message', (topico, bruto) => {
-  const r = interpretar(topico, bruto);
-  if (!r.ok) {
-    console.log(`${agora()} [MQTT] Descartada em ${topico} (${r.motivo}): ${bruto.toString().slice(0, 200)}`);
+  const v = validar(topico, bruto);
+  if (!v.ok) {
+    console.log(`${agora()} [MQTT] Rejeitada em ${topico} (${v.motivo}): ${bruto.toString().slice(0, 200)}`);
     return;
   }
-  arquivo.adicionar(r.mensagem);
-  const texto = JSON.stringify(r.mensagem);
-  console.log(`${agora()} [MQTT] ${topico} ${JSON.stringify(r.mensagem.payload)} → ${clientes.size} painel(is)`);
+  if (!ehDoPainel(v.topico)) {
+    // Válida, mas o painel não mostra este tópico (grupo3/ventilacao, decisão 14 em aberto).
+    console.log(`${agora()} [MQTT] ${topico} ${JSON.stringify(v.payload)} (válida; fora do painel)`);
+    return;
+  }
+  const mensagem = { topico: v.topico, payload: v.payload };
+  arquivo.adicionar(mensagem);
+  const texto = JSON.stringify(mensagem);
+  console.log(`${agora()} [MQTT] ${topico} ${JSON.stringify(v.payload)} → ${clientes.size} painel(is)`);
   for (const ws of clientes) {
     if (ws.readyState === ws.OPEN) ws.send(texto);
   }

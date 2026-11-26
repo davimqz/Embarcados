@@ -8,7 +8,7 @@ checa os tipos.
 | `comum/` | Configuração (`.env`) e nomes dos tópicos | T3.0 |
 | `broker/` | Broker MQTT de desenvolvimento (aedes), para não precisar instalar o Mosquitto | T3.0 |
 | `simulador/` | Simulador da placa: publica o mesmo que o firmware do M2 | T3.0 |
-| `ingest/` | Servidor do painel (MQTT → WebSocket/REST, T4.6); depois, validação e SQLite | T4.6, T3.1–T3.3 |
+| `ingest/` | Servidor do painel (MQTT → WebSocket/REST, T4.6), validação do contrato (`contrato.ts`, T3.1); depois, SQLite | T4.6, T3.1–T3.3 |
 | `anchor/` | Serviço de ancoragem na Cardano Preprod | M5 |
 
 ## Como rodar
@@ -26,11 +26,16 @@ npm run simulador         # terminal 2: a "placa"
 
 ```sh
 npm run servidor          # assina o broker do .env e serve o painel em http://localhost:3000
-npm test                  # testes do interpretador e do arquivo em memória
+npm test                  # testes do validador do contrato e do arquivo em memória
 ```
 
-O `servidor` (`ingest/servidor.ts`) assina `grupo3/status`, `grupo3/telemetria`, `grupo3/silo/evento` e
-`grupo3/alerta` e repassa cada mensagem como `{ topico, payload }`, com o payload sem alteração:
+O `servidor` (`ingest/servidor.ts`) assina os cinco tópicos da placa (`grupo3/status`, `grupo3/telemetria`,
+`grupo3/silo/evento`, `grupo3/alerta` e `grupo3/ventilacao`) e valida cada payload contra o contrato
+(`ingest/contrato.ts`, campo a campo, conforme `docs/topicos-mqtt.md`). Payload fora do contrato (JSON inválido, campo
+faltando, tipo ou valor errado) é **rejeitado** e aparece no log com o motivo. As mensagens válidas dos quatro tópicos
+que o painel mostra são repassadas como `{ topico, payload }`, com o payload sem alteração; `grupo3/ventilacao` é
+validado, mas não vai ao painel (decisão 14 em `docs/decisoes-pendentes.md`). Se o broker cair, o servidor tenta
+reconectar a cada 3 s:
 
 | Rota | O que faz |
 |---|---|
@@ -38,9 +43,8 @@ O `servidor` (`ingest/servidor.ts`) assina `grupo3/status`, `grupo3/telemetria`,
 | `GET /api/mensagens?desde=&ate=&topicos=a,b` | Histórico por período (`ts` em segundos UTC; mensagem com `ts: null` usa a hora de chegada) |
 | `GET /api/saude` | Broker, conexão, total de mensagens guardadas e painéis abertos |
 
-As mensagens ficam **só em memória** (até 20 000, ~24 h): ao reiniciar o servidor, o histórico some. O SQLite e a
-validação completa do contrato entram na T3.1–T3.2, neste mesmo serviço. Mensagens fora do formato são descartadas
-e aparecem no log.
+As mensagens ficam **só em memória** (até 20 000, ~24 h): ao reiniciar o servidor, o histórico some. O SQLite entra
+na T3.2, neste mesmo serviço.
 
 Com a placa real, o `.env` aponta para o mesmo broker do `config.h` do firmware:
 
